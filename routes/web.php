@@ -37,7 +37,15 @@ Route::middleware(['auth'])->group(function () {
 // Índice de ventas (solo vista / diseño)
 Route::get('/ventas', fn () => view('sales.index'))->name('sales.index');
 Route::get('/compras', fn () => view('purchases.index'))->name('purchases.index');
+
 // Gestor de productos (solo vista / UI)
 Route::get('/items', fn () => view('items.index'))->name('items.index');
+
+// Reportes (solo UI)
+Route::get('/reportes', fn () => view('reports.index'))->name('reports.index');
+
+// Finanzas (solo UI)
+Route::get('/finanzas', fn () => view('finance.index'))->name('finance.index');
+Route::get('/finanzas/inversiones', fn () => view('finance.investments'))->name('finance.investments');
 
 require __DIR__.'/auth.php';

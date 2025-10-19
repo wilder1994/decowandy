@@ -58,8 +58,14 @@
                 <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
                     <span class="material-symbols-outlined text-base">request_quote</span> Gastos
                 </a>
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
+                <a href="{{ route('reports.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('reportes')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">monitoring</span> Reportes
+                </a>
+                <a href="{{ route('finance.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('finanzas')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
+                    <span class="material-symbols-outlined text-base">account_balance</span> Finanzas
+                </a>
+                <a href="{{ route('finance.investments') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('finanzas/inversiones')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
+                    <span class="material-symbols-outlined text-base">savings</span> Inversiones
                 </a>
                 <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
                     <span class="material-symbols-outlined text-base">settings</span> Ajustes
