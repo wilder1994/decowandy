@@ -46,13 +46,13 @@
                 <a href="{{ url('/dashboard') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 text-[color:var(--dw-text)] @if(request()->is('dashboard')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">dashboard</span> Dashboard
                 </a>
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
+                <a href="{{ route('items.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('items')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">inventory_2</span> Ítems
                 </a>
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
+                <a href="{{ route('sales.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('ventas')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">point_of_sale</span> Ventas
                 </a>
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
+                <a href="{{ route('purchases.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('compras')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">shopping_cart</span> Compras
                 </a>
                 <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
@@ -78,10 +78,13 @@
                     </div>
 
                     <div class="flex items-center gap-3">
-                        <a href="#" class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl text-white brand-gradient shadow hover:opacity-90">
+                        <button id="openSaleModal"
+                                type="button"
+                                class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl text-white brand-gradient shadow hover:opacity-90">
                             <span class="material-symbols-outlined text-base">add_shopping_cart</span>
                             Registrar venta
-                        </a>
+                        </button>
+
 
                         {{-- Menú del usuario --}}
                         <div class="relative">
@@ -126,6 +129,10 @@
             <div class="max-w-7xl mx-auto px-4 py-8">
                 @yield('content')
             </div>
+
+            {{-- Modal Registrar venta (UI) --}}
+            @include('sales.partials.modal-create')
+
         </main>
     </div>
 
@@ -144,5 +151,9 @@
 
     {{-- Iconos Google (ligeros). Puedes quitar si ya usas otros íconos. --}}
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@400,0,0" rel="stylesheet" />
+>
+
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@400,0,0" rel="stylesheet" />
+@stack('scripts')
 </body>
 </html>

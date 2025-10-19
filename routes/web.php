@@ -34,4 +34,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
 });
 
+// Índice de ventas (solo vista / diseño)
+Route::get('/ventas', fn () => view('sales.index'))->name('sales.index');
+Route::get('/compras', fn () => view('purchases.index'))->name('purchases.index');
+// Gestor de productos (solo vista / UI)
+Route::get('/items', fn () => view('items.index'))->name('items.index');
+
 require __DIR__.'/auth.php';
