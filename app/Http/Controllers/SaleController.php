@@ -2,181 +2,119 @@
 
 namespace App\Http\Controllers;
 
+
+use App\Models\Item;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Item;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Str;
+
 
 class SaleController extends Controller
 {
-    public function index()
-    {
-        $sales = Sale::orderByDesc('id')->paginate(10);
-        return view('sales.index', compact('sales'));
-    }
-
-    /**
-     * Formulario para registrar una venta (POS)
-     */
-    public function create(Request $request)
-    {
-        // Sector recibido desde la ruta (diseno / impresion / papeleria)
-        $sector = $request->get('sector', 'papeleria');
-
-        // Filtrar ítems por sector activo
-        $items = Item::where('sector', $sector)
-            ->where('active', true)
-            ->orderBy('name')
-            ->get();
-
-        return view('sales.create', compact('items', 'sector'));
-    }
+    public function __construct(private readonly InventoryService $inventory) {}
 
 
     /**
-     * Guarda la venta + detalle e imprime PDF
+     * POST /ventas
+     * Request esperado (ejemplo):
+     * {
+     * sold_at: '2025-10-25 13:05:00',
+     * customer_name?, customer_email?, customer_phone?,
+     * payment_method: 'cash'|'transfer'|'card'|'mixed'|'other',
+     * amount_received: 25000,
+     * items: [
+     * { item_id:1, quantity:2 },
+     * { item_id:3, quantity:1, unit_price:5000, sheets_used:1 } // impresión
+     * ]
+     * }
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'customer_name'   => 'nullable|string|max:100',
-            'customer_email'  => 'nullable|email|max:100',
-            'customer_phone'  => 'nullable|string|max:30',
-            'amount_received' => 'required|numeric|min:0',
-            'items'           => 'required|array|min:1',
-            'items.*.id'      => 'required|exists:items,id',
-            'items.*.quantity'=> 'required|numeric|min:1',
-            // Si quieres aceptar precio desde el cliente, al menos valida:
-            'items.*.price'   => 'required|numeric|min:0',
-            'payment_method'  => 'nullable|in:cash,transfer,card,mixed,other',
+        $data = $request->validate([
+            'sold_at' => 'nullable|date',
+            'customer_name' => 'nullable|string|max:255',
+            'customer_email' => 'nullable|email|max:255',
+            'customer_phone' => 'nullable|string|max:50',
+            'payment_method' => 'required|string|max:20',
+            'amount_received' => 'required|integer|min:0',
+            'items' => 'required|array|min:1',
+            'items.*.item_id' => 'required|integer|exists:items,id',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'nullable|integer|min:0',
+            'items.*.sheets_used' => 'nullable|integer|min:0',
         ]);
 
-        DB::beginTransaction();
-        try {
-            // 1) Traer items desde BD y recalcular totales
-            $itemIds = collect($request->items)->pluck('id')->all();
-            $itemsDb = Item::whereIn('id', $itemIds)->get()->keyBy('id');
 
+        $sale = DB::transaction(function () use ($data) {
+            $total = 0;
             $lines = [];
-            $subtotal = 0;
 
-            foreach ($request->items as $row) {
-                $it = $itemsDb[$row['id']] ?? null;
-                if (!$it) {
-                    throw new \Exception("Producto {$row['id']} no encontrado.");
-                }
 
-                $qty = (float) $row['quantity'];
+            foreach ($data['items'] as $i => $line) {
+                $item = Item::findOrFail($line['item_id']);
+                $unitPrice = $line['unit_price'] ?? (int)$item->price; // trae precio del item si no viene
+                $qty = (int)$line['quantity'];
+                $lineTotal = $unitPrice * $qty; // COP enteros
 
-                // Precio de venta confiable:
-                $unitPrice = (float) ($row['price'] ?? $it->sale_price); // o fuerza $it->sale_price
-
-                $lineTotal = round($qty * $unitPrice, 2);
-                $subtotal += $lineTotal;
-
-                // Verificar stock (opcional: solo si manejas stock estricto)
-                if (!is_null($it->stock) && $it->stock < $qty) {
-                    throw new \Exception("Stock insuficiente para {$it->name}.");
-                }
 
                 $lines[] = [
-                    'item'        => $it,
-                    'quantity'    => $qty,
-                    'unit_price'  => $unitPrice,
-                    'line_total'  => $lineTotal,
+                    'item' => $item,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'line_total' => $lineTotal,
+                    'sheets_used' => $line['sheets_used'] ?? null,
                 ];
+
+
+                $total += $lineTotal;
             }
 
-            $discount = 0; // ajustar si luego aplicas descuentos
-            $taxes    = 0; // ajustar si luego aplicas impuestos
-            $total    = round($subtotal - $discount + $taxes, 2);
 
-            // 2) Validar recibido vs total
-            $amountReceived = (float) $request->amount_received;
-            $change = $amountReceived >= $total ? round($amountReceived - $total, 2) : 0;
-
-            // 3) Crear venta
             $sale = Sale::create([
-                'sale_code'       => 'DW-' . date('YmdHis'),
-                'date'            => now()->toDateString(),
-                'time'            => now()->toTimeString(),
-                'user_id'         => Auth::id(),
-                'sector'          => $request->sector ?? 'papeleria',
-                'customer_name'   => $request->customer_name,
-                'customer_email'  => $request->customer_email,
-                'customer_phone'  => $request->customer_phone,
-                'subtotal'        => $subtotal,
-                'discount'        => $discount,
-                'taxes'           => $taxes,
-                'total'           => $total,
-                'amount_received' => $amountReceived,
-                'change_due'      => $change,
-                'payment_method'  => $request->payment_method ?? 'cash',
+                'sale_code' => 'DW-' . str_pad((string)((int)(optional(Sale::latest('id')->first())->id ?? 0) + 1), 6, '0', STR_PAD_LEFT),
+                'sold_at' => $data['sold_at'] ?? now(),
+                'customer_name' => $data['customer_name'] ?? null,
+                'customer_email' => $data['customer_email'] ?? null,
+                'customer_phone' => $data['customer_phone'] ?? null,
+                'user_id' => optional(auth()->user())->id,
+                'payment_method' => $data['payment_method'],
+                'amount_received' => $data['amount_received'],
+                'total' => $total,
+                'change_due' => max(0, (int)$data['amount_received'] - $total),
             ]);
 
 
-            // 4) Crear líneas y actualizar inventario
-            foreach ($lines as $L) {
-                SaleItem::create([
-                    'sale_id'    => $sale->id,
-                    'item_id'    => $L['item']->id,
-                    'quantity'   => $L['quantity'],
-                    'unit_price' => $L['unit_price'],
-                    'line_total' => $L['line_total'],
-                ]);
+            foreach ($lines as $l) {
+                $si = new SaleItem();
+                $si->sale_id = $sale->id;
+                $si->item_id = $l['item']->id;
+                $si->category = $l['item']->category; // copia para reportes
+                $si->quantity = $l['quantity'];
+                $si->unit_price = $l['unit_price'];
+                $si->line_total = $l['line_total'];
+                $si->sheets_used = $l['sheets_used']; // solo aplica impresión
+                $si->save();
 
-                // ↓ Si gestionas stock:
-                if (!is_null($L['item']->stock)) {
-                    $L['item']->decrement('stock', $L['quantity']);
+                // Hook inventario: solo Papelería en F1
+                if (strtolower($l['item']->category) === 'papelería' || strtolower($l['item']->category) === 'papeleria') {
+                    $this->inventory->out($l['item']->id, $l['quantity'], 'venta', $sale->id);
                 }
-
-                // ↓ Registrar movimiento (opcional pero recomendado)
-                \App\Models\StockMovement::create([
-                    'item_id'   => $L['item']->id,
-                    'type'      => 'out', // salida por venta
-                    'quantity'  => $L['quantity'],
-                    'note'      => 'Venta ID '.$sale->id,
-                    'date'      => now()->toDateString(),
-                ]);
             }
 
-            // 5) Cargar relaciones para PDF
-            $sale->load(['items.item','user']);
 
-            // 6) Asegurar carpeta y generar PDF
-            Storage::disk('public')->makeDirectory('invoices');
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('sales.invoice', ['sale' => $sale]);
-
-            $fileName = 'invoice_' . $sale->id . '.pdf';
-            Storage::disk('public')->put('invoices/'.$fileName, $pdf->output());
-
-            // 7) Guardar ruta PDF en venta
-            $sale->update(['invoice_pdf_path' => 'invoices/'.$fileName]);
-
-            DB::commit();
-
-            return redirect()
-                ->route('dashboard')
-                ->with('success', 'Venta registrada y factura generada.');
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            return back()->withErrors(['error' => 'Error: ' . $e->getMessage()]);
-        }
-    }
+            return $sale;
+        });
 
 
-     public function invoice(Sale $sale)
-    {
-        if ($sale->invoice_pdf_path) {
-            return redirect()->to(asset('storage/'.$sale->invoice_pdf_path));
-        }
-
-        // Fallback: renderizar la vista de factura (HTML) para imprimir/guardar como PDF
-        // Si usas DOMPDF, aquí podrías generar el PDF en caliente y retornarlo como stream.
-        return view('sales.invoice', compact('sale'));
+        return response()->json([
+            'ok' => true,
+            'sale_id' => $sale->id,
+            'sale_code' => $sale->sale_code,
+            'total' => $sale->total,
+            'change_due' => $sale->change_due,
+        ], 201);
     }
 }
