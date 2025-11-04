@@ -2,8 +2,14 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\PurchaseController;
+
+// Controladores
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\Api\PurchaseController;
+use App\Http\Controllers\Api\ItemController;
+use App\Http\Controllers\Api\CatalogItemController;
+use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\InventoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,5 +34,21 @@ Route::middleware('auth:sanctum')->group(function () {
     // Compras
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('api.purchases.store');
 
-    // (Pendiente por agregar): Items, Expenses, Inventory, Catalog...
+    // Items POS
+    Route::post('/items', [ItemController::class, 'store'])->name('api.items.store');
+    Route::put('/items/{item}', [ItemController::class, 'update'])->name('api.items.update');
+    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('api.items.destroy');
+
+    // Welcome / Catálogo público
+    Route::get('/ajustes/welcome/items', [CatalogItemController::class, 'index'])->name('api.welcome.items.index');
+    Route::post('/ajustes/welcome/items', [CatalogItemController::class, 'store'])->name('api.welcome.items.store');
+    Route::post('/ajustes/welcome/items/{item}', [CatalogItemController::class, 'update'])->name('api.welcome.items.update'); // soporta X-HTTP-Method-Override
+    Route::post('/ajustes/welcome/items/{item}/delete', [CatalogItemController::class, 'destroy'])->name('api.welcome.items.destroy');
+    Route::post('/ajustes/welcome/sort', [CatalogItemController::class, 'sort'])->name('api.welcome.items.sort');
+
+    // Gastos (movida a web.php para usar sesión web)
+    //Route::post('/expenses', [ExpenseController::class, 'store'])->name('api.expenses.store');
+
+    // Inventario
+    Route::get('/stocks/low', [InventoryController::class, 'lowStock'])->name('api.stocks.low');
 });

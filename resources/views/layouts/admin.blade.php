@@ -55,7 +55,9 @@
                 <a href="{{ route('purchases.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('compras')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">shopping_cart</span> Compras
                 </a>
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
+                <a href="{{ route('expenses.index') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50
+                        @if(request()->is('gastos')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">request_quote</span> Gastos
                 </a>
                 <a href="{{ route('reports.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('reportes')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
@@ -67,9 +69,12 @@
                 <a href="{{ route('finance.investments') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('finanzas/inversiones')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">savings</span> Inversiones
                 </a>
-                <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50">
+                <a href="{{ route('settings.public') }}"
+                    class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50
+                            @if(request()->is('ajustes*')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">settings</span> Ajustes
                 </a>
+
             </nav>
         </aside>
 
