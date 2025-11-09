@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('api.purchases.store');
 
     // Items POS
+    Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
     Route::post('/items', [ItemController::class, 'store'])->name('api.items.store');
     Route::put('/items/{item}', [ItemController::class, 'update'])->name('api.items.update');
     Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('api.items.destroy');
