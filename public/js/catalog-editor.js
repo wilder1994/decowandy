@@ -3,7 +3,7 @@
   const $ = (id) => document.getElementById(id);
 
   const st = {
-    activeCat: 'Papelería',
+    activeCat: (window.CATALOG && window.CATALOG.defaultCategory) || 'Papelería',
     list: [],
     editing: null,
     file: null
@@ -44,7 +44,7 @@
       loadList();
     };
     tabs.forEach((b) => b.addEventListener('click', () => setActive(b.dataset.cat)));
-    setActive('Papelería');
+    setActive(st.activeCat);
   }
 
   // list
@@ -54,9 +54,28 @@
       const data = await fetchJSON(url, { headers: headers() });
       st.list = data.items || [];
       renderGrid();
+      await refreshPreview();
     } catch (e) {
       console.error(e);
       alert('No fue posible cargar los ítems.');
+    }
+  }
+
+  async function refreshPreview() {
+    const card = $('previewCard');
+    const list = $('previewList');
+    if (!card || !list || !CATALOG.routes.preview) return;
+
+    const url = `${CATALOG.routes.preview}?category=${encodeURIComponent(st.activeCat)}`;
+
+    try {
+      const res = await fetch(url, { headers: headers({ Accept: 'application/json' }) });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.card) card.innerHTML = data.card;
+      if (data.list) list.innerHTML = data.list;
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -203,6 +222,7 @@
         headers: headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ category: st.activeCat, ids })
       });
+      await refreshPreview();
     } catch (e) {
       console.error(e);
       alert('No se pudo guardar el nuevo orden.');

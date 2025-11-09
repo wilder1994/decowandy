@@ -2,39 +2,54 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\CatalogView;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CatalogController extends Controller
 {
     // Página pública
     public function welcome()
     {
-        // Traemos TODO el catálogo visible
-        $base = DB::table('catalog_items')
-            ->where('visible', 1)
-            ->orderBy('sort_order')
-            ->orderBy('id')
-            ->get()
-            ->map(function ($x) {
-                // normalizar imagen
-                if ($x->image_path && !Str::startsWith($x->image_path, ['http://', 'https://', '/storage'])) {
-                    $x->image_path = Storage::url($x->image_path);
-                }
-                return $x;
-            });
+        [$categories, $destacados] = $this->composeCatalogData();
 
-        // Separamos por categoría
-        $papeleria = $base->where('category', 'Papelería')->values();
-        $impresion = $base->where('category', 'Impresión')->values();
-        $diseno    = $base->where('category', 'Diseño')->values();
+        return view('welcome', compact('categories', 'destacados'));
+    }
 
-        // Destacados
-        $destacados = $base->where('featured', 1)->take(6)->values();
+    // Vista del editor (staff)
+    public function settings()
+    {
+        [$categories, $destacados] = $this->composeCatalogData();
 
-        return view('welcome', compact('papeleria', 'impresion', 'diseno', 'destacados'));
+        return view('settings.public', compact('categories', 'destacados'));
+    }
+
+    public function preview(Request $request)
+    {
+        $categoryName = $request->query('category');
+
+        if (!$categoryName) {
+            abort(422, 'category parameter is required');
+        }
+
+        [$categories] = $this->composeCatalogData();
+
+        $category = $categories->firstWhere('key', $categoryName);
+
+        if (!$category) {
+            abort(404);
+        }
+
+        $card = view('welcome.partials.category-card', compact('category'))->render();
+        $list = view('welcome.partials.category-list', compact('category'))->render();
+
+        return response()->json([
+            'card' => $card,
+            'list' => $list,
+        ]);
     }
 
     // === API DEL EDITOR ===
@@ -141,5 +156,29 @@ class CatalogController extends Controller
         $v['featured']   = (int) ($v['featured'] ?? 0);
 
         return $v;
+    }
+
+    protected function composeCatalogData(): array
+    {
+        $items = $this->fetchVisibleItems();
+        $categories = CatalogView::compose($items);
+        $destacados = $items->where('featured', 1)->take(6)->values();
+
+        return [$categories, $destacados];
+    }
+
+    protected function fetchVisibleItems(): Collection
+    {
+        return DB::table('catalog_items')
+            ->where('visible', 1)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->map(function ($x) {
+                if ($x->image_path && !Str::startsWith($x->image_path, ['http://', 'https://', '/storage'])) {
+                    $x->image_path = Storage::url($x->image_path);
+                }
+                return $x;
+            });
     }
 }
