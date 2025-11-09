@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\SalesController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\PurchaseController;
@@ -39,7 +40,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
 
     // Vistas solo UI (panel)
-    Route::get('/ventas', fn () => view('sales.index'))->name('sales.index');
+    Route::get('/ventas', [SalesController::class, 'index'])->name('sales.index');
     Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/compras/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');

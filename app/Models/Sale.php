@@ -9,11 +9,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Sale extends Model
 {
     protected $fillable = [
-        'sale_code','date','time','user_id',
-        'customer_name','customer_email','customer_phone',
-        'subtotal','discount','taxes','total',
-        'amount_received','change_due','payment_method',
-        'invoice_pdf_path','invoice_img_path',
+        'sale_code', 'sold_at', 'date', 'time', 'user_id',
+        'customer_name', 'customer_email', 'customer_phone',
+        'subtotal', 'discount', 'taxes', 'total',
+        'amount_received', 'change_due', 'payment_method',
+        'invoice_pdf_path', 'invoice_img_path', 'notes',
+    ];
+
+    protected $casts = [
+        'sold_at' => 'datetime',
     ];
 
     /** Una venta tiene muchos ítems */
