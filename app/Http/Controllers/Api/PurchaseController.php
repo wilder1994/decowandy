@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Api;
 
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePurchaseRequest;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
-use App\Models\Item;
 use App\Services\InventoryService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 
@@ -32,35 +31,33 @@ class PurchaseController extends Controller
      * ]
      * }
      */
-    public function store(Request $request)
+    public function store(StorePurchaseRequest $request)
     {
-        $data = $request->validate([
-            'date' => 'required|date',
-            'category' => 'required|string|max:30',
-            'supplier' => 'nullable|string|max:255',
-            'note' => 'nullable|string|max:255',
-            'to_inventory' => 'required|boolean',
-            'items' => 'required|array|min:1',
-            'items.*.product_name' => 'required|string|max:255',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.total_cost' => 'required|integer|min:0',
-            'items.*.item_id' => 'nullable|integer|exists:items,id',
-        ]);
+        $purchaseDate = $request->date('date')->toDateString();
+        $category = $request->string('category')->trim()->value();
+        $supplier = $request->filled('supplier')
+            ? $request->string('supplier')->trim()->value()
+            : null;
+        $note = $request->filled('note')
+            ? $request->string('note')->trim()->value()
+            : null;
+        $toInventory = $request->boolean('to_inventory');
 
+        $items = collect($request->validated()['items'] ?? []);
 
-        $purchase = DB::transaction(function () use ($data) {
+        $purchase = DB::transaction(function () use ($purchaseDate, $category, $supplier, $note, $toInventory, $items) {
             $purchase = Purchase::create([
-                'date' => $data['date'],
-                'category' => $data['category'],
-                'supplier' => $data['supplier'] ?? null,
-                'note' => $data['note'] ?? null,
-                'to_inventory' => $data['to_inventory'],
+                'date' => $purchaseDate,
+                'category' => $category,
+                'supplier' => $supplier,
+                'note' => $note,
+                'to_inventory' => $toInventory,
                 'total' => 0,
             ]);
 
 
             $total = 0;
-            foreach ($data['items'] as $line) {
+            foreach ($items as $line) {
                 $qty = (int)$line['quantity'];
                 $tcost = (int)$line['total_cost'];
                 $ucost = intdiv($tcost, max(1, $qty)); // COP enteros
@@ -78,7 +75,7 @@ class PurchaseController extends Controller
 
 
                 // Stock IN si aplica: Papelería o insumo de Impresión y hay item_id
-                if ($data['to_inventory'] && isset($line['item_id'])) {
+                if ($toInventory && isset($line['item_id'])) {
                     // Nota: en F1 solo agregamos a inventario si explicitamente viene item_id
                     $this->inventory->in((int)$line['item_id'], $qty, $ucost, 'compra', $purchase->id);
                 }
