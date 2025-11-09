@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSaleRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class StoreSaleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return auth()->check();
     }
 
     /**
@@ -22,7 +23,19 @@ class StoreSaleRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'sold_at' => ['nullable', 'date'],
+            'customer_name' => ['nullable', 'string', 'max:255'],
+            'customer_email' => ['nullable', 'email', 'max:255'],
+            'customer_phone' => ['nullable', 'string', 'max:50'],
+            'payment_method' => ['required', 'string', Rule::in(['cash', 'transfer', 'card', 'mixed', 'other'])],
+            'amount_received' => ['required', 'integer', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.unit_price' => ['nullable', 'integer', 'min:0'],
+            'items.*.sheets_used' => ['nullable', 'integer', 'min:0'],
+            'items.*.description' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string'],
         ];
     }
 }

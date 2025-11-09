@@ -2,20 +2,17 @@
 
 namespace App\Http\Controllers;
 
-
+use App\Http\Requests\StoreSaleRequest;
 use App\Models\Item;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\InventoryService;
-use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-
 
 class SaleController extends Controller
 {
     public function __construct(private readonly InventoryService $inventory) {}
-
 
     /**
      * POST /ventas
@@ -26,88 +23,90 @@ class SaleController extends Controller
      * payment_method: 'cash'|'transfer'|'card'|'mixed'|'other',
      * amount_received: 25000,
      * items: [
-     * { item_id:1, quantity:2 },
-     * { item_id:3, quantity:1, unit_price:5000, sheets_used:1 } // impresión
+     *   { item_id:1, quantity:2 },
+     *   { item_id:3, quantity:1, unit_price:5000, sheets_used:1 }
      * ]
      * }
      */
-    public function store(Request $request)
+    public function store(StoreSaleRequest $request)
     {
-        $data = $request->validate([
-            'sold_at' => 'nullable|date',
-            'customer_name' => 'nullable|string|max:255',
-            'customer_email' => 'nullable|email|max:255',
-            'customer_phone' => 'nullable|string|max:50',
-            'payment_method' => 'required|string|max:20',
-            'amount_received' => 'required|integer|min:0',
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'required|integer|exists:items,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'nullable|integer|min:0',
-            'items.*.sheets_used' => 'nullable|integer|min:0',
-        ]);
+        $data = $request->validated();
+        $soldAt = isset($data['sold_at']) ? Carbon::parse($data['sold_at']) : now();
 
+        $itemIds = collect($data['items'])->pluck('item_id')->all();
+        $catalog = Item::whereIn('id', $itemIds)->get()->keyBy('id');
 
-        $sale = DB::transaction(function () use ($data) {
+        $sale = DB::transaction(function () use ($data, $catalog, $soldAt) {
             $total = 0;
             $lines = [];
 
+            foreach ($data['items'] as $line) {
+                $item = $catalog->get($line['item_id']);
 
-            foreach ($data['items'] as $i => $line) {
-                $item = Item::findOrFail($line['item_id']);
-                $unitPrice = $line['unit_price'] ?? (int)$item->price; // trae precio del item si no viene
-                $qty = (int)$line['quantity'];
-                $lineTotal = $unitPrice * $qty; // COP enteros
+                if (!$item) {
+                    // Si el ítem fue eliminado entre la validación y la transacción, ignoramos la línea.
+                    continue;
+                }
 
+                $quantity = (int) $line['quantity'];
+                $unitPrice = array_key_exists('unit_price', $line) && $line['unit_price'] !== null
+                    ? (int) $line['unit_price']
+                    : (int) round($item->sale_price);
+
+                $lineTotal = $unitPrice * $quantity;
 
                 $lines[] = [
                     'item' => $item,
-                    'quantity' => $qty,
+                    'sector' => $item->sector,
+                    'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'line_total' => $lineTotal,
                     'sheets_used' => $line['sheets_used'] ?? null,
+                    'description' => $line['description'] ?? null,
                 ];
-
 
                 $total += $lineTotal;
             }
 
+            if ($total <= 0) {
+                abort(422, 'La venta debe tener al menos un ítem con valor.');
+            }
 
             $sale = Sale::create([
-                'sale_code' => 'DW-' . str_pad((string)((int)(optional(Sale::latest('id')->first())->id ?? 0) + 1), 6, '0', STR_PAD_LEFT),
-                'sold_at' => $data['sold_at'] ?? now(),
+                'sale_code' => $this->nextSaleCode(),
+                'sold_at' => $soldAt,
+                'date' => $soldAt->toDateString(),
+                'time' => $soldAt->format('H:i:s'),
                 'customer_name' => $data['customer_name'] ?? null,
                 'customer_email' => $data['customer_email'] ?? null,
                 'customer_phone' => $data['customer_phone'] ?? null,
-                'user_id' => optional(auth()->user())->id,
+                'user_id' => auth()->id(),
                 'payment_method' => $data['payment_method'],
-                'amount_received' => $data['amount_received'],
+                'amount_received' => (int) $data['amount_received'],
                 'total' => $total,
-                'change_due' => max(0, (int)$data['amount_received'] - $total),
+                'change_due' => max(0, (int) $data['amount_received'] - $total),
+                'notes' => $data['notes'] ?? null,
             ]);
 
+            foreach ($lines as $lineData) {
+                SaleItem::create([
+                    'sale_id' => $sale->id,
+                    'item_id' => $lineData['item']->id,
+                    'description' => $lineData['description'],
+                    'quantity' => $lineData['quantity'],
+                    'unit_price' => $lineData['unit_price'],
+                    'line_total' => $lineData['line_total'],
+                    'category' => $lineData['sector'],
+                    'sheets_used' => $lineData['sheets_used'],
+                ]);
 
-            foreach ($lines as $l) {
-                $si = new SaleItem();
-                $si->sale_id = $sale->id;
-                $si->item_id = $l['item']->id;
-                $si->category = $l['item']->category; // copia para reportes
-                $si->quantity = $l['quantity'];
-                $si->unit_price = $l['unit_price'];
-                $si->line_total = $l['line_total'];
-                $si->sheets_used = $l['sheets_used']; // solo aplica impresión
-                $si->save();
-
-                // Hook inventario: solo Papelería en F1
-                if (strtolower($l['item']->category) === 'papelería' || strtolower($l['item']->category) === 'papeleria') {
-                    $this->inventory->out($l['item']->id, $l['quantity'], 'venta', $sale->id);
+                if ($lineData['sector'] === 'papeleria') {
+                    $this->inventory->out($lineData['item']->id, $lineData['quantity'], 'venta', $sale->id);
                 }
             }
 
-
             return $sale;
         });
-
 
         return response()->json([
             'ok' => true,
@@ -116,5 +115,12 @@ class SaleController extends Controller
             'total' => $sale->total,
             'change_due' => $sale->change_due,
         ], 201);
+    }
+
+    private function nextSaleCode(): string
+    {
+        $lastId = (int) optional(Sale::latest('id')->first())->id;
+
+        return 'DW-' . str_pad((string) ($lastId + 1), 6, '0', STR_PAD_LEFT);
     }
 }
