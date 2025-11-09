@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ItemController;
 
 /*
@@ -39,7 +40,8 @@ Route::middleware('auth')->group(function () {
 
     // Vistas solo UI (panel)
     Route::get('/ventas', fn () => view('sales.index'))->name('sales.index');
-    Route::get('/compras', fn () => view('purchases.index'))->name('purchases.index');
+    Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
+    Route::get('/compras/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
     Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
