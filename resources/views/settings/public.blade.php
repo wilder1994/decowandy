@@ -4,6 +4,13 @@
 @section('title','Ajustes — Editor de página de bienvenida')
 
 @section('content')
+@php
+  $categoryCollection = ($categories ?? collect()) instanceof \Illuminate\Support\Collection
+      ? $categories
+      : collect($categories ?? []);
+  $initialCategory = $categoryCollection->first();
+@endphp
+
 <div class="flex items-center justify-between mb-4">
   <div>
     <h1 class="text-2xl font-bold">Editor de página de bienvenida</h1>
@@ -17,17 +24,41 @@
   </div>
 </div>
 
-{{-- Tabs --}}
-<div class="flex gap-2 mb-4">
-  @php $tabs = ['Papelería','Impresión','Diseño']; @endphp
-  @foreach($tabs as $cat)
-    <button class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border"
-            data-cat="{{ $cat }}">{{ $cat }}</button>
-  @endforeach
-</div>
+<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
+  <div>
+    {{-- Tabs --}}
+    <div class="flex gap-2 mb-4 flex-wrap">
+      @foreach($categoryCollection as $category)
+        <button class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border"
+                data-cat="{{ $category['name'] }}">{{ $category['name'] }}</button>
+      @endforeach
+    </div>
 
-{{-- Grid --}}
-<div id="cardsGrid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+    {{-- Grid --}}
+    <div id="cardsGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+  </div>
+
+  <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 h-fit space-y-6">
+    <div>
+      <h2 class="text-lg font-semibold">Vista previa</h2>
+      <p class="text-xs text-gray-500">Así se verá la sección pública para la categoría activa.</p>
+    </div>
+    <div class="space-y-6">
+      <div id="previewCard">
+        @if($initialCategory)
+          @include('welcome.partials.category-card', ['category' => $initialCategory])
+        @else
+          <p class="text-sm text-gray-500">Selecciona una categoría para ver su vista previa.</p>
+        @endif
+      </div>
+      <div id="previewList" class="border-t pt-6">
+        @if($initialCategory)
+          @include('welcome.partials.category-list', ['category' => $initialCategory])
+        @endif
+      </div>
+    </div>
+  </aside>
+</div>
 
 {{-- Modal CRUD --}}
 <div id="itemModal" class="hidden fixed inset-0 z-50">
@@ -107,7 +138,9 @@
       update: "{{ url('ajustes/welcome/api/items') }}",           // + '/{id}'
       destroy:"{{ url('ajustes/welcome/api/items') }}",           // + '/{id}/delete'
       sort:   "{{ route('catalog.sort') }}",
-    }
+      preview:"{{ route('catalog.preview') }}",
+    },
+    defaultCategory: "{{ $initialCategory['name'] ?? 'Papelería' }}"
   };
 </script>
 <script src="{{ asset('js/catalog-editor.js') }}"></script>

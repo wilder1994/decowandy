@@ -58,7 +58,7 @@ Route::middleware('auth')->group(function () {
 
 
     // Ajustes → Editor de página pública (vista)
-    Route::get('/ajustes/welcome', fn () => view('settings.public'))->name('settings.public');
+    Route::get('/ajustes/welcome', [CatalogController::class, 'settings'])->name('settings.public');
 
     // Ajustes → Welcome (API)
     Route::prefix('ajustes/welcome')->group(function () {
@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/api/items/{catalogItem}', [CatalogController::class, 'update'])->name('catalog.update'); // con X-HTTP-Method-Override: PUT
         Route::post('/api/items/{catalogItem}/delete', [CatalogController::class, 'destroy'])->name('catalog.destroy'); // con X-HTTP-Method-Override: DELETE
         Route::post('/api/sort', [CatalogController::class, 'sort'])->name('catalog.sort');
+        Route::get('/api/preview', [CatalogController::class, 'preview'])->name('catalog.preview');
     });
 });
 
