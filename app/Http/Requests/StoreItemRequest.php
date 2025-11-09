@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-
 use Illuminate\Foundation\Http\FormRequest;
-
 
 class StoreItemRequest extends FormRequest
 {
@@ -13,16 +11,20 @@ class StoreItemRequest extends FormRequest
         return auth()->check();
     }
 
-
     public function rules(): array
     {
         return [
             'name' => 'required|string|max:255',
-            'category' => 'required|string|in:Papelería,Impresión,Diseño,Papeleria',
-            'price' => 'required|integer|min:0',
-            'sku' => 'nullable|string|max:100',
-            'unit' => 'nullable|string|max:20',
-            'is_active' => 'sometimes|boolean',
+            'description' => 'nullable|string',
+            'type' => 'required|string|in:product,service',
+            'sector' => 'required|string|in:papeleria,impresion,diseno',
+            'sale_price' => 'required|numeric|min:0',
+            'cost' => 'nullable|numeric|min:0',
+            'stock' => 'nullable|integer|min:0',
+            'min_stock' => 'nullable|integer|min:0',
+            'unit' => 'nullable|string|max:30',
+            'featured' => 'sometimes|boolean',
+            'active' => 'sometimes|boolean',
         ];
     }
 }
