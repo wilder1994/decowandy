@@ -1,34 +1,64 @@
 {{-- resources/views/items/index.blade.php
-     Gestor de Productos — UI (sin BD)
-     - Tabs por categoría (Diseño por defecto)
-     - Tabla con Nombre, Precio (COP), Visible, Acciones
-     - Modal Crear/Editar (formatea COP, sin decimales)
+     Gestor de Productos — conectado a la API
+     - Tabs por sector (Diseño, Impresión, Papelería)
+     - Tabla con datos reales usando Axios sobre /api/items
+     - Modal Crear/Editar con envíos POST/PUT y confirmación de borrado
 --}}
 @extends('layouts.admin')
 
 @section('title','Ítems — DecoWandy')
 
+@php
+    $initialPayload = [
+        'items' => $items->items(),
+        'pagination' => [
+            'current_page' => $items->currentPage(),
+            'last_page' => $items->lastPage(),
+            'per_page' => $items->perPage(),
+            'total' => $items->total(),
+        ],
+        'filters' => $filters,
+    ];
+@endphp
+
 @section('content')
 
   {{-- Header --}}
-  <div class="mb-6 flex items-center justify-between">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold">Ítems</h1>
       <p class="text-sm text-gray-500">Gestiona los productos que aparecen en el POS.</p>
     </div>
     <button id="btnNew"
+            type="button"
             class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white brand-gradient shadow hover:opacity-90">
       <span class="material-symbols-outlined text-base">add</span>
       Nuevo producto
     </button>
   </div>
 
-  {{-- Tabs de categoría --}}
-  <div class="mb-4 flex flex-wrap gap-2">
-    <button data-cat="Diseño"     class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold bg-indigo-600 text-white shadow">Diseño</button>
-    <button data-cat="Papelería"  class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold bg-white border hover:bg-slate-50">Papelería</button>
-    <button data-cat="Impresión"  class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold bg-white border hover:bg-slate-50">Impresión</button>
+  {{-- Buscador --}}
+  <div class="mb-4 flex flex-wrap items-center gap-3">
+    <div class="flex flex-wrap gap-2">
+      @foreach($sectors as $key => $label)
+        <button data-sector="{{ $key }}"
+                type="button"
+                class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border hover:bg-slate-50"
+                data-default="{{ $loop->first ? '1' : '0' }}">
+          {{ $label }}
+        </button>
+      @endforeach
+    </div>
+    <div class="relative ml-auto w-full max-w-xs">
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">search</span>
+      <input id="searchBox"
+             type="search"
+             placeholder="Buscar por nombre o descripción"
+             class="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+    </div>
   </div>
+
+  <div id="itemsAlert" class="hidden mb-4 rounded-xl border px-4 py-3 text-sm"></div>
 
   {{-- Tabla --}}
   <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
@@ -38,70 +68,57 @@
           <tr class="text-left">
             <th class="py-2 pr-4">Producto</th>
             <th class="py-2 pr-4">Categoría</th>
+            <th class="py-2 pr-4">Tipo</th>
             <th class="py-2 pr-4">Precio (COP)</th>
-            <th class="py-2 pr-4">Visible en POS</th>
-            <th class="py-2 pr-2 w-28 text-right">Acciones</th>
+            <th class="py-2 pr-4">Visible</th>
+            <th class="py-2 pr-2 w-32 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody id="itemsTable" class="divide-y divide-gray-100">
-          {{-- filas por JS --}}
+        <tbody id="itemsTableBody" class="divide-y divide-gray-100">
+          {{-- filas generadas por JS --}}
         </tbody>
       </table>
+    </div>
+
+    <div id="paginationControls" class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+      <div id="paginationInfo"></div>
+      <div class="flex items-center gap-2">
+        <button id="btnPrev"
+                type="button"
+                class="rounded-xl border border-gray-200 px-3 py-1 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
+          Anterior
+        </button>
+        <button id="btnNext"
+                type="button"
+                class="rounded-xl border border-gray-200 px-3 py-1 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
+          Siguiente
+        </button>
+      </div>
     </div>
   </div>
 
   {{-- Modal Crear/Editar --}}
   <div id="itemModal" class="hidden fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/30"></div>
-    <div class="relative mx-auto mt-16 w-[min(720px,92%)] rounded-2xl bg-white p-5 shadow-2xl">
-      <div class="flex items-center justify-between mb-3">
+    <div class="absolute inset-0 bg-black/30" data-close="true"></div>
+    <div class="relative mx-auto mt-16 w-[min(720px,92%)] rounded-2xl bg-white p-6 shadow-2xl">
+      <div class="flex items-center justify-between mb-4">
         <h2 id="modalTitle" class="text-xl font-semibold">Nuevo producto</h2>
-        <button id="modalClose" class="h-9 w-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
+        <button id="modalClose" type="button" class="h-9 w-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
-      <div class="grid gap-4 md:grid-cols-2">
-        <div class="md:col-span-1">
-          <label class="block text-sm text-gray-600 mb-1">Nombre</label>
-          <input id="f_name" type="text" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ej: Copias B/N">
-        </div>
-        <div class="md:col-span-1">
-          <label class="block text-sm text-gray-600 mb-1">Categoría</label>
-          <select id="f_category" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-            <option>Diseño</option>
-            <option>Papelería</option>
-            <option>Impresión</option>
-          </select>
-        </div>
-        <div class="md:col-span-1">
-          <label class="block text-sm text-gray-600 mb-1">Precio base (COP)</label>
-          <input id="f_price" type="text" inputmode="numeric" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="0">
-          <p class="text-[11px] text-gray-500 mt-1">Se muestra en el POS; sin decimales, con punto de miles.</p>
-        </div>
-        <div class="md:col-span-1 flex items-end">
-          <label class="inline-flex items-center gap-2">
-            <input id="f_visible" type="checkbox" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" checked>
-            <span class="text-sm text-gray-700">Visible en POS</span>
-          </label>
-        </div>
+      <div id="modalAlert" class="hidden mb-4 rounded-xl border px-3 py-2 text-sm"></div>
 
-        {{-- Opcional: control de stock por tipo --}}
-        <div class="md:col-span-2 rounded-xl border border-gray-100 p-3 bg-slate-50">
-          <div class="flex items-center gap-3">
-            <label class="inline-flex items-center gap-2">
-              <input id="f_stockable" type="checkbox" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-              <span class="text-sm text-gray-700">Este producto controla stock</span>
-            </label>
-            <span class="text-xs text-gray-500">Úsalo para Papelería y ciertos insumos de Impresión.</span>
-          </div>
+      <form id="itemForm" class="space-y-5">
+        @include('items.partials.form', ['item' => null])
+        <div class="flex items-center justify-end gap-3">
+          <button id="modalCancel" type="button" class="rounded-xl bg-white px-4 py-2 border hover:bg-slate-50">Cancelar</button>
+          <button id="modalSave" type="submit" class="rounded-xl bg-indigo-600 text-white px-4 py-2 shadow hover:bg-indigo-700">
+            Guardar
+          </button>
         </div>
-      </div>
-
-      <div class="mt-5 flex items-center justify-end gap-3">
-        <button id="modalCancel" type="button" class="rounded-xl bg-white px-4 py-2 border hover:bg-slate-50">Cancelar</button>
-        <button id="modalSave" type="button" class="rounded-xl bg-indigo-600 text-white px-4 py-2 shadow hover:bg-indigo-700">Guardar (ensayo)</button>
-      </div>
+      </form>
     </div>
   </div>
 
@@ -109,134 +126,445 @@
 
 @push('scripts')
 <script>
-/* ===== Utilidades COP ===== */
-function onlyDigits(s){return (s||'').replace(/[^\d]/g,'');}
-function toInt(s){const z=onlyDigits(s);return z?parseInt(z,10):0;}
-function fmt(n){n=Number(n||0);if(!Number.isFinite(n))n=0;return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g,'.');}
+  document.addEventListener('DOMContentLoaded', () => {
+    const axiosInstance = window.axios;
+    if (!axiosInstance) {
+      console.error('Axios no está disponible en la página.');
+      return;
+    }
 
-/* ===== Estado (demo en memoria; sin BD) ===== */
-const state = {
-  activeCat: 'Diseño',
-  items: [
-    // Demo inicial (solo para que veas)
-    {id:1, name:'Copias B/N',        category:'Impresión', price:200,  visible:true,  stockable:false},
-    {id:2, name:'Copias Color',      category:'Impresión', price:600,  visible:true,  stockable:false},
-    {id:3, name:'Escáner',           category:'Impresión', price:500,  visible:true,  stockable:false},
-    {id:4, name:'Resma Carta',       category:'Impresión', price:25000,visible:true,  stockable:true},
-    {id:5, name:'Lápiz HB',          category:'Papelería', price:1000, visible:true,  stockable:true},
-    {id:6, name:'Logo básico',       category:'Diseño',    price:30000,visible:true,  stockable:false},
-  ],
-  nextId: 7,
-  editingId: null,
-};
+    const initialPayload = @json($initialPayload, JSON_UNESCAPED_UNICODE);
+    const sectorLabels = @json($sectors, JSON_UNESCAPED_UNICODE);
 
-/* ===== Tabs ===== */
-document.addEventListener('DOMContentLoaded', () => {
-  const btns=[...document.querySelectorAll('.tab-btn')];
-  function setActive(cat){
-    state.activeCat=cat;
-    btns.forEach(b=>{
-      const active=b.dataset.cat===cat;
-      b.className='tab-btn rounded-xl px-4 py-2 text-sm font-semibold '+(active?'bg-indigo-600 text-white shadow':'bg-white border hover:bg-slate-50');
+    const tabButtons = Array.from(document.querySelectorAll('[data-sector]'));
+    const searchBox = document.getElementById('searchBox');
+    const tableBody = document.getElementById('itemsTableBody');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const itemsAlert = document.getElementById('itemsAlert');
+    const modal = document.getElementById('itemModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalAlert = document.getElementById('modalAlert');
+    const modalSave = document.getElementById('modalSave');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalClose = document.getElementById('modalClose');
+    const btnNew = document.getElementById('btnNew');
+    const form = document.getElementById('itemForm');
+
+    const fields = {
+      name: document.getElementById('f_name'),
+      sector: document.getElementById('f_sector'),
+      salePrice: document.getElementById('f_sale_price'),
+      cost: document.getElementById('f_cost'),
+      unit: document.getElementById('f_unit'),
+      active: document.getElementById('f_active'),
+      stockable: document.getElementById('f_stockable'),
+      stock: document.getElementById('f_stock'),
+      minStock: document.getElementById('f_min_stock'),
+      description: document.getElementById('f_description'),
+      stockFields: document.getElementById('stockFields'),
+    };
+
+    const state = {
+      sector: initialPayload.filters?.sector || Object.keys(sectorLabels)[0],
+      search: initialPayload.filters?.search || '',
+      page: initialPayload.pagination?.current_page || 1,
+      perPage: initialPayload.pagination?.per_page || 10,
+      lastPage: initialPayload.pagination?.last_page || 1,
+      total: initialPayload.pagination?.total || 0,
+      items: Array.isArray(initialPayload.items) ? initialPayload.items : [],
+      loading: false,
+      editing: null,
+    };
+
+    const currency = new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
     });
-    renderTable();
-  }
-  btns.forEach(b=>b.addEventListener('click',()=>setActive(b.dataset.cat)));
-  setActive('Diseño'); // por defecto
-});
 
-/* ===== Render tabla ===== */
-function renderTable(){
-  const tbody=document.getElementById('itemsTable');
-  tbody.innerHTML='';
-  const rows=state.items.filter(it=>it.category===state.activeCat);
-  if(rows.length===0){
-    tbody.innerHTML=`<tr><td colspan="5" class="py-6 text-center text-sm text-gray-500">Sin productos en esta categoría.</td></tr>`;
-    return;
-  }
-  rows.forEach(it=>{
-    const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td class="py-2 pr-4">${escapeHtml(it.name)}</td>
-      <td class="py-2 pr-4">${it.category}</td>
-      <td class="py-2 pr-4">$ ${fmt(it.price)}</td>
-      <td class="py-2 pr-4">
-        <span class="px-2 py-1 rounded-full text-xs ${it.visible?'bg-green-100 text-green-700':'bg-gray-100 text-gray-700'}">
-          ${it.visible?'Sí':'No'}
-        </span>
-      </td>
-      <td class="py-2 pr-2 text-right">
-        <button class="text-[color:var(--dw-primary)] hover:underline mr-2" data-edit="${it.id}">Editar</button>
-        <button class="text-rose-500 hover:underline" data-del="${it.id}">Eliminar</button>
-      </td>`;
-    tbody.appendChild(tr);
+    searchBox.value = state.search;
+
+    function escapeHtml(value) {
+      const div = document.createElement('div');
+      div.innerText = value ?? '';
+      return div.innerHTML;
+    }
+
+    function toggleTabs() {
+      tabButtons.forEach((btn) => {
+        const active = btn.dataset.sector === state.sector;
+        btn.classList.toggle('bg-indigo-600', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('shadow', active);
+        btn.classList.toggle('border', !active);
+        btn.classList.toggle('border-indigo-200', active);
+      });
+    }
+
+    function showPageAlert(type, message) {
+      itemsAlert.textContent = message;
+      itemsAlert.classList.remove('hidden', 'border-green-200', 'text-green-700', 'border-red-200', 'text-red-700', 'bg-green-50', 'bg-red-50');
+      if (type === 'success') {
+        itemsAlert.classList.add('border-green-200', 'text-green-700', 'bg-green-50');
+      } else {
+        itemsAlert.classList.add('border-red-200', 'text-red-700', 'bg-red-50');
+      }
+      setTimeout(() => {
+        itemsAlert.classList.add('hidden');
+      }, 4000);
+    }
+
+    function showModalAlert(type, message) {
+      modalAlert.textContent = message;
+      modalAlert.classList.remove('hidden', 'border-green-200', 'text-green-700', 'border-red-200', 'text-red-700', 'bg-green-50', 'bg-red-50');
+      if (type === 'success') {
+        modalAlert.classList.add('border-green-200', 'text-green-700', 'bg-green-50');
+      } else {
+        modalAlert.classList.add('border-red-200', 'text-red-700', 'bg-red-50');
+      }
+    }
+
+    function clearModalAlert() {
+      modalAlert.textContent = '';
+      modalAlert.classList.add('hidden');
+    }
+
+    function updateStockVisibility() {
+      if (state.editing && state.editing.type === 'product') {
+        fields.stockable.checked = true;
+      }
+      const shouldShow = fields.stockable.checked;
+      fields.stockFields.classList.toggle('hidden', !shouldShow);
+    }
+
+    function formatMoney(value) {
+      const number = Number(value ?? 0);
+      return currency.format(Number.isFinite(number) ? number : 0);
+    }
+
+    function renderTable() {
+      tableBody.innerHTML = '';
+
+      if (state.loading) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="6" class="py-6 text-center text-sm text-gray-500">Cargando ítems…</td>';
+        tableBody.appendChild(row);
+        return;
+      }
+
+      if (!state.items.length) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="6" class="py-6 text-center text-sm text-gray-500">Sin productos en este sector.</td>';
+        tableBody.appendChild(row);
+        return;
+      }
+
+      state.items.forEach((item) => {
+        const tr = document.createElement('tr');
+        const activeBadge = item.active
+          ? '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Sí</span>'
+          : '<span class="px-2 py-1 rounded-full text-xs bg-gray-200 text-gray-700">No</span>';
+
+        tr.innerHTML = `
+          <td class="py-2 pr-4">
+            <div class="font-medium text-[color:var(--dw-text)]">${escapeHtml(item.name)}</div>
+            ${item.description ? `<div class="text-xs text-gray-500 mt-0.5">${escapeHtml(item.description)}</div>` : ''}
+          </td>
+          <td class="py-2 pr-4">${sectorLabels[item.sector] ?? item.sector}</td>
+          <td class="py-2 pr-4">${item.type === 'product' ? 'Producto' : 'Servicio'}</td>
+          <td class="py-2 pr-4">${formatMoney(item.sale_price)}</td>
+          <td class="py-2 pr-4">${activeBadge}</td>
+          <td class="py-2 pr-2 text-right">
+            <button type="button" class="text-[color:var(--dw-primary)] hover:underline mr-2" data-edit-id="${item.id}">Editar</button>
+            <button type="button" class="text-rose-500 hover:underline" data-delete-id="${item.id}">Eliminar</button>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function renderPagination() {
+      if (!state.total) {
+        paginationInfo.textContent = 'Sin resultados';
+        btnPrev.disabled = true;
+        btnNext.disabled = true;
+        return;
+      }
+
+      const from = (state.page - 1) * state.perPage + 1;
+      const to = Math.min(state.page * state.perPage, state.total);
+      paginationInfo.textContent = `Mostrando ${from} – ${to} de ${state.total} ítems`;
+
+      btnPrev.disabled = state.page <= 1;
+      btnNext.disabled = state.page >= state.lastPage;
+    }
+
+    function extractErrorMessage(error) {
+      if (error.response?.data?.message) {
+        return error.response.data.message;
+      }
+      if (error.response?.data?.errors) {
+        const firstKey = Object.keys(error.response.data.errors)[0];
+        if (firstKey) {
+          return error.response.data.errors[firstKey][0];
+        }
+      }
+      return 'Ocurrió un error inesperado. Intenta de nuevo.';
+    }
+
+    async function loadItems(page = 1) {
+      state.loading = true;
+      renderTable();
+      try {
+        const { data } = await axiosInstance.get('/api/items', {
+          params: {
+            sector: state.sector,
+            search: state.search,
+            page,
+          },
+        });
+        state.items = Array.isArray(data.data) ? data.data : [];
+        state.page = data.pagination?.current_page ?? page;
+        state.perPage = data.pagination?.per_page ?? state.perPage;
+        state.lastPage = data.pagination?.last_page ?? state.lastPage;
+        state.total = data.pagination?.total ?? state.total;
+        state.loading = false;
+        renderTable();
+        renderPagination();
+      } catch (error) {
+        state.items = [];
+        state.total = 0;
+        state.loading = false;
+        renderTable();
+        renderPagination();
+        showPageAlert('error', extractErrorMessage(error));
+      }
+    }
+
+    function resetForm() {
+      form.reset();
+      fields.name.value = '';
+      fields.sector.value = state.sector;
+      fields.salePrice.value = '0';
+      fields.cost.value = '';
+      fields.unit.value = '';
+      fields.active.checked = true;
+      fields.stockable.checked = false;
+      fields.stock.value = '';
+      fields.minStock.value = '';
+      fields.description.value = '';
+      state.editing = null;
+      updateStockVisibility();
+      clearModalAlert();
+    }
+
+    function openModal() {
+      modal.classList.remove('hidden');
+      document.body.classList.add('overflow-hidden');
+    }
+
+    function closeModal() {
+      modal.classList.add('hidden');
+      document.body.classList.remove('overflow-hidden');
+      clearModalAlert();
+    }
+
+    function openNew() {
+      resetForm();
+      modalTitle.textContent = 'Nuevo producto';
+      openModal();
+    }
+
+    function fillForm(item) {
+      state.editing = item;
+      modalTitle.textContent = 'Editar producto';
+      fields.name.value = item.name ?? '';
+      fields.sector.value = item.sector ?? state.sector;
+      fields.salePrice.value = Number(item.sale_price ?? 0);
+      fields.cost.value = item.cost ?? '';
+      fields.unit.value = item.unit ?? '';
+      fields.active.checked = Boolean(item.active);
+      fields.stockable.checked = item.type === 'product';
+      fields.stock.value = item.stock ?? '';
+      fields.minStock.value = item.min_stock ?? '';
+      fields.description.value = item.description ?? '';
+      updateStockVisibility();
+      clearModalAlert();
+      openModal();
+    }
+
+    function getPayloadFromForm() {
+      const payload = {
+        name: fields.name.value.trim(),
+        sector: fields.sector.value,
+        sale_price: Number(fields.salePrice.value || 0),
+        cost: fields.cost.value !== '' ? Number(fields.cost.value) : null,
+        unit: fields.unit.value.trim() || null,
+        active: fields.active.checked,
+        type: fields.stockable.checked ? 'product' : 'service',
+        description: fields.description.value.trim() || null,
+      };
+
+      if (payload.type === 'product') {
+        payload.stock = fields.stock.value !== '' ? Number(fields.stock.value) : 0;
+        payload.min_stock = fields.minStock.value !== '' ? Number(fields.minStock.value) : 0;
+      } else {
+        payload.stock = 0;
+        payload.min_stock = 0;
+      }
+
+      if (!payload.cost) {
+        delete payload.cost;
+      }
+      if (!payload.unit) {
+        delete payload.unit;
+      }
+      if (!payload.description) {
+        delete payload.description;
+      }
+
+      return payload;
+    }
+
+    async function saveItem(event) {
+      event.preventDefault();
+      clearModalAlert();
+
+      const payload = getPayloadFromForm();
+      if (!payload.name) {
+        showModalAlert('error', 'El nombre es obligatorio.');
+        return;
+      }
+
+      modalSave.disabled = true;
+      modalSave.textContent = 'Guardando…';
+
+      try {
+        if (state.editing) {
+          await axiosInstance.put(`/api/items/${state.editing.id}`, payload);
+          showPageAlert('success', 'Ítem actualizado correctamente.');
+        } else {
+          await axiosInstance.post('/api/items', payload);
+          showPageAlert('success', 'Ítem creado correctamente.');
+        }
+        closeModal();
+        await loadItems(state.editing ? state.page : 1);
+      } catch (error) {
+        showModalAlert('error', extractErrorMessage(error));
+      } finally {
+        modalSave.disabled = false;
+        modalSave.textContent = 'Guardar';
+      }
+    }
+
+    async function deleteItem(id) {
+      const item = state.items.find((it) => Number(it.id) === Number(id));
+      if (!item) {
+        return;
+      }
+      const confirmed = confirm(`¿Eliminar "${item.name}"?`);
+      if (!confirmed) {
+        return;
+      }
+      try {
+        await axiosInstance.delete(`/api/items/${item.id}`, {
+          params: { force: 1 },
+        });
+        showPageAlert('success', 'Ítem eliminado.');
+        const shouldGoBack = state.items.length === 1 && state.page > 1;
+        await loadItems(shouldGoBack ? state.page - 1 : state.page);
+      } catch (error) {
+        showPageAlert('error', extractErrorMessage(error));
+      }
+    }
+
+    // Eventos UI
+    tabButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const sector = btn.dataset.sector;
+        if (sector === state.sector) {
+          return;
+        }
+        state.sector = sector;
+        state.page = 1;
+        toggleTabs();
+        loadItems(1);
+      });
+    });
+
+    let searchTimer = null;
+    searchBox.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.search = searchBox.value.trim();
+        state.page = 1;
+        loadItems(1);
+      }, 350);
+    });
+
+    btnPrev.addEventListener('click', () => {
+      if (state.page <= 1) {
+        return;
+      }
+      const newPage = state.page - 1;
+      loadItems(newPage);
+    });
+
+    btnNext.addEventListener('click', () => {
+      if (state.page >= state.lastPage) {
+        return;
+      }
+      const newPage = state.page + 1;
+      loadItems(newPage);
+    });
+
+    tableBody.addEventListener('click', (event) => {
+      const editBtn = event.target.closest('[data-edit-id]');
+      if (editBtn) {
+        const id = Number(editBtn.dataset.editId);
+        const item = state.items.find((it) => Number(it.id) === id);
+        if (item) {
+          fillForm(item);
+        }
+        return;
+      }
+      const deleteBtn = event.target.closest('[data-delete-id]');
+      if (deleteBtn) {
+        const id = Number(deleteBtn.dataset.deleteId);
+        deleteItem(id);
+      }
+    });
+
+    fields.stockable.addEventListener('change', () => {
+      updateStockVisibility();
+    });
+
+    btnNew.addEventListener('click', () => {
+      openNew();
+    });
+
+    modalClose.addEventListener('click', () => {
+      closeModal();
+    });
+
+    modalCancel.addEventListener('click', () => {
+      closeModal();
+    });
+
+    modal.addEventListener('click', (event) => {
+      if (event.target.dataset.close) {
+        closeModal();
+      }
+    });
+
+    form.addEventListener('submit', saveItem);
+
+    // Estado inicial
+    toggleTabs();
+    updateStockVisibility();
+    loadItems(state.page);
   });
-
-  // wire acciones
-  tbody.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEdit(+b.dataset.edit)));
-  tbody.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>delItem(+b.dataset.del)));
-}
-
-/* ===== Modal ===== */
-function qs(id){return document.getElementById(id);}
-function openNew(){
-  state.editingId=null;
-  qs('modalTitle').textContent='Nuevo producto';
-  qs('f_name').value='';
-  qs('f_category').value=state.activeCat;
-  qs('f_price').value='0';
-  qs('f_visible').checked=true;
-  qs('f_stockable').checked=(state.activeCat!=='Diseño'); // por defecto
-  showModal(true);
-}
-function openEdit(id){
-  const it=state.items.find(x=>x.id===id);
-  if(!it) return;
-  state.editingId=id;
-  qs('modalTitle').textContent='Editar producto';
-  qs('f_name').value=it.name;
-  qs('f_category').value=it.category;
-  qs('f_price').value=fmt(it.price);
-  qs('f_visible').checked=it.visible;
-  qs('f_stockable').checked=it.stockable;
-  showModal(true);
-}
-function saveItem(){
-  const name=qs('f_name').value.trim();
-  const category=qs('f_category').value;
-  const price=toInt(qs('f_price').value);
-  const visible=qs('f_visible').checked;
-  const stockable=qs('f_stockable').checked;
-  if(!name){ alert('Escribe un nombre.'); return; }
-
-  if(state.editingId){
-    const it=state.items.find(x=>x.id===state.editingId);
-    if(!it) return;
-    it.name=name; it.category=category; it.price=price; it.visible=visible; it.stockable=stockable;
-  }else{
-    state.items.push({id:state.nextId++, name, category, price, visible, stockable});
-  }
-  showModal(false);
-  renderTable();
-}
-function delItem(id){
-  if(!confirm('¿Eliminar este producto?')) return;
-  state.items = state.items.filter(x=>x.id!==id);
-  renderTable();
-}
-function showModal(v){
-  const m=qs('itemModal');
-  m.classList.toggle('hidden', !v);
-}
-function escapeHtml(s){return (s||'').replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-
-document.addEventListener('DOMContentLoaded', () => {
-  qs('btnNew').addEventListener('click', openNew);
-  qs('modalClose').addEventListener('click', ()=>showModal(false));
-  qs('modalCancel').addEventListener('click', ()=>showModal(false));
-  qs('modalSave').addEventListener('click', saveItem);
-  qs('f_price').addEventListener('input', e=> e.target.value = fmt(toInt(e.target.value)));
-});
-
 </script>
 @endpush

@@ -11,6 +11,62 @@ use Illuminate\Support\Str;
 
 class ItemController extends Controller
 {
+    public function index(Request $request)
+    {
+        $perPage = (int) $request->integer('per_page', 15);
+        if ($perPage < 1) {
+            $perPage = 15;
+        }
+        if ($perPage > 100) {
+            $perPage = 100;
+        }
+
+        $search = trim((string) $request->query('search', ''));
+        $sector = $request->query('sector');
+        $type = $request->query('type');
+
+        $query = Item::query()->orderBy('name');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($sector) {
+            $query->where('sector', $sector);
+        }
+
+        if ($type) {
+            $query->where('type', $type);
+        }
+
+        $items = $query->paginate($perPage)->withQueryString();
+
+        return response()->json([
+            'ok' => true,
+            'data' => $items->items(),
+            'pagination' => [
+                'current_page' => $items->currentPage(),
+                'last_page' => $items->lastPage(),
+                'per_page' => $items->perPage(),
+                'total' => $items->total(),
+            ],
+            'links' => [
+                'first' => $items->url(1),
+                'last' => $items->url($items->lastPage()),
+                'prev' => $items->previousPageUrl(),
+                'next' => $items->nextPageUrl(),
+            ],
+            'filters' => [
+                'search' => $search,
+                'sector' => $sector,
+                'type' => $type,
+            ],
+        ]);
+    }
+
     public function store(StoreItemRequest $request)
     {
         $data = $request->validated();

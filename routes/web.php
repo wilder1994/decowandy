@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\ItemController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,7 +40,10 @@ Route::middleware('auth')->group(function () {
     // Vistas solo UI (panel)
     Route::get('/ventas', fn () => view('sales.index'))->name('sales.index');
     Route::get('/compras', fn () => view('purchases.index'))->name('purchases.index');
-    Route::get('/items', fn () => view('items.index'))->name('items.index');
+    Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+    Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
+    Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
+    Route::get('/items/{item}/destroy', [ItemController::class, 'destroy'])->name('items.destroy');
     Route::get('/reportes', fn () => view('reports.index'))->name('reports.index');
     Route::get('/finanzas', fn () => view('finance.index'))->name('finance.index');
     Route::get('/finanzas/inversiones', fn () => view('finance.investments'))->name('finance.investments');
