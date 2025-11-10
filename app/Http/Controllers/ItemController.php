@@ -9,16 +9,30 @@ class ItemController extends Controller
 {
     public function index(Request $request)
     {
+        [$sectors, $filters, $items] = $this->getItemsListing($request);
+
+        return view('items.index', [
+            'items'   => $items,
+            'filters' => $filters,
+            'sectors' => $sectors,
+        ]);
+    }
+
+    /**
+    * Lógica común para listar ítems con filtros y paginación.
+    */
+    protected function getItemsListing(Request $request): array
+    {
         $sectors = [
-            'diseno' => 'Diseño',
-            'impresion' => 'Impresión',
-            'papeleria' => 'Papelería',
+            'diseno'     => 'Diseño',
+            'impresion'  => 'Impresión',
+            'papeleria'  => 'Papelería',
         ];
 
         $filters = [
             'search' => trim((string) $request->query('search', '')),
             'sector' => (string) $request->query('sector', ''),
-            'type' => (string) $request->query('type', ''),
+            'type'   => (string) $request->query('type', ''),
         ];
 
         if (!array_key_exists($filters['sector'], $sectors)) {
@@ -49,10 +63,25 @@ class ItemController extends Controller
 
         $items = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
-        return view('items.index', [
-            'items' => $items,
-            'filters' => $filters,
-            'sectors' => $sectors,
+        return [$sectors, $filters, $items];
+    }
+
+    /**
+     * API: GET /api/items
+     * Listado con filtros y paginación (usado por Axios en la vista).
+     */
+    public function apiIndex(Request $request)
+    {
+        [$sectors, $filters, $items] = $this->getItemsListing($request);
+
+        return response()->json([
+            'data' => $items->items(),
+            'pagination' => [
+                'current_page' => $items->currentPage(),
+                'last_page'    => $items->lastPage(),
+                'per_page'     => $items->perPage(),
+                'total'        => $items->total(),
+            ],
         ]);
     }
 

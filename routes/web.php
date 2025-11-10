@@ -20,6 +20,8 @@ use App\Http\Controllers\ItemController;
 // PÚBLICO
 //
 Route::get('/', [CatalogController::class, 'welcome'])->name('welcome');
+Route::get('/catalogo/categoria/{category}', [CatalogController::class, 'category'])
+    ->name('catalog.category');
 
 //
 // DASHBOARD (autenticado)
@@ -55,7 +57,12 @@ Route::middleware('auth')->group(function () {
         
     // API gastos (usa sesión web, pero conserva el nombre api.expenses.store)
     Route::post('/api/expenses', [ExpenseController::class, 'store'])->name('api.expenses.store');
-
+    
+    // API ítems (usa sesión web, responde JSON)
+    Route::get('/api/items', [ItemController::class, 'apiIndex'])->name('api.items.index');
+    Route::post('/api/items', [ItemController::class, 'apiStore'])->name('api.items.store');
+    Route::put('/api/items/{item}', [ItemController::class, 'apiUpdate'])->name('api.items.update');
+    Route::delete('/api/items/{item}', [ItemController::class, 'apiDestroy'])->name('api.items.destroy');
 
     // Ajustes → Editor de página pública (vista)
     Route::get('/ajustes/welcome', [CatalogController::class, 'settings'])->name('settings.public');

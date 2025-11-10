@@ -1,32 +1,22 @@
-@props(['category', 'limit' => 5])
-
+{{-- resources/views/welcome/partials/category-card.blade.php --}}
 @php
-    $items = collect($category['items'] ?? []);
-    $tags = $items->take($limit);
-    $slug = $category['slug'] ?? \Illuminate\Support\Str::slug($category['name'] ?? '');
-    $ctaLabel = $category['cta_label'] ?? 'Ver más';
-    $emptyMessage = $category['tag_empty'] ?? 'Sin elementos.';
-    $background = $category['card_background'] ?? 'linear-gradient(135deg, var(--dw-lilac), var(--dw-accent))';
+    use Illuminate\Support\Str;
 @endphp
 
-<div class="rounded-3xl bg-white border border-gray-100 p-5 shadow-sm hover:shadow-md transition">
-    <div class="h-36 rounded-2xl mb-3" style="background:{{ $background }}"></div>
-    <h3 class="text-lg font-semibold">{{ $category['name'] ?? '' }}</h3>
-    @if(!empty($category['card_summary']))
-        <p class="text-sm text-gray-600">{{ $category['card_summary'] }}</p>
-    @endif
-
-    <div class="mt-4 flex flex-wrap gap-2">
-        @forelse($tags as $item)
-            <span class="px-3 py-1 rounded-full bg-slate-100 text-sm text-slate-700 truncate max-w-[140px]">
-                {{ $item->title }}
-            </span>
-        @empty
-            <span class="text-xs text-gray-400">{{ $emptyMessage }}</span>
-        @endforelse
+<a href="{{ route('catalog.category', Str::slug($category['key'] ?? $category->key)) }}"
+   class="block rounded-3xl overflow-hidden shadow-md hover:-translate-y-1 hover:shadow-xl transition bg-white">
+    
+    <div class="h-40 w-full overflow-hidden">
+        @if(!empty($category['cover_image'] ?? null))
+            <img src="{{ $category['cover_image'] }}" class="w-full h-full object-cover" alt="{{ $category['name'] }}">
+        @else
+            <div class="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200"></div>
+        @endif
     </div>
 
-    <a href="#{{ $slug }}-full" class="mt-4 inline-flex text-[color:var(--dw-accent)] hover:underline">
-        {{ $ctaLabel }}
-    </a>
-</div>
+    <div class="p-6">
+        <h3 class="text-xl font-semibold">{{ $category['name'] }}</h3>
+        <p class="mt-2 text-gray-600 text-sm">{{ $category['description'] ?? '' }}</p>
+        <p class="mt-4 font-semibold text-[color:var(--dw-accent)]">Ver productos</p>
+    </div>
+</a>

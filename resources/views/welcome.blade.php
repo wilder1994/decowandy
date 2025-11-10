@@ -9,8 +9,11 @@
         <div class="max-w-7xl mx-auto px-4 pt-12 pb-16 grid gap-10 md:grid-cols-2 items-center">
             <div>
                 <h1 class="text-4xl md:text-5xl font-bold leading-tight" style="font-family:'Poppins',Inter,system-ui">
-                    Diseños, papelería e
-                    <span class="block">impresiones</span>
+                    <a href="{{ route('catalog.category', 'diseno') }}" class="hover:text-[color:var(--dw-accent)] transition">Diseños</a>,
+                    <a href="{{ route('catalog.category', 'papeleria') }}" class="hover:text-[color:var(--dw-accent)] transition">papelería</a> e
+                    <span class="block">
+                        <a href="{{ route('catalog.category', 'impresion') }}" class="hover:text-[color:var(--dw-accent)] transition">impresiones</a>
+                    </span>
                 </h1>
 
                 <div class="mt-4">
@@ -60,22 +63,19 @@
         </div>
     </section>
 
-    {{-- LISTAS COMPLETAS (anclas) --}}
-    <section class="max-w-7xl mx-auto px-4 pb-12 space-y-10">
-        @foreach($categories as $category)
-            @include('welcome.partials.category-list', ['category' => $category])
-        @endforeach
-    </section>
-
     {{-- DESTACADOS --}}
     <section class="max-w-7xl mx-auto px-4 pb-16">
         <h2 class="text-2xl font-bold mb-4">Destacados</h2>
         <div class="grid gap-6 md:grid-cols-3">
             @forelse($destacados as $d)
                 <div class="rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition overflow-hidden">
-                    <div class="h-40 bg-[color:var(--dw-lilac)]/30 overflow-hidden">
+                    <div class="h-48 flex items-center justify-center bg-[color:var(--dw-lilac)]/20 overflow-hidden">
                         @if($d->image_path)
-                            <img src="{{ $d->image_path }}" class="w-full h-full object-cover" alt="{{ $d->title }}">
+                            <img src="{{ $d->image_path }}"
+                                class="max-h-44 w-auto object-contain transition-transform duration-300 hover:scale-105"
+                                alt="{{ $d->title }}">
+                        @else
+                            <div class="text-gray-400 text-sm">Sin imagen</div>
                         @endif
                     </div>
                     <div class="p-5">

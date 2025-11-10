@@ -181,4 +181,34 @@ class CatalogController extends Controller
                 return $x;
             });
     }
+
+    public function category($category)
+    {
+        // Normalizar el slug para mostrar nombres con tildes correctamente
+        $map = [
+            'papeleria' => 'Papelería',
+            'impresion' => 'Impresión',
+            'diseno'    => 'Diseño',
+        ];
+
+        $categoryName = $map[strtolower($category)] ?? ucfirst($category);
+
+        $items = DB::table('catalog_items')
+            ->where('visible', 1)
+            ->where('category', $categoryName)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->map(function ($x) {
+                if ($x->image_path && !Str::startsWith($x->image_path, ['http://', 'https://', '/storage'])) {
+                    $x->image_path = Storage::url($x->image_path);
+                }
+                return $x;
+            });
+
+        return view('catalog.category', [
+            'categoryName' => $categoryName,
+            'items' => $items,
+        ]);
+    }
 }

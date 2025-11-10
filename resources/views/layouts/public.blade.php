@@ -39,9 +39,9 @@
                 <span class="sr-only">DecoWandy</span>
             </a>
             <nav class="hidden md:flex items-center gap-6 font-semibold">
-                <a href="#papeleria" class="hover:text-[color:var(--dw-accent)] transition">Papelería</a>
-                <a href="#impresion" class="hover:text-[color:var(--dw-accent)] transition">Impresión</a>
-                <a href="#diseno" class="hover:text-[color:var(--dw-accent)] transition">Diseño</a>
+                <a href="{{ route('catalog.category', 'papeleria') }}" class="hover:text-[color:var(--dw-accent)] transition">Papelería</a>
+                <a href="{{ route('catalog.category', 'impresion') }}" class="hover:text-[color:var(--dw-accent)] transition">Impresión</a>
+                <a href="{{ route('catalog.category', 'diseno') }}" class="hover:text-[color:var(--dw-accent)] transition">Diseño</a>
                 <a href="#contacto" class="hover:text-[color:var(--dw-accent)] transition">Contacto</a>
             </nav>
             <div class="flex items-center gap-3">
