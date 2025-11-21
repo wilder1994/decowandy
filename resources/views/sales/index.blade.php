@@ -33,6 +33,14 @@
     </div>
   </div>
 
+    {{-- Toast de confirmación de venta --}}
+  <div id="saleToast" class="hidden fixed top-5 right-5 z-[90]">
+    <div class="rounded-2xl bg-emerald-500 text-white shadow-lg px-4 py-3 text-sm flex items-center gap-2">
+      <span class="material-symbols-outlined text-base">check_circle</span>
+      <span id="saleToastText">Venta registrada.</span>
+    </div>
+  </div>
+
   {{-- Filtros --}}
   <form id="filters-form" method="GET" class="mb-6 rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4">
     <div class="grid gap-4 md:grid-cols-4">

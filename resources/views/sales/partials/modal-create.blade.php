@@ -121,16 +121,16 @@
               </div>
 
               <div class="pt-3 flex gap-3">
-                <button id="saveSaleDraft"
+                <button id="saveSale"
                         class="flex-1 rounded-xl bg-indigo-600 text-white font-semibold px-4 py-3 shadow hover:bg-indigo-700">
-                  Guardar (ensayo)
+                  Registrar venta
                 </button>
                 <button id="cancelSale"
                         class="rounded-xl bg-white text-slate-700 font-semibold px-4 py-3 border hover:bg-slate-50">
                   Cancelar
                 </button>
               </div>
-              <p class="text-xs text-slate-500">* Ensayo visual: no guarda en base de datos.</p>
+              <p class="text-xs text-slate-500">La venta se registrará en el sistema.</p>
             </div>
           </div>
         </div>
@@ -152,21 +152,19 @@ function formatCOP(num){
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-/* ===== Dataset demo (reemplazar luego por datos reales) ===== */
-const DATASET = {
-  "Impresión": [
-    { id: 1, name: "Copias B/N", unit: 200 },
-    { id: 2, name: "Copias Color", unit: 600 },
-    { id: 3, name: "Escáner", unit: 1000 }
-  ],
-  "Papelería": [
-    { id: 4, name: "Resma Carta", unit: 25000 },
-    { id: 5, name: "Lápiz HB", unit: 1000 }
-  ],
-  "Diseño": [
-    { id: 6, name: "Logo básico", unit: 150000 },
-    { id: 7, name: "Afiche A3 diseño", unit: 50000 }
-  ]
+/* ===== Dataset real desde la BD (items) ===== */
+@php
+    // Si NO viene $catalogDataset (por ejemplo en el dashboard), usamos un arreglo vacío
+    $modalCatalogDataset = $catalogDataset ?? [];
+@endphp
+const DATASET = @json($modalCatalogDataset, JSON_UNESCAPED_UNICODE);
+
+
+/* Etiquetas bonitas para las categorías */
+const SECTOR_LABELS = {
+  impresion: 'Impresión',
+  papeleria: 'Papelería',
+  diseno: 'Diseño',
 };
 
 /* ===== Refs ===== */
@@ -174,6 +172,7 @@ const saleModal = document.getElementById('saleModal');
 const openBtn   = document.getElementById('openSaleModal');
 const closeBtn  = document.getElementById('closeSaleModal');
 const cancelBtn = document.getElementById('cancelSale');
+const saveBtn   = document.getElementById('saveSale');
 
 const selProduct = document.getElementById('p_product');
 const badgeCat   = document.getElementById('p_category_badge');
@@ -182,6 +181,25 @@ const inpUnit    = document.getElementById('p_unit');
 const inpTotal   = document.getElementById('p_total');
 const inpGiven   = document.getElementById('pay_given');
 const inpChange  = document.getElementById('pay_change');
+
+/* Toast global para mensajes de venta */
+let saleToast = null;
+let saleToastText = null;
+let saleToastTimer = null;
+
+function showSaleToast(message) {
+  if (!saleToast || !saleToastText) return;
+  saleToastText.textContent = message;
+  saleToast.classList.remove('hidden');
+
+  if (saleToastTimer) {
+    clearTimeout(saleToastTimer);
+  }
+
+  saleToastTimer = setTimeout(() => {
+    saleToast.classList.add('hidden');
+  }, 3500);
+}
 
 /* ===== Render de opciones (solo nombre; guardamos categoría/precio en data-*) ===== */
 function renderProducts(){
@@ -222,15 +240,91 @@ function recalcChange(){
   inpChange.value = formatCOP(change);
 }
 
+/* ===== Enviar venta al backend ===== */
+async function submitSale(event){
+  event.preventDefault();
+
+  const axiosInstance = window.axios;
+  if (!axiosInstance) {
+    showSaleToast('No se encontró Axios en la página.');
+    return;
+  }
+
+  const sel = selProduct.options[selProduct.selectedIndex];
+  if (!sel) {
+    showSaleToast('Selecciona un producto.');
+    return;
+  }
+
+  const itemId = parseInt(sel.value || "0", 10);
+  const qty    = Math.max(1, parseInt(inpQty.value || "1", 10));
+  const unit   = toInt(inpUnit.value);
+  const total  = qty * unit;
+  const given  = toInt(inpGiven.value);
+
+  if (!itemId) {
+    showSaleToast('Producto inválido.');
+    return;
+  }
+  if (unit <= 0 || total <= 0) {
+    showSaleToast('El valor unitario y el total deben ser mayores que cero.');
+    return;
+  }
+
+  const payload = {
+    customer_name: document.getElementById('c_name').value || null,
+    customer_email: document.getElementById('c_email').value || null,
+    customer_phone: document.getElementById('c_phone').value || null,
+    payment_method: 'cash',
+    amount_received: given || 0,
+    items: [
+      {
+        item_id: itemId,
+        quantity: qty,
+        unit_price: unit,
+      },
+    ],
+  };
+
+  try {
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+
+    const response = await axiosInstance.post("{{ route('sales.store') }}", payload);
+
+    showSaleToast('Venta registrada. Código: ' + (response.data.sale_code || 'N/A'));
+    closeModal();
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+
+  } catch (error) {
+    console.error(error);
+    let msg = 'No se pudo registrar la venta.';
+
+    if (error.response?.data?.message) {
+      msg = error.response.data.message;
+    }
+
+    showSaleToast(msg);
+
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Registrar venta';
+  }
+}
+
 /* ===== Al cambiar producto: actualizar categoría (badge) y precio unitario ===== */
 function onProductChange(){
   const sel = selProduct.options[selProduct.selectedIndex];
   if(!sel) return;
-  const cat  = sel.dataset.category || "";
-  const unit = parseInt(sel.dataset.unit || "0", 10);
-  if(badgeCat) badgeCat.textContent = cat || "—";
+  const catCode  = sel.dataset.category || "";
+  const unit     = parseInt(sel.dataset.unit || "0", 10);
+  const catLabel = SECTOR_LABELS[catCode] || catCode || "—";
+  if (badgeCat) badgeCat.textContent = catLabel;
   inpUnit.value = formatCOP(unit);
-  if(!inpQty.value || parseInt(inpQty.value,10) < 1) inpQty.value = 1;
+  if (!inpQty.value || parseInt(inpQty.value, 10) < 1) inpQty.value = 1;
   recalcTotal();
 }
 
@@ -240,15 +334,24 @@ function formatOnGiven(e){ e.target.value = formatCOP(toInt(e.target.value)); re
 
 /* ===== Init ===== */
 document.addEventListener('DOMContentLoaded', () => {
+  saleToast     = document.getElementById('saleToast');
+  saleToastText = document.getElementById('saleToastText');
+
   renderProducts();
+
   if(selProduct.options.length > 0){
     selProduct.selectedIndex = 0;
     onProductChange();
   }
+
   selProduct.addEventListener('change', onProductChange);
   inpQty.addEventListener('input', recalcTotal);
   inpUnit.addEventListener('input', formatOnUnit);
   inpGiven.addEventListener('input', formatOnGiven);
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', submitSale);
+  }
 });
 </script>
 @endpush

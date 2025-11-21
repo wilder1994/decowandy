@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Models\Item;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -110,18 +111,35 @@ class SalesController extends Controller
             $sections = Arr::only($sections, [$category]);
         }
 
-        return view('sales.index', [
-            'sections' => $sections,
-            'overallTotal' => $overallTotal,
-            'filters' => [
-                'category' => $category,
-                'date_type' => $dateType,
-                'day' => $filterValues['day'],
-                'week' => $filterValues['week'],
-                'month' => $filterValues['month'],
-                'range' => $range,
+                // Catálogo de ítems para el modal (datos reales)
+        $catalogItems = Item::select('id', 'name', 'sale_price', 'sector')
+            ->orderBy('name')
+            ->get();
+
+        // Lo convertimos en un dataset por sector para el JS del modal
+        $catalogDataset = $catalogItems->groupBy('sector')->map(function ($group) {
+            return $group->map(function ($item) {
+                return [
+                    'id'   => $item->id,
+                    'name' => $item->name,
+                    'unit' => (int) $item->sale_price,
+                ];
+            })->values();
+        });
+
+                return view('sales.index', [
+            'sections'      => $sections,
+            'overallTotal'  => $overallTotal,
+            'filters'       => [
+                'category'   => $category,
+                'date_type'  => $dateType,
+                'day'        => $filterValues['day'],
+                'week'       => $filterValues['week'],
+                'month'      => $filterValues['month'],
+                'range'      => $range,
             ],
-            'sectorLabels' => $sectorLabels,
+            'sectorLabels'  => $sectorLabels,
+            'catalogDataset'=> $catalogDataset,
         ]);
     }
 
