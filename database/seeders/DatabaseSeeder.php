@@ -6,11 +6,11 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    /**
+     * Seeder principal sin datos de ejemplo.
+     */
     public function run(): void
     {
-        $this->call([
-            AdminSeeder::class,
-            ItemSeeder::class,
-        ]);
+        // Intencionalmente vacío: usaremos datos reales en lugar de semillas.
     }
 }
