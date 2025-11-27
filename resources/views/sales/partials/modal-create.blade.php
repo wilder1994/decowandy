@@ -159,6 +159,8 @@ function formatCOP(num){
 @endphp
 const DATASET = @json($modalCatalogDataset, JSON_UNESCAPED_UNICODE);
 
+const DEFAULT_BADGE = 'Selecciona un producto';
+
 
 /* Etiquetas bonitas para las categorías */
 const SECTOR_LABELS = {
@@ -181,6 +183,9 @@ const inpUnit    = document.getElementById('p_unit');
 const inpTotal   = document.getElementById('p_total');
 const inpGiven   = document.getElementById('pay_given');
 const inpChange  = document.getElementById('pay_change');
+const inpName    = document.getElementById('c_name');
+const inpEmail   = document.getElementById('c_email');
+const inpPhone   = document.getElementById('c_phone');
 
 /* Toast global para mensajes de venta */
 let saleToast = null;
@@ -204,6 +209,15 @@ function showSaleToast(message) {
 /* ===== Render de opciones (solo nombre; guardamos categoría/precio en data-*) ===== */
 function renderProducts(){
   selProduct.innerHTML = "";
+
+  const placeholder = document.createElement('option');
+  placeholder.value = "";
+  placeholder.textContent = 'Selecciona un producto';
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  placeholder.hidden = true;
+  selProduct.appendChild(placeholder);
+
   Object.keys(DATASET).forEach(cat => {
     DATASET[cat].forEach(p => {
       const opt = document.createElement('option');
@@ -211,13 +225,48 @@ function renderProducts(){
       opt.textContent = p.name;
       opt.dataset.category = cat;
       opt.dataset.unit = String(p.unit);
+      if (p.stock !== undefined && p.stock !== null) {
+        opt.dataset.stock = String(p.stock);
+      }
       selProduct.appendChild(opt);
     });
   });
 }
 
+function getSelectedOption(){
+  const opt = selProduct.options[selProduct.selectedIndex];
+  return opt && opt.value ? opt : null;
+}
+
+function getAvailableStock(opt){
+  if (!opt) return null;
+  const raw = opt.dataset.stock;
+  if (raw === undefined || raw === null || raw === '') return null;
+  const parsed = parseInt(raw, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+function resetSaleForm(){
+  selProduct.selectedIndex = 0;
+  if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
+
+  inpQty.value = "";
+  inpUnit.value = "";
+  inpTotal.value = "";
+  inpGiven.value = "";
+  inpChange.value = "";
+
+  if (inpName) inpName.value = "";
+  if (inpEmail) inpEmail.value = "";
+  if (inpPhone) inpPhone.value = "";
+}
+
 /* ===== Abrir / Cerrar modal ===== */
-function openModal(){ saleModal.classList.remove('hidden'); document.body.classList.add('overflow-hidden'); }
+function openModal(){
+  resetSaleForm();
+  saleModal.classList.remove('hidden');
+  document.body.classList.add('overflow-hidden');
+}
 function closeModal(){ saleModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }
 openBtn?.addEventListener('click', openModal);
 closeBtn?.addEventListener('click', closeModal);
@@ -227,7 +276,30 @@ window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); }
 
 /* ===== Cálculos ===== */
 function recalcTotal(){
-  const qty  = Math.max(1, parseInt(inpQty.value || "1", 10));
+  const sel = getSelectedOption();
+
+  if (!sel) {
+    inpTotal.value = "";
+    recalcChange();
+    return;
+  }
+
+  const available = getAvailableStock(sel);
+
+  if (available !== null && available <= 0) {
+    inpTotal.value = "";
+    recalcChange();
+    return;
+  }
+
+  let qty = Math.max(1, parseInt(inpQty.value || "1", 10));
+
+  if (available !== null && qty > available) {
+    qty = available;
+    inpQty.value = String(available);
+    showSaleToast(`Solo hay ${available} unidad${available === 1 ? '' : 'es'} disponibles.`);
+  }
+
   const unit = toInt(inpUnit.value);
   const total = qty * unit;
   inpTotal.value = formatCOP(total);
@@ -250,7 +322,7 @@ async function submitSale(event){
     return;
   }
 
-  const sel = selProduct.options[selProduct.selectedIndex];
+  const sel = getSelectedOption();
   if (!sel) {
     showSaleToast('Selecciona un producto.');
     return;
@@ -261,6 +333,22 @@ async function submitSale(event){
   const unit   = toInt(inpUnit.value);
   const total  = qty * unit;
   const given  = toInt(inpGiven.value);
+
+  const available = getAvailableStock(sel);
+
+  if (available !== null) {
+    if (available <= 0) {
+      showSaleToast('Este producto no tiene stock disponible.');
+      return;
+    }
+
+    if (qty > available) {
+      showSaleToast(`Solo hay ${available} unidad${available === 1 ? '' : 'es'} disponibles.`);
+      inpQty.value = String(available);
+      recalcTotal();
+      return;
+    }
+  }
 
   if (!itemId) {
     showSaleToast('Producto inválido.');
@@ -317,14 +405,38 @@ async function submitSale(event){
 
 /* ===== Al cambiar producto: actualizar categoría (badge) y precio unitario ===== */
 function onProductChange(){
-  const sel = selProduct.options[selProduct.selectedIndex];
-  if(!sel) return;
+  const sel = getSelectedOption();
+
+  if(!sel){
+    if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
+    inpUnit.value = "";
+    inpQty.value = "";
+    inpTotal.value = "";
+    recalcChange();
+    return;
+  }
+
   const catCode  = sel.dataset.category || "";
   const unit     = parseInt(sel.dataset.unit || "0", 10);
+  const available = getAvailableStock(sel);
   const catLabel = SECTOR_LABELS[catCode] || catCode || "—";
+
   if (badgeCat) badgeCat.textContent = catLabel;
   inpUnit.value = formatCOP(unit);
-  if (!inpQty.value || parseInt(inpQty.value, 10) < 1) inpQty.value = 1;
+
+  if (available !== null && available <= 0) {
+    inpQty.value = "";
+    inpTotal.value = "";
+    showSaleToast('Este producto no tiene stock disponible.');
+    recalcChange();
+    return;
+  }
+
+  if (!inpQty.value || parseInt(inpQty.value, 10) < 1) {
+    const defaultQty = available !== null ? Math.min(1, available) : 1;
+    inpQty.value = defaultQty > 0 ? defaultQty : "";
+  }
+
   recalcTotal();
 }
 
@@ -338,11 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
   saleToastText = document.getElementById('saleToastText');
 
   renderProducts();
-
-  if(selProduct.options.length > 0){
-    selProduct.selectedIndex = 0;
-    onProductChange();
-  }
+  resetSaleForm();
 
   selProduct.addEventListener('change', onProductChange);
   inpQty.addEventListener('input', recalcTotal);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\Item;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -112,8 +113,15 @@ class SalesController extends Controller
         }
 
                 // Catálogo de ítems para el modal (datos reales)
-        $catalogItems = Item::select('id', 'name', 'sale_price', 'sector')
-            ->orderBy('name')
+        $catalogItems = Item::select(
+            'items.id',
+            'items.name',
+            'items.sale_price',
+            'items.sector',
+            DB::raw('COALESCE(stocks.quantity, 0) as stock_qty')
+        )
+            ->leftJoin('stocks', 'stocks.item_id', '=', 'items.id')
+            ->orderBy('items.name')
             ->get();
 
         // Lo convertimos en un dataset por sector para el JS del modal
@@ -123,6 +131,9 @@ class SalesController extends Controller
                     'id'   => $item->id,
                     'name' => $item->name,
                     'unit' => (int) $item->sale_price,
+                    'stock'=> $item->sector === 'papeleria'
+                        ? (int) $item->stock_qty
+                        : null,
                 ];
             })->values();
         });
