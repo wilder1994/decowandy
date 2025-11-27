@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Expense;
+use App\Models\Investment;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -18,16 +19,46 @@ class ReportController extends Controller
         $categoria = $this->sanitizeCategory($request->query('category', 'all'));
         $metodo = $this->sanitizePayment($request->query('payment', 'all'));
 
-        $saleItems = SaleItem::with(['sale', 'item'])
-            ->whereHas('sale', function ($query) use ($from, $to, $metodo) {
-                $query->whereBetween('sold_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()]);
+        $sales = Sale::with('items')
+            ->whereBetween('sold_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->when($metodo !== 'all', fn ($query) => $query->where('payment_method', $metodo))
+            ->get();
 
-                if ($metodo !== 'all') {
-                    $query->where('payment_method', $metodo);
-                }
-            })
+        $saleItems = SaleItem::with(['sale', 'item'])
+            ->whereIn('sale_id', $sales->pluck('id'))
             ->when($categoria !== 'all', fn ($query) => $query->where('category', $categoria))
             ->get();
+
+        $expenses = Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])->get();
+        $purchases = Purchase::where('to_inventory', false)
+            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
+            ->get();
+        $investments = Investment::whereBetween('date', [$from->toDateString(), $to->toDateString()])->get();
+
+        $ingresos = (int) $sales->sum('total');
+        $egresos = (int) ($expenses->sum('amount') + $purchases->sum('total'));
+        $invertido = (int) $investments->sum('amount');
+
+        $utilidad = $ingresos - $egresos;
+        $recuperado = max(0, $utilidad);
+        $porRecuperar = max($invertido - $recuperado, 0);
+        $porcentajeRecuperado = $invertido > 0 ? round(($recuperado / $invertido) * 100, 1) : 0;
+        $estadoCaja = $ingresos - $egresos - $invertido;
+
+        $movimientosCaja = $this->composeMovements($sales, $expenses, $purchases, $investments)
+            ->sortByDesc('fecha')
+            ->values();
+
+        $cashflowDataset = $this->cashflowDataset($sales, $expenses, $purchases, $investments, $from, $to);
+
+        $ingresosVsGastosDataset = [
+            'labels' => ['Ingresos', 'Egresos', 'Inversión'],
+            'data' => [
+                $ingresos,
+                $egresos,
+                $invertido,
+            ],
+        ];
 
         $ventas = (int) $saleItems->sum('line_total');
         $costoVenta = (int) $saleItems->sum(function (SaleItem $item) {
@@ -36,16 +67,10 @@ class ReportController extends Controller
             return (int) round($costoUnitario * (float) $item->quantity);
         });
 
-        $expenses = Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])->get();
-        $purchases = Purchase::where('to_inventory', false)
-            ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
-            ->get();
-
         $gastos = (int) ($expenses->sum('amount') + $purchases->sum('total'));
         $utilidadNeta = $ventas - $costoVenta - $gastos;
 
         $ventasPorCategoria = $this->ventasPorCategoria($saleItems);
-        $cashflowDataset = $this->cashflowDataset($saleItems, $expenses, $purchases, $from, $to);
 
         $ventasListado = Sale::withCount('items')
             ->whereBetween('sold_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
@@ -63,14 +88,24 @@ class ReportController extends Controller
                 'category' => $categoria,
                 'payment' => $metodo,
             ],
+            'resumen' => [
+                'caja' => $estadoCaja,
+                'invertido' => $invertido,
+                'recuperado' => $recuperado,
+                'por_recuperar' => $porRecuperar,
+                'porcentaje_recuperado' => $porcentajeRecuperado,
+                'utilidad' => $utilidad,
+            ],
             'totales' => [
                 'ingresos' => $ventas,
                 'cogs' => $costoVenta,
                 'gastos' => $gastos,
                 'utilidad' => $utilidadNeta,
             ],
+            'ingresosVsGastosDataset' => $ingresosVsGastosDataset,
             'ventasPorCategoria' => $ventasPorCategoria,
             'cashflowDataset' => $cashflowDataset,
+            'movimientosCaja' => $movimientosCaja,
             'ventasListado' => $ventasListado,
             'gastosListado' => $gastosListado,
         ]);
@@ -126,7 +161,7 @@ class ReportController extends Controller
         return $dataset;
     }
 
-    private function cashflowDataset(Collection $sales, Collection $expenses, Collection $purchases, Carbon $from, Carbon $to): array
+    private function cashflowDataset(Collection $sales, Collection $expenses, Collection $purchases, Collection $investments, Carbon $from, Carbon $to): array
     {
         $period = new \DatePeriod($from->copy()->startOfDay(), new \DateInterval('P1D'), $to->copy()->addDay());
 
@@ -138,14 +173,15 @@ class ReportController extends Controller
             $dateKey = $day->format('Y-m-d');
             $labels[] = $day->format('d/m');
 
-            $dailyIncome = (int) $sales->filter(fn (SaleItem $item) => $item->sale && $item->sale->sold_at && $item->sale->sold_at->toDateString() === $dateKey)
-                ->sum('line_total');
+            $dailyIncome = (int) $sales->filter(fn (Sale $sale) => $sale->sold_at && $sale->sold_at->toDateString() === $dateKey)
+                ->sum('total');
 
             $dailyExpenses = (int) $expenses->where('date', $dateKey)->sum('amount');
             $dailyPurchases = (int) $purchases->where('date', $dateKey)->sum('total');
+            $dailyInvestments = (int) $investments->where('date', $dateKey)->sum('amount');
 
             $entradas[] = $dailyIncome;
-            $salidas[] = $dailyExpenses + $dailyPurchases;
+            $salidas[] = $dailyExpenses + $dailyPurchases + $dailyInvestments;
         }
 
         return [
@@ -153,6 +189,53 @@ class ReportController extends Controller
             'entradas' => $entradas,
             'salidas' => $salidas,
         ];
+    }
+
+    private function composeMovements(Collection $sales, Collection $expenses, Collection $purchases, Collection $investments): Collection
+    {
+        $listado = collect();
+
+        foreach ($sales as $sale) {
+            $listado->push([
+                'fecha' => $sale->sold_at instanceof Carbon ? $sale->sold_at : Carbon::parse($sale->sold_at),
+                'concepto' => $sale->sale_code ? 'Venta ' . $sale->sale_code : 'Venta #' . $sale->id,
+                'metodo' => $sale->payment_method,
+                'monto' => (int) $sale->total,
+                'tipo' => 'entrada',
+            ]);
+        }
+
+        foreach ($expenses as $expense) {
+            $listado->push([
+                'fecha' => Carbon::parse($expense->date),
+                'concepto' => $expense->concept,
+                'metodo' => 'gasto',
+                'monto' => (int) $expense->amount * -1,
+                'tipo' => 'salida',
+            ]);
+        }
+
+        foreach ($purchases as $purchase) {
+            $listado->push([
+                'fecha' => Carbon::parse($purchase->date),
+                'concepto' => 'Compra ' . ($purchase->supplier ?: $purchase->category),
+                'metodo' => $purchase->to_inventory ? 'inventario' : 'gasto',
+                'monto' => (int) $purchase->total * -1,
+                'tipo' => 'salida',
+            ]);
+        }
+
+        foreach ($investments as $investment) {
+            $listado->push([
+                'fecha' => Carbon::parse($investment->date),
+                'concepto' => 'Inversión: ' . $investment->concept,
+                'metodo' => 'inversión',
+                'monto' => (int) $investment->amount * -1,
+                'tipo' => 'salida',
+            ]);
+        }
+
+        return $listado;
     }
 
     private function composeGastosListado(Collection $expenses, Collection $purchases): Collection

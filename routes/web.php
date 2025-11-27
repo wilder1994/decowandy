@@ -9,7 +9,6 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ItemController;
-use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\ReportController;
 
@@ -53,7 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
     Route::get('/items/{item}/destroy', [ItemController::class, 'destroy'])->name('items.destroy');
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
-    Route::get('/finanzas', [FinanceController::class, 'index'])->name('finance.index');
+    Route::get('/finanzas', [ReportController::class, 'index'])->name('finance.index');
     Route::get('/finanzas/inversiones', [InvestmentController::class, 'index'])->name('finance.investments');
     Route::get('/gastos', [ExpenseController::class, 'index'])->name('expenses.index');
 
