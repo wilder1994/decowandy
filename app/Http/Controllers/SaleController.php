@@ -6,6 +6,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Models\Item;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Stock;
 use App\Services\InventoryService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,41 @@ class SaleController extends Controller
 
         $itemIds = collect($data['items'])->pluck('item_id')->all();
         $catalog = Item::whereIn('id', $itemIds)->get()->keyBy('id');
+
+        $papeleriaIds = $catalog->where('sector', 'papeleria')->keys();
+
+        if ($papeleriaIds->isNotEmpty()) {
+            $requestedStock = [];
+
+            foreach ($data['items'] as $line) {
+                $item = $catalog->get($line['item_id']);
+
+                if (!$item || $item->sector !== 'papeleria') {
+                    continue;
+                }
+
+                $requestedStock[$item->id] = ($requestedStock[$item->id] ?? 0) + (int) $line['quantity'];
+            }
+
+            if ($requestedStock) {
+                $availableStock = Stock::whereIn('item_id', array_keys($requestedStock))
+                    ->pluck('quantity', 'item_id');
+
+                foreach ($requestedStock as $itemId => $neededQty) {
+                    $availableQty = (int) ($availableStock[$itemId] ?? 0);
+
+                    if ($neededQty > $availableQty) {
+                        $itemName = $catalog[$itemId]->name ?? 'Producto';
+                        abort(422, sprintf(
+                            'No hay stock suficiente para %s. Disponible: %d unidad%s.',
+                            $itemName,
+                            $availableQty,
+                            $availableQty === 1 ? '' : 'es'
+                        ));
+                    }
+                }
+            }
+        }
 
         $sale = DB::transaction(function () use ($data, $catalog, $soldAt) {
             $total = 0;
