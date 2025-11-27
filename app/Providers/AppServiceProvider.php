@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Models\Item;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,15 +27,8 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
-            $catalogItems = Item::select(
-                'items.id',
-                'items.name',
-                'items.sale_price',
-                'items.sector',
-                DB::raw('COALESCE(stocks.quantity, 0) as stock_qty')
-            )
-                ->leftJoin('stocks', 'stocks.item_id', '=', 'items.id')
-                ->orderBy('items.name')
+            $catalogItems = Item::select('id', 'name', 'sale_price', 'sector')
+                ->orderBy('name')
                 ->get();
 
             $catalogDataset = $catalogItems->groupBy('sector')->map(function ($group) {
@@ -45,9 +37,6 @@ class AppServiceProvider extends ServiceProvider
                         'id' => $item->id,
                         'name' => $item->name,
                         'unit' => (int) $item->sale_price,
-                        'stock' => $item->sector === 'papeleria'
-                            ? (int) $item->stock_qty
-                            : null,
                     ];
                 })->values();
             });
