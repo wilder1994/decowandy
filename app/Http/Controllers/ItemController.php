@@ -11,10 +11,25 @@ class ItemController extends Controller
     {
         [$sectors, $filters, $items] = $this->getItemsListing($request);
 
+        $inventoryStats = [
+            'stockable' => Item::where('type', 'product')->count(),
+            'services' => Item::where('type', 'service')->count(),
+            'units' => (int) Item::where('type', 'product')->sum('stock'),
+            'low_stock' => Item::where('type', 'product')->whereColumn('stock', '<', 'min_stock')->count(),
+        ];
+
+        $lowStockItems = Item::where('type', 'product')
+            ->whereColumn('stock', '<', 'min_stock')
+            ->orderBy('stock')
+            ->limit(5)
+            ->get(['id', 'name', 'stock', 'min_stock', 'sector']);
+
         return view('items.index', [
             'items'   => $items,
             'filters' => $filters,
             'sectors' => $sectors,
+            'inventoryStats' => $inventoryStats,
+            'lowStockItems' => $lowStockItems,
         ]);
     }
 

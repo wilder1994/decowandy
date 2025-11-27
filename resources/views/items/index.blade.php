@@ -27,7 +27,7 @@
   <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-bold">Ítems</h1>
-      <p class="text-sm text-gray-500">Gestiona los productos que aparecen en el POS.</p>
+      <p class="text-sm text-gray-500">Gestiona los productos y el inventario que alimentan el POS.</p>
     </div>
     <button id="btnNew"
             type="button"
@@ -35,6 +35,64 @@
       <span class="material-symbols-outlined text-base">add</span>
       Nuevo producto
     </button>
+  </div>
+
+  {{-- Inventario --}}
+  <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+      <div class="text-sm text-gray-500">Productos con stock</div>
+      <div class="mt-1 text-2xl font-bold">{{ $inventoryStats['stockable'] }}</div>
+      <div class="text-xs text-gray-500 mt-1">Listos para controlar existencias</div>
+    </div>
+    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+      <div class="text-sm text-gray-500">Servicios</div>
+      <div class="mt-1 text-2xl font-bold">{{ $inventoryStats['services'] }}</div>
+      <div class="text-xs text-gray-500 mt-1">Ítems sin stock</div>
+    </div>
+    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+      <div class="text-sm text-gray-500">Unidades en stock</div>
+      <div class="mt-1 text-2xl font-bold">{{ number_format($inventoryStats['units'], 0, ',', '.') }}</div>
+      <div class="text-xs text-gray-500 mt-1">Suma de existencias actuales</div>
+    </div>
+    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+      <div class="text-sm text-gray-500">Bajo stock</div>
+      <div class="mt-1 text-2xl font-bold">{{ $inventoryStats['low_stock'] }}</div>
+      <div class="text-xs text-gray-500 mt-1">Por debajo del mínimo</div>
+    </div>
+  </div>
+
+  <div class="mb-6 rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <h3 class="font-semibold">Alertas de inventario</h3>
+        <p class="text-xs text-gray-500">Items con stock por debajo del mínimo configurado.</p>
+      </div>
+      <span class="text-xs text-gray-500">Top 5</span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full text-sm">
+        <thead class="text-gray-500">
+          <tr class="text-left">
+            <th class="py-2 pr-4">Producto</th>
+            <th class="py-2 pr-4">Sector</th>
+            <th class="py-2 pr-4">Stock</th>
+            <th class="py-2 pr-4">Mínimo</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @forelse($lowStockItems as $item)
+            <tr>
+              <td class="py-2 pr-4">{{ $item->name }}</td>
+              <td class="py-2 pr-4 text-gray-500">{{ $sectors[$item->sector] ?? $item->sector }}</td>
+              <td class="py-2 pr-4 text-rose-600 font-semibold">{{ $item->stock }}</td>
+              <td class="py-2 pr-4 text-gray-600">{{ $item->min_stock }}</td>
+            </tr>
+          @empty
+            <tr><td colspan="4" class="py-3 text-center text-sm text-gray-500">Sin alertas de inventario.</td></tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
   </div>
 
   {{-- Buscador --}}
@@ -69,6 +127,8 @@
             <th class="py-2 pr-4">Producto</th>
             <th class="py-2 pr-4">Categoría</th>
             <th class="py-2 pr-4">Tipo</th>
+            <th class="py-2 pr-4">Stock</th>
+            <th class="py-2 pr-4">Mínimo</th>
             <th class="py-2 pr-4">Precio (COP)</th>
             <th class="py-2 pr-4">Visible</th>
             <th class="py-2 pr-2 w-32 text-right">Acciones</th>
@@ -249,14 +309,14 @@
 
       if (state.loading) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6" class="py-6 text-center text-sm text-gray-500">Cargando ítems…</td>';
+        row.innerHTML = '<td colspan="8" class="py-6 text-center text-sm text-gray-500">Cargando ítems…</td>';
         tableBody.appendChild(row);
         return;
       }
 
       if (!state.items.length) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="6" class="py-6 text-center text-sm text-gray-500">Sin productos en este sector.</td>';
+        row.innerHTML = '<td colspan="8" class="py-6 text-center text-sm text-gray-500">Sin productos en este sector.</td>';
         tableBody.appendChild(row);
         return;
       }
@@ -267,6 +327,13 @@
           ? '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Sí</span>'
           : '<span class="px-2 py-1 rounded-full text-xs bg-gray-200 text-gray-700">No</span>';
 
+        const stockNumber = item.type === 'product' ? Number(item.stock ?? 0) : null;
+        const minStock = item.type === 'product' ? Number(item.min_stock ?? 0) : null;
+        const stockBadge = stockNumber === null
+          ? '<span class="px-2 py-1 rounded-full bg-slate-100 text-gray-600 text-xs">Servicio</span>'
+          : `<div class="font-semibold ${stockNumber <= minStock ? 'text-rose-600' : 'text-emerald-700'}">${stockNumber}</div>`;
+        const minStockLabel = stockNumber === null ? '—' : minStock;
+
         tr.innerHTML = `
           <td class="py-2 pr-4">
             <div class="font-medium text-[color:var(--dw-text)]">${escapeHtml(item.name)}</div>
@@ -274,6 +341,8 @@
           </td>
           <td class="py-2 pr-4">${sectorLabels[item.sector] ?? item.sector}</td>
           <td class="py-2 pr-4">${item.type === 'product' ? 'Producto' : 'Servicio'}</td>
+          <td class="py-2 pr-4">${stockBadge}</td>
+          <td class="py-2 pr-4">${minStockLabel}</td>
           <td class="py-2 pr-4">${formatMoney(item.sale_price)}</td>
           <td class="py-2 pr-4">${activeBadge}</td>
           <td class="py-2 pr-2 text-right">
