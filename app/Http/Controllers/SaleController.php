@@ -137,7 +137,7 @@ class SaleController extends Controller
                 ]);
 
                 if ($lineData['sector'] === 'papeleria') {
-                    $this->inventory->out($lineData['item']->id, $lineData['quantity'], 'venta', $sale->id);
+                    $this->inventory->out($lineData['item']->id, $lineData['quantity'], 'sale', $sale->id);
                 }
             }
 

@@ -22,8 +22,6 @@ class ItemFactory extends Factory
             'sector' => $this->faker->randomElement(['papeleria', 'impresion', 'diseno']),
             'sale_price' => $this->faker->randomFloat(2, 1000, 150000),
             'cost' => $this->faker->randomFloat(2, 500, 120000),
-            'stock' => $this->faker->numberBetween(0, 250),
-            'min_stock' => $this->faker->numberBetween(0, 25),
             'unit' => $this->faker->optional()->randomElement(['unidad', 'paquete', 'servicio', 'kit']),
             'featured' => $this->faker->boolean,
             'active' => $this->faker->boolean(85),

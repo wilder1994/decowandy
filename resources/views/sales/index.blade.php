@@ -105,6 +105,19 @@
     </div>
   </form>
 
+  <div class="mb-4 flex justify-end gap-2">
+    <button id="openSaleModal"
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl bg-[color:var(--dw-primary)] px-4 py-2 text-white font-semibold shadow hover:opacity-90">
+      <span class="material-symbols-outlined text-base">add</span>
+      Registrar venta
+    </button>
+    <a href="{{ route('sales.create') }}"
+       class="inline-flex items-center gap-2 rounded-xl bg-white border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+      Abrir vista de creación
+    </a>
+  </div>
+
   @forelse($sections as $key => $section)
     <section class="mb-6 rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 shadow-sm">
       <div class="px-5 py-4 flex items-center justify-between">
@@ -173,6 +186,8 @@
       No hay ventas registradas para los filtros seleccionados.
     </div>
   @endforelse
+
+  @include('sales.partials.modal-create')
 @endsection
 
 @push('scripts')
@@ -191,6 +206,17 @@
     }
     typeSel.addEventListener('change', refreshDateInputs);
     refreshDateInputs();
+
+    @if(request('open') === 'create')
+    window.addEventListener('load', () => {
+      if (typeof openModal === 'function') {
+        openModal();
+      } else {
+        const modal = document.getElementById('saleModal');
+        modal?.classList.remove('hidden');
+      }
+    });
+    @endif
   });
 </script>
 @endpush

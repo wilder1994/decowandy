@@ -7,35 +7,26 @@ use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\Fluent\AssertableJson;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class InventoryApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function authenticate(): User
-    {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
-
-        return $user;
-    }
-
     public function test_low_stock_uses_item_min_stock_when_threshold_is_missing(): void
     {
-        $this->authenticate();
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $item = Item::factory()->create([
             'type' => 'product',
             'sector' => 'papeleria',
-            'min_stock' => 5,
         ]);
 
         Stock::create([
             'item_id' => $item->id,
             'quantity' => 3,
-            'min_threshold' => null,
+            'min_threshold' => 5,
         ]);
 
         $response = $this->getJson(route('api.stocks.low'));
@@ -52,12 +43,12 @@ class InventoryApiTest extends TestCase
 
     public function test_low_stock_prefers_stock_specific_threshold(): void
     {
-        $this->authenticate();
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $item = Item::factory()->create([
             'type' => 'product',
             'sector' => 'impresion',
-            'min_stock' => 10,
         ]);
 
         Stock::create([
@@ -70,7 +61,6 @@ class InventoryApiTest extends TestCase
         $other = Item::factory()->create([
             'type' => 'product',
             'sector' => 'papeleria',
-            'min_stock' => 2,
         ]);
 
         Stock::create([

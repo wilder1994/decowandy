@@ -5,24 +5,16 @@ namespace Tests\Feature;
 use App\Models\Item;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ItemApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function authenticate(): User
-    {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
-
-        return $user;
-    }
-
     public function test_authenticated_user_can_create_item(): void
     {
-        $this->authenticate();
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $payload = [
             'name' => 'Nuevo producto',
@@ -31,8 +23,6 @@ class ItemApiTest extends TestCase
             'sector' => 'diseno',
             'sale_price' => 25000,
             'cost' => 12000,
-            'stock' => 10,
-            'min_stock' => 2,
             'unit' => 'unidad',
             'featured' => true,
             'active' => true,
@@ -53,14 +43,14 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_can_update_item(): void
     {
-        $this->authenticate();
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $item = Item::factory()->create([
             'name' => 'Original',
             'sector' => 'diseno',
             'type' => 'product',
             'sale_price' => 12000,
-            'stock' => 5,
         ]);
 
         $payload = [
@@ -89,7 +79,8 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_can_delete_item(): void
     {
-        $this->authenticate();
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $item = Item::factory()->create();
 

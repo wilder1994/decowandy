@@ -14,7 +14,7 @@ class InventoryService
     /**
      * Entrada a inventario (IN)
      */
-    public function in(int $itemId, int $quantity, ?int $unitCost = null, string $reason = 'compra', ?int $relatedId = null): void
+    public function in(int $itemId, int $quantity, ?int $unitCost = null, string $reason = 'purchase', ?int $relatedId = null): void
     {
         if ($quantity <= 0) return;
 
@@ -26,7 +26,7 @@ class InventoryService
                 'quantity' => $quantity,
                 'unit_cost' => $unitCost,
                 'reason' => $reason,
-                'related_id' => $relatedId,
+                'ref_id' => $relatedId,
             ]);
 
 
@@ -39,7 +39,7 @@ class InventoryService
     /**
      * Salida de inventario (OUT)
      */
-    public function out(int $itemId, int $quantity, string $reason = 'venta', ?int $relatedId = null): void
+    public function out(int $itemId, int $quantity, string $reason = 'sale', ?int $relatedId = null): void
     {
         if ($quantity <= 0) return;
 
@@ -57,7 +57,7 @@ class InventoryService
                 'type' => 'out',
                 'quantity' => abs($delta),
                 'reason' => $reason,
-                'related_id' => $relatedId,
+                'ref_id' => $relatedId,
             ]);
 
 
@@ -74,12 +74,11 @@ class InventoryService
     {
         $totals = StockMovement::selectRaw(
             "SUM(CASE WHEN type='in' THEN quantity ELSE 0 END) as tin, " .
-                "SUM(CASE WHEN type='out' THEN quantity ELSE 0 END) as tout, " .
-                "SUM(CASE WHEN type='adjust' THEN quantity ELSE 0 END) as tadj"
+                "SUM(CASE WHEN type='out' THEN quantity ELSE 0 END) as tout"
         )->where('item_id', $itemId)->first();
 
 
-        $qty = (int)$totals->tin - (int)$totals->tout + (int)$totals->tadj;
+        $qty = (int)$totals->tin - (int)$totals->tout;
         $stock = Stock::firstOrCreate(['item_id' => $itemId], ['quantity' => 0]);
         $stock->quantity = max(0, $qty);
         $stock->save();

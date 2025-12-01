@@ -17,6 +17,9 @@ class StockMovement extends Model
         'reason',
         'sale_id',
         'purchase_id',
+        'unit_cost',
+        'type',
+        'ref_id',
     ];
 
     protected $casts = [
@@ -24,6 +27,8 @@ class StockMovement extends Model
         'quantity'    => 'integer', // o 'decimal:2' si usas decimales
         'sale_id'     => 'integer',
         'purchase_id' => 'integer',
+        'unit_cost'   => 'integer',
+        'ref_id'      => 'integer',
     ];
 
     // Relaciones opcionales (solo si tienes estas tablas)

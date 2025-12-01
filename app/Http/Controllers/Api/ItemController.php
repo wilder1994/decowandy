@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
+use App\Models\Stock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -26,6 +27,7 @@ class ItemController extends Controller
         $type = $request->query('type');
 
         $query = Item::query()->orderBy('name');
+        $query->with('stock');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -44,9 +46,9 @@ class ItemController extends Controller
 
         $items = $query->paginate($perPage)->withQueryString();
 
-        return response()->json([
+        $payload = [
             'ok' => true,
-            'data' => $items->items(),
+            'data' => $items->map(fn ($item) => $this->transformItem($item))->items(),
             'pagination' => [
                 'current_page' => $items->currentPage(),
                 'last_page' => $items->lastPage(),
@@ -64,7 +66,9 @@ class ItemController extends Controller
                 'sector' => $sector,
                 'type' => $type,
             ],
-        ]);
+        ];
+
+        return response()->json($payload);
     }
 
     public function store(StoreItemRequest $request)
@@ -80,8 +84,9 @@ class ItemController extends Controller
         $data['active'] = $request->boolean('active', true);
 
         $item = Item::create($data);
+        $this->syncStock($item, $data);
 
-        return response()->json(['ok' => true, 'item' => $item->fresh()], 201);
+        return response()->json(['ok' => true, 'item' => $this->transformItem($item->fresh('stock'))], 201);
     }
 
     public function update(UpdateItemRequest $request, Item $item)
@@ -109,8 +114,9 @@ class ItemController extends Controller
 
         $item->fill($data);
         $item->save();
+        $this->syncStock($item, $data);
 
-        return response()->json(['ok' => true, 'item' => $item->refresh()]);
+        return response()->json(['ok' => true, 'item' => $this->transformItem($item->refresh()->load('stock'))]);
     }
 
     /**
@@ -125,5 +131,29 @@ class ItemController extends Controller
         $item->active = false;
         $item->save();
         return response()->json(['ok' => true, 'active' => false]);
+    }
+
+    private function syncStock(Item $item, array $data): void
+    {
+        if (($data['type'] ?? $item->type) !== 'product') {
+            return;
+        }
+
+        $qty = (int) ($data['stock'] ?? $item->stock ?? 0);
+        $min = (int) ($data['min_stock'] ?? $item->min_stock ?? 0);
+
+        $stock = Stock::firstOrCreate(['item_id' => $item->id], ['quantity' => 0]);
+        $stock->quantity = $qty;
+        $stock->min_threshold = $min;
+        $stock->save();
+    }
+
+    private function transformItem(Item $item): array
+    {
+        $array = $item->toArray();
+        $array['stock'] = $item->stock->quantity ?? $item->stock ?? 0;
+        $array['min_stock'] = $item->stock->min_threshold ?? $item->min_stock ?? 0;
+
+        return $array;
     }
 }

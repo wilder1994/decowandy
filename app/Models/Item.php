@@ -10,17 +10,43 @@ class Item extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name','slug','description','type','sector',
-        'sale_price','cost','stock','min_stock','unit',
-        'featured','active',
+        'name',
+        'slug',
+        'description',
+        'type',
+        'sector',
+        'sale_price',
+        'cost',
+        'unit',
+        'featured',
+        'active',
     ];
 
     protected $casts = [
         'sale_price' => 'decimal:2',
-        'cost' => 'decimal:2',
-        'stock' => 'integer',
-        'min_stock' => 'integer',
-        'featured' => 'boolean',
-        'active' => 'boolean',
+        'cost'       => 'decimal:2',
+        'featured'   => 'boolean',
+        'active'     => 'boolean',
     ];
+
+    // 👈 RELACIÓN CORRECTA (añadir esto)
+    public function stock()
+    {
+        return $this->hasOne(Stock::class, 'item_id');
+    }
+
+    // 👈 Para acceder de forma bonita: $item->quantity
+    public function getQuantityAttribute()
+    {
+        if (array_key_exists('stock', $this->attributes)) {
+            return (int) $this->attributes['stock'];
+        }
+
+        return $this->stock?->quantity ?? 0;
+    }
+
+    public function getMinThresholdAttribute()
+    {
+        return $this->stock?->min_threshold ?? 0;
+    }
 }

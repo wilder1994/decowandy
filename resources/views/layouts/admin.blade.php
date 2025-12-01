@@ -47,7 +47,7 @@
                     <span class="material-symbols-outlined text-base">dashboard</span> Dashboard
                 </a>
                 <a href="{{ route('items.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('items')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
-                    <span class="material-symbols-outlined text-base">inventory_2</span> Ítems
+                    <span class="material-symbols-outlined text-base">inventory_2</span> Ítems - Inventario
                 </a>
                 <a href="{{ route('sales.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('ventas')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">point_of_sale</span> Ventas

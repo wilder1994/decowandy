@@ -77,7 +77,7 @@ class PurchaseController extends Controller
                 // Stock IN si aplica: Papelería o insumo de Impresión y hay item_id
                 if ($toInventory && isset($line['item_id'])) {
                     // Nota: en F1 solo agregamos a inventario si explicitamente viene item_id
-                    $this->inventory->in((int)$line['item_id'], $qty, $ucost, 'compra', $purchase->id);
+                    $this->inventory->in((int)$line['item_id'], $qty, $ucost, 'purchase', $purchase->id);
                 }
             }
 

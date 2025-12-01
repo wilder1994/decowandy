@@ -15,7 +15,7 @@ class InventoryController extends Controller
      */
     public function lowStock()
     {
-        $thresholdSql = 'COALESCE(s.min_threshold, i.min_stock, 0)';
+        $thresholdSql = 'COALESCE(s.min_threshold, 0)';
 
         $rows = DB::table('stocks as s')
             ->join('items as i', 'i.id', '=', 's.item_id')

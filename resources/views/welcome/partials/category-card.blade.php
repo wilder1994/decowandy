@@ -1,22 +1,51 @@
 {{-- resources/views/welcome/partials/category-card.blade.php --}}
 @php
     use Illuminate\Support\Str;
+
+    $slug = Str::slug($category['slug'] ?? $category['key'] ?? $category['name'] ?? 'categoria');
+    $items = collect($category['items'] ?? []);
 @endphp
 
-<a href="{{ route('catalog.category', Str::slug($category['key'] ?? $category->key)) }}"
+<a href="{{ route('catalog.category', $slug) }}#{{ $slug }}-full"
    class="block rounded-3xl overflow-hidden shadow-md hover:-translate-y-1 hover:shadow-xl transition bg-white">
-    
-    <div class="h-40 w-full overflow-hidden">
+    <div class="h-40 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200">
         @if(!empty($category['cover_image'] ?? null))
             <img src="{{ $category['cover_image'] }}" class="w-full h-full object-cover" alt="{{ $category['name'] }}">
-        @else
-            <div class="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200"></div>
         @endif
     </div>
 
-    <div class="p-6">
-        <h3 class="text-xl font-semibold">{{ $category['name'] }}</h3>
-        <p class="mt-2 text-gray-600 text-sm">{{ $category['description'] ?? '' }}</p>
-        <p class="mt-4 font-semibold text-[color:var(--dw-accent)]">Ver productos</p>
+    <div class="p-6 space-y-3">
+        <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold">{{ $category['name'] }}</h3>
+            <span class="text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700">
+                {{ Str::title($slug) }}
+            </span>
+        </div>
+        @if($items->isEmpty())
+            <p class="text-sm text-gray-500">{{ $category['tag_empty'] ?? 'Sin productos' }}</p>
+        @else
+            <ul class="text-sm text-gray-700 space-y-1">
+                @foreach($items->take(5) as $item)
+                    <li class="flex items-center justify-between">
+                        <span>{{ $item->title ?? $item['title'] ?? 'Item' }}</span>
+                        @php
+                            $price = $item->price ?? $item['price'] ?? null;
+                            $showPrice = $item->show_price ?? $item['show_price'] ?? false;
+                        @endphp
+                        <span class="text-xs text-gray-500">
+                            @if($showPrice && $price)
+                                ${{ number_format((int) $price, 0, ',', '.') }}
+                            @else
+                                $ �?"
+                            @endif
+                        </span>
+                    </li>
+                @endforeach
+            </ul>
+            @if($items->count() > 5)
+                <p class="text-xs text-gray-400">y {{ $items->count() - 5 }} m��s�?�</p>
+            @endif
+        @endif
+        <p class="mt-1 font-semibold text-[color:var(--dw-accent)]">Ver productos</p>
     </div>
 </a>

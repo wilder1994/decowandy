@@ -14,15 +14,18 @@ class ItemController extends Controller
         $inventoryStats = [
             'stockable' => Item::where('type', 'product')->count(),
             'services' => Item::where('type', 'service')->count(),
-            'units' => (int) Item::where('type', 'product')->sum('stock'),
-            'low_stock' => Item::where('type', 'product')->whereColumn('stock', '<', 'min_stock')->count(),
+            'units' => (int) \App\Models\Stock::sum('quantity'),
+            'low_stock' => (int) \App\Models\Stock::whereRaw('quantity <= COALESCE(min_threshold, 0)')->count(),
         ];
 
-        $lowStockItems = Item::where('type', 'product')
-            ->whereColumn('stock', '<', 'min_stock')
-            ->orderBy('stock')
+        $lowStockItems = Item::query()
+            ->select('items.id', 'items.name', 'items.sector', 'stocks.quantity as stock', 'stocks.min_threshold as min_stock')
+            ->leftJoin('stocks', 'stocks.item_id', '=', 'items.id')
+            ->where('items.type', 'product')
+            ->whereRaw('stocks.quantity <= COALESCE(stocks.min_threshold, 0)')
+            ->orderBy('stocks.quantity')
             ->limit(5)
-            ->get(['id', 'name', 'stock', 'min_stock', 'sector']);
+            ->get();
 
         return view('items.index', [
             'items'   => $items,
@@ -59,7 +62,9 @@ class ItemController extends Controller
             $perPage = 10;
         }
 
-        $query = Item::query();
+        $query = Item::query()
+            ->select('items.*', 'stocks.quantity as stock', 'stocks.min_threshold as min_stock')
+            ->leftJoin('stocks', 'stocks.item_id', '=', 'items.id');
 
         if ($filters['search'] !== '') {
             $query->where(function ($builder) use ($filters) {

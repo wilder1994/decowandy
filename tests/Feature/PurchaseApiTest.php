@@ -5,24 +5,16 @@ namespace Tests\Feature;
 use App\Models\Item;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class PurchaseApiTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function authenticate(): User
-    {
-        $user = User::factory()->create();
-        Sanctum::actingAs($user);
-
-        return $user;
-    }
-
     public function test_purchase_to_inventory_creates_stock_entries(): void
     {
-        $this->authenticate();
+        $user = User::factory()->create();
+        $this->actingAs($user);
 
         $item = Item::factory()->create([
             'type' => 'product',
@@ -76,8 +68,8 @@ class PurchaseApiTest extends TestCase
             'item_id' => $item->id,
             'type' => 'in',
             'quantity' => 3,
-            'reason' => 'compra',
-            'related_id' => $response->json('purchase_id'),
+            'reason' => 'purchase',
+            'ref_id' => $response->json('purchase_id'),
         ]);
     }
 }
