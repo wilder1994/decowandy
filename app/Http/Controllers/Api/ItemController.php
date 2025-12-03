@@ -44,11 +44,18 @@ class ItemController extends Controller
             $query->where('type', $type);
         }
 
+        if ($request->filled('active')) {
+            $query->where('active', $request->boolean('active'));
+        }
+
         $items = $query->paginate($perPage)->withQueryString();
+        $items->setCollection(
+            $items->getCollection()->map(fn ($item) => $this->transformItem($item))
+        );
 
         $payload = [
             'ok' => true,
-            'data' => $items->map(fn ($item) => $this->transformItem($item))->items(),
+            'data' => $items->items(),
             'pagination' => [
                 'current_page' => $items->currentPage(),
                 'last_page' => $items->lastPage(),

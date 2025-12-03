@@ -46,6 +46,8 @@
            placeholder="0">
   </div>
 
+  <p id="priceWarning" class="md:col-span-2 hidden text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"></p>
+
   <div class="md:col-span-1">
     <label class="block text-sm text-gray-600 mb-1">Unidad (opcional)</label>
     <input id="f_unit"

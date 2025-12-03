@@ -41,11 +41,7 @@ class ItemController extends Controller
     */
     protected function getItemsListing(Request $request): array
     {
-        $sectors = [
-            'diseno'     => 'Diseño',
-            'impresion'  => 'Impresión',
-            'papeleria'  => 'Papelería',
-        ];
+        $sectors = config('decowandy.sectors');
 
         $filters = [
             'search' => trim((string) $request->query('search', '')),
@@ -115,8 +111,18 @@ class ItemController extends Controller
         return view('items.partials.form', compact('item'));
     }
 
-    public function destroy(Item $item)
+    public function confirmDelete(Item $item)
     {
         return view('items.partials.confirm-delete', compact('item'));
+    }
+
+    public function destroy(Item $item)
+    {
+        $item->active = false;
+        $item->save();
+
+        return redirect()
+            ->route('items.index')
+            ->with('status', 'Ítem desactivado correctamente.');
     }
 }

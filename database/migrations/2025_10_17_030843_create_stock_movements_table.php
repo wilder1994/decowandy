@@ -9,15 +9,19 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained()->cascadeOnUpdate();
+            $table->foreignId('item_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->enum('type', ['in','out']);                       // entrada | salida
-            $table->decimal('quantity', 12, 2)->default(0);
-            $table->enum('reason', ['sale','purchase','adjustment']); // motivo
-            $table->unsignedBigInteger('ref_id')->nullable();         // id de sales/purchases si aplica
+            $table->integer('quantity')->default(0);
+            $table->string('reason', 30)->default('sale');             // sale | purchase | adjustment
+            $table->unsignedBigInteger('sale_id')->nullable();
+            $table->unsignedBigInteger('purchase_id')->nullable();
+            $table->unsignedBigInteger('ref_id')->nullable();          // id de sales/purchases si aplica
+            $table->integer('unit_cost')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 
             $table->index(['item_id','type','reason']);
+            $table->index(['sale_id','purchase_id']);
         });
     }
 
@@ -25,4 +29,3 @@ return new class extends Migration {
         Schema::dropIfExists('stock_movements');
     }
 };
-

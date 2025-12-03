@@ -16,13 +16,11 @@ return new class extends Migration {
             $table->enum('type', ['product','service']); // producto o servicio
             $table->enum('sector', ['papeleria','impresion','diseno']);
 
-            $table->decimal('sale_price', 12, 2)->default(0); // precio de venta base
-            $table->decimal('cost', 12, 2)->default(0);       // costo (promedio) para margen
-            $table->integer('stock')->default(0);            // solo aplica si type=product
-            $table->integer('min_stock')->default(0);        // alerta de stock bajo
-            $table->string('unit', 30)->nullable();          // hoja, unidad, paquete, servicio
+            $table->integer('sale_price')->default(0); // precio de venta base (COP enteros)
+            $table->integer('cost')->default(0);       // costo (promedio) para margen
+            $table->string('unit', 30)->nullable();    // hoja, unidad, paquete, servicio
 
-            $table->boolean('featured')->default(false);     // destacar en landing
+            $table->boolean('featured')->default(false); // destacar en landing
             $table->boolean('active')->default(true);
 
             $table->timestamps();

@@ -1,16 +1,12 @@
 {{-- resources/views/sales/partials/modal-create.blade.php --}}
-{{-- Modal: Registrar venta (solo UI; sin guardar en BD) --}}
+{{-- Modal: Registrar venta --}}
 
-<!-- ============ MODAL REGISTRAR VENTA ============ -->
 <div id="saleModal" class="fixed inset-0 z-[70] hidden">
-  <!-- Fondo -->
   <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-  <!-- Contenedor -->
   <div class="absolute inset-0 flex items-center justify-center p-4">
     <div class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-      <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b">
         <h3 class="text-xl font-bold text-slate-800">Registrar venta</h3>
         <button id="closeSaleModal"
@@ -20,13 +16,9 @@
         </button>
       </div>
 
-      <!-- Body -->
       <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Columna izquierda: Cliente + Producto (ocupa 2) -->
         <div class="lg:col-span-2 space-y-6">
-
-          <!-- Cliente (opcional) -->
           <div class="bg-slate-50 rounded-xl p-4">
             <div class="flex items-center justify-between mb-3">
               <h4 class="font-semibold text-slate-700">Cliente (opcional)</h4>
@@ -51,13 +43,11 @@
             </div>
           </div>
 
-          <!-- Producto (categoría centrada + campos separados) -->
           <div class="bg-white rounded-xl border p-4">
             <div class="flex items-center justify-between">
               <h4 class="font-semibold text-slate-700">Producto</h4>
             </div>
 
-            <!-- Categoría (badge centrado) -->
             <div class="mt-2 flex justify-center">
               <span id="p_category_badge"
                     class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-slate-100 text-slate-700">
@@ -65,26 +55,24 @@
               </span>
             </div>
 
-            <!-- Campos: dos columnas -->
             <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <!-- Izquierda -->
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm text-slate-600 mb-1" for="p_product">Producto</label>
                   <select id="p_product"
                           class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
-                    <!-- Opciones generadas por JS (solo nombre) -->
                   </select>
+                  <p id="stock_info" class="mt-1 text-xs text-slate-500 hidden"></p>
                 </div>
 
                 <div>
                   <label class="block text-sm text-slate-600 mb-1" for="p_qty">Cantidad</label>
                   <input id="p_qty" type="number" min="1" value="1"
                          class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                  <p id="qty_error" class="mt-1 text-xs text-rose-600 hidden"></p>
                 </div>
               </div>
 
-              <!-- Derecha -->
               <div class="space-y-4">
                 <div>
                   <label class="block text-sm text-slate-600 mb-1" for="p_unit">Valor unidad (COP)</label>
@@ -102,7 +90,6 @@
           </div>
         </div>
 
-        <!-- Columna derecha: Pago -->
         <div class="lg:col-span-1">
           <div class="bg-indigo-50 rounded-xl border border-indigo-100 p-4">
             <h4 class="font-semibold text-indigo-800 mb-3">Pago</h4>
@@ -135,15 +122,13 @@
           </div>
         </div>
 
-      </div><!-- /Body -->
+      </div>
     </div>
   </div>
 </div>
-<!-- ============ /MODAL REGISTRAR VENTA ============ -->
 
 @push('scripts')
 <script>
-/* ===== Utilidades ===== */
 function onlyDigits(str){ return (str || '').replace(/[^\d]/g,''); }
 function toInt(str){ const s = onlyDigits(str); return s ? parseInt(s,10) : 0; }
 function formatCOP(num){
@@ -152,24 +137,17 @@ function formatCOP(num){
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
 
-/* ===== Dataset real desde la BD (items) ===== */
-@php
-    // Si NO viene $catalogDataset (por ejemplo en el dashboard), usamos un arreglo vacío
-    $modalCatalogDataset = $catalogDataset ?? [];
-@endphp
+@php $modalCatalogDataset = $catalogDataset ?? []; @endphp
 const DATASET = @json($modalCatalogDataset, JSON_UNESCAPED_UNICODE);
-
 const DEFAULT_BADGE = 'Selecciona un producto';
+let productDataset = JSON.parse(JSON.stringify(DATASET));
 
-
-/* Etiquetas bonitas para las categorías */
 const SECTOR_LABELS = {
   impresion: 'Impresión',
   papeleria: 'Papelería',
   diseno: 'Diseño',
 };
 
-/* ===== Refs ===== */
 const saleModal = document.getElementById('saleModal');
 const openBtn   = document.getElementById('openSaleModal');
 const closeBtn  = document.getElementById('closeSaleModal');
@@ -186,8 +164,9 @@ const inpChange  = document.getElementById('pay_change');
 const inpName    = document.getElementById('c_name');
 const inpEmail   = document.getElementById('c_email');
 const inpPhone   = document.getElementById('c_phone');
+const stockInfo  = document.getElementById('stock_info');
+const qtyError   = document.getElementById('qty_error');
 
-/* Toast global para mensajes de venta */
 let saleToast = null;
 let saleToastText = null;
 let saleToastTimer = null;
@@ -200,13 +179,11 @@ function showSaleToast(message) {
   if (saleToastTimer) {
     clearTimeout(saleToastTimer);
   }
-
   saleToastTimer = setTimeout(() => {
     saleToast.classList.add('hidden');
   }, 3500);
 }
 
-/* ===== Render de opciones (solo nombre; guardamos categoría/precio en data-*) ===== */
 function renderProducts(){
   selProduct.innerHTML = "";
 
@@ -218,13 +195,14 @@ function renderProducts(){
   placeholder.hidden = true;
   selProduct.appendChild(placeholder);
 
-  Object.keys(DATASET).forEach(cat => {
-    DATASET[cat].forEach(p => {
+  Object.keys(productDataset).forEach(cat => {
+    productDataset[cat].forEach(p => {
       const opt = document.createElement('option');
       opt.value = String(p.id);
       opt.textContent = p.name;
       opt.dataset.category = cat;
       opt.dataset.unit = String(p.unit);
+      opt.dataset.type = p.type || '';
       if (p.stock !== undefined && p.stock !== null) {
         opt.dataset.stock = String(p.stock);
       }
@@ -246,6 +224,18 @@ function getAvailableStock(opt){
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+function getSelectedProductMeta(){
+  const opt = getSelectedOption();
+  if (!opt) return null;
+  return {
+    id: parseInt(opt.value || "0", 10),
+    category: opt.dataset.category || '',
+    unit: parseInt(opt.dataset.unit || "0", 10),
+    stock: getAvailableStock(opt),
+    type: opt.dataset.type || '',
+  };
+}
+
 function resetSaleForm(){
   selProduct.selectedIndex = 0;
   if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
@@ -259,45 +249,62 @@ function resetSaleForm(){
   if (inpName) inpName.value = "";
   if (inpEmail) inpEmail.value = "";
   if (inpPhone) inpPhone.value = "";
+  if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('hidden'); stockInfo.classList.remove('text-rose-600'); }
+  if (qtyError) { qtyError.textContent = ''; qtyError.classList.add('hidden'); }
 }
 
-/* ===== Abrir / Cerrar modal ===== */
 function openModal(){
   resetSaleForm();
   saleModal.classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
 }
 function closeModal(){ saleModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }
-openBtn?.addEventListener('click', openModal);
 closeBtn?.addEventListener('click', closeModal);
 cancelBtn?.addEventListener('click', closeModal);
 saleModal.addEventListener('click', e => { if(e.target === saleModal) closeModal(); });
 window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
 
-/* ===== Cálculos ===== */
 function recalcTotal(){
-  const sel = getSelectedOption();
+  const meta = getSelectedProductMeta();
 
-  if (!sel) {
+  if (!meta) {
     inpTotal.value = "";
     recalcChange();
     return;
   }
 
-  const available = getAvailableStock(sel);
+  const available = meta.stock;
+  const isService = meta.type === 'service' || available === null;
 
-  if (available !== null && available <= 0) {
+  if (!isService && available !== null && available <= 0) {
     inpTotal.value = "";
     recalcChange();
+    if (stockInfo) {
+      stockInfo.textContent = 'Sin stock disponible.';
+      stockInfo.classList.remove('hidden');
+      stockInfo.classList.add('text-rose-600');
+    }
     return;
   }
 
   let qty = Math.max(1, parseInt(inpQty.value || "1", 10));
 
-  if (available !== null && qty > available) {
+  if (!isService && available !== null && qty > available) {
     qty = available;
     inpQty.value = String(available);
     showSaleToast(`Solo hay ${available} unidad${available === 1 ? '' : 'es'} disponibles.`);
+    if (qtyError) {
+      qtyError.textContent = `Cantidad no disponible. Solo hay ${available} unidad${available === 1 ? '' : 'es'} en inventario.`;
+      qtyError.classList.remove('hidden');
+    }
+    if (saveBtn) saveBtn.disabled = true;
+  }
+  else {
+    if (qtyError) {
+      qtyError.textContent = '';
+      qtyError.classList.add('hidden');
+    }
+    if (saveBtn) saveBtn.disabled = false;
   }
 
   const unit = toInt(inpUnit.value);
@@ -312,7 +319,6 @@ function recalcChange(){
   inpChange.value = formatCOP(change);
 }
 
-/* ===== Enviar venta al backend ===== */
 async function submitSale(event){
   event.preventDefault();
 
@@ -322,21 +328,22 @@ async function submitSale(event){
     return;
   }
 
-  const sel = getSelectedOption();
-  if (!sel) {
+  const meta = getSelectedProductMeta();
+  if (!meta) {
     showSaleToast('Selecciona un producto.');
     return;
   }
 
-  const itemId = parseInt(sel.value || "0", 10);
+  const itemId = meta.id;
   const qty    = Math.max(1, parseInt(inpQty.value || "1", 10));
   const unit   = toInt(inpUnit.value);
   const total  = qty * unit;
   const given  = toInt(inpGiven.value);
 
-  const available = getAvailableStock(sel);
+  const available = meta.stock;
+  const isService = meta.type === 'service' || available === null;
 
-  if (available !== null) {
+  if (!isService && available !== null) {
     if (available <= 0) {
       showSaleToast('Este producto no tiene stock disponible.');
       return;
@@ -403,31 +410,42 @@ async function submitSale(event){
   }
 }
 
-/* ===== Al cambiar producto: actualizar categoría (badge) y precio unitario ===== */
 function onProductChange(){
-  const sel = getSelectedOption();
+  const meta = getSelectedProductMeta();
 
-  if(!sel){
+  if(!meta){
     if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
     inpUnit.value = "";
     inpQty.value = "";
     inpTotal.value = "";
+    if (stockInfo) stockInfo.classList.add('hidden');
     recalcChange();
     return;
   }
 
-  const catCode  = sel.dataset.category || "";
-  const unit     = parseInt(sel.dataset.unit || "0", 10);
-  const available = getAvailableStock(sel);
-  const catLabel = SECTOR_LABELS[catCode] || catCode || "—";
+  const catCode  = meta.category || "";
+  const unit     = meta.unit;
+  const available = meta.stock;
+  const catLabel = SECTOR_LABELS[catCode] || catCode || "";
 
   if (badgeCat) badgeCat.textContent = catLabel;
   inpUnit.value = formatCOP(unit);
+
+  if (available !== null && stockInfo) {
+    stockInfo.textContent = `Stock disponible: ${available} unidad${available === 1 ? '' : 'es'}`;
+    stockInfo.classList.remove('hidden');
+    stockInfo.classList.remove('text-rose-600');
+  } else if (stockInfo) {
+    stockInfo.textContent = 'Servicio (sin control de stock)';
+    stockInfo.classList.remove('hidden');
+    stockInfo.classList.remove('text-rose-600');
+  }
 
   if (available !== null && available <= 0) {
     inpQty.value = "";
     inpTotal.value = "";
     showSaleToast('Este producto no tiene stock disponible.');
+    if (stockInfo) stockInfo.classList.add('text-rose-600');
     recalcChange();
     return;
   }
@@ -440,11 +458,9 @@ function onProductChange(){
   recalcTotal();
 }
 
-/* ===== Formateo COP en inputs visibles ===== */
 function formatOnUnit(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcTotal(); }
 function formatOnGiven(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcChange(); }
 
-/* ===== Init ===== */
 document.addEventListener('DOMContentLoaded', () => {
   saleToast     = document.getElementById('saleToast');
   saleToastText = document.getElementById('saleToastText');
@@ -460,6 +476,34 @@ document.addEventListener('DOMContentLoaded', () => {
   if (saveBtn) {
     saveBtn.addEventListener('click', submitSale);
   }
+
+  openBtn?.addEventListener('click', async () => {
+    try {
+      const axiosInstance = window.axios;
+      if (axiosInstance) {
+        const { data } = await axiosInstance.get('/api/items', {
+          params: { per_page: 200, active: 1 },
+        });
+        const grouped = {};
+        (data.data || []).forEach((item) => {
+          const sector = item.sector || 'otros';
+          if (!grouped[sector]) grouped[sector] = [];
+          grouped[sector].push({
+            id: item.id,
+            name: item.name,
+            unit: item.sale_price ?? 0,
+            stock: item.type === 'product' ? (item.stock ?? null) : null,
+            type: item.type,
+          });
+        });
+        productDataset = grouped;
+        renderProducts();
+      }
+    } catch (e) {
+      console.warn('No se pudo actualizar el catálogo en vivo', e);
+    }
+    openModal();
+  });
 });
 </script>
 @endpush

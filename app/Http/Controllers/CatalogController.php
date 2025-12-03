@@ -141,8 +141,10 @@ class CatalogController extends Controller
 
     private function validateData(Request $request): array
     {
+        $allowedCategories = array_keys(config('decowandy.catalog_categories'));
+
         $v = $request->validate([
-            'category'   => 'required|string|in:Papelería,Impresión,Diseño',
+            'category'   => 'required|string|in:' . implode(',', $allowedCategories),
             'title'      => 'required|string|max:200',
             'description'=> 'nullable|string|max:1000',
             'price'      => 'nullable|integer|min:0',
@@ -184,12 +186,8 @@ class CatalogController extends Controller
 
     public function category($category)
     {
-        // Normalizar el slug para mostrar nombres con tildes correctamente
-        $map = [
-            'papeleria' => 'Papelería',
-            'impresion' => 'Impresión',
-            'diseno'    => 'Diseño',
-        ];
+        $map = collect(config('decowandy.catalog_categories'))
+            ->mapWithKeys(fn ($meta) => [strtolower($meta['slug']) => $meta['name']]);
 
         $categoryName = $map[strtolower($category)] ?? ucfirst($category);
 

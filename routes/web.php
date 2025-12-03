@@ -53,7 +53,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
     Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
-    Route::get('/items/{item}/destroy', [ItemController::class, 'destroy'])->name('items.destroy');
+    Route::get('/items/{item}/destroy', [ItemController::class, 'confirmDelete'])->name('items.destroy.confirm');
+    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/finanzas', [FinanceController::class, 'index'])->name('finance.index');
     Route::get('/finanzas/inversiones', [InvestmentController::class, 'index'])->name('finance.investments');

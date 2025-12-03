@@ -14,11 +14,7 @@ class SalesController extends Controller
 {
     public function index(Request $request)
     {
-        $sectorLabels = [
-            'diseno' => 'Diseño',
-            'impresion' => 'Impresión',
-            'papeleria' => 'Papelería',
-        ];
+        $sectorLabels = config('decowandy.sectors');
 
         $category = $request->query('category', 'all');
         if ($category !== 'all' && !array_key_exists($category, $sectorLabels)) {

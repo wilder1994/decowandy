@@ -37,7 +37,7 @@
     <div class="min-h-screen grid grid-cols-12">
 
         {{-- SIDEBAR --}}
-        <aside class="col-span-12 md:col-span-3 lg:col-span-2 bg-white border-r border-gray-100">
+        <aside class="col-span-12 md:col-span-3 lg:col-span-2 bg-white border-r border-gray-100 h-screen sticky top-0">
             <div class="px-4 py-4 flex items-center gap-3">
                 <img src="{{ asset('images/logo-decowandy.png') }}" alt="DecoWandy" class="h-9 w-auto">
                 <div class="font-bold" style="font-family:'Poppins'">DecoWandy</div>
@@ -76,11 +76,11 @@
         </aside>
 
         {{-- CONTENT --}}
-        <main class="col-span-12 md:col-span-9 lg:col-span-10">
+        <main class="col-span-12 md:col-span-9 lg:col-span-10 flex flex-col h-screen overflow-hidden">
 
             {{-- TOPBAR --}}
             <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-gray-100">
-                <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+                <div class="w-full px-4 lg:px-6 py-3 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="hidden md:block text-sm text-gray-500">Panel administrativo</div>
                     </div>
@@ -134,8 +134,10 @@
             </header>
 
             {{-- SLOT DE CONTENIDO --}}
-            <div class="max-w-7xl mx-auto px-4 py-8">
-                @yield('content')
+            <div class="flex-1 overflow-y-auto">
+                <div class="w-full px-4 lg:px-6 py-8">
+                    @yield('content')
+                </div>
             </div>
 
             {{-- Modal Registrar venta (UI) --}}
@@ -159,9 +161,8 @@
 
     {{-- Iconos Google (ligeros). Puedes quitar si ya usas otros íconos. --}}
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@400,0,0" rel="stylesheet" />
->
-
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL,GRAD@400,0,0" rel="stylesheet" />
 @stack('scripts')
 </body>
 </html>
+
+

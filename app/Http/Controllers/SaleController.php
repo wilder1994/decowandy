@@ -10,6 +10,7 @@ use App\Models\Stock;
 use App\Services\InventoryService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class SaleController extends Controller
 {
@@ -62,7 +63,7 @@ class SaleController extends Controller
                     if ($neededQty > $availableQty) {
                         $itemName = $catalog[$itemId]->name ?? 'Producto';
                         abort(422, sprintf(
-                            'No hay stock suficiente para %s. Disponible: %d unidad%s.',
+                            'Stock insuficiente para %s. Solo quedan %d unidad%s.',
                             $itemName,
                             $availableQty,
                             $availableQty === 1 ? '' : 'es'
@@ -72,77 +73,81 @@ class SaleController extends Controller
             }
         }
 
-        $sale = DB::transaction(function () use ($data, $catalog, $soldAt) {
-            $total = 0;
-            $lines = [];
+        try {
+            $sale = DB::transaction(function () use ($data, $catalog, $soldAt) {
+                $total = 0;
+                $lines = [];
 
-            foreach ($data['items'] as $line) {
-                $item = $catalog->get($line['item_id']);
+                foreach ($data['items'] as $line) {
+                    $item = $catalog->get($line['item_id']);
 
-                if (!$item) {
-                    // Si el ítem fue eliminado entre la validación y la transacción, ignoramos la línea.
-                    continue;
+                    if (!$item) {
+                        // Si el ítem fue eliminado entre la validación y la transacción, ignoramos la línea.
+                        continue;
+                    }
+
+                    $quantity = (int) $line['quantity'];
+                    $unitPrice = array_key_exists('unit_price', $line) && $line['unit_price'] !== null
+                        ? (int) $line['unit_price']
+                        : (int) round($item->sale_price);
+
+                    $lineTotal = $unitPrice * $quantity;
+
+                    $lines[] = [
+                        'item' => $item,
+                        'sector' => $item->sector,
+                        'quantity' => $quantity,
+                        'unit_price' => $unitPrice,
+                        'line_total' => $lineTotal,
+                        'sheets_used' => $line['sheets_used'] ?? null,
+                        'description' => $line['description'] ?? null,
+                    ];
+
+                    $total += $lineTotal;
                 }
 
-                $quantity = (int) $line['quantity'];
-                $unitPrice = array_key_exists('unit_price', $line) && $line['unit_price'] !== null
-                    ? (int) $line['unit_price']
-                    : (int) round($item->sale_price);
+                if ($total <= 0) {
+                    abort(422, 'La venta debe tener al menos un ítem con valor.');
+                }
 
-                $lineTotal = $unitPrice * $quantity;
-
-                $lines[] = [
-                    'item' => $item,
-                    'sector' => $item->sector,
-                    'quantity' => $quantity,
-                    'unit_price' => $unitPrice,
-                    'line_total' => $lineTotal,
-                    'sheets_used' => $line['sheets_used'] ?? null,
-                    'description' => $line['description'] ?? null,
-                ];
-
-                $total += $lineTotal;
-            }
-
-            if ($total <= 0) {
-                abort(422, 'La venta debe tener al menos un ítem con valor.');
-            }
-
-            $sale = Sale::create([
-                'sale_code' => $this->nextSaleCode(),
-                'sold_at' => $soldAt,
-                'date' => $soldAt->toDateString(),
-                'time' => $soldAt->format('H:i:s'),
-                'customer_name' => $data['customer_name'] ?? null,
-                'customer_email' => $data['customer_email'] ?? null,
-                'customer_phone' => $data['customer_phone'] ?? null,
-                'user_id' => auth()->id(),
-                'payment_method' => $data['payment_method'],
-                'amount_received' => (int) $data['amount_received'],
-                'total' => $total,
-                'change_due' => max(0, (int) $data['amount_received'] - $total),
-                'notes' => $data['notes'] ?? null,
-            ]);
-
-            foreach ($lines as $lineData) {
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'item_id' => $lineData['item']->id,
-                    'description' => $lineData['description'],
-                    'quantity' => $lineData['quantity'],
-                    'unit_price' => $lineData['unit_price'],
-                    'line_total' => $lineData['line_total'],
-                    'category' => $lineData['sector'],
-                    'sheets_used' => $lineData['sheets_used'],
+                $sale = Sale::create([
+                    'sale_code' => $this->nextSaleCode(),
+                    'sold_at' => $soldAt,
+                    'date' => $soldAt->toDateString(),
+                    'time' => $soldAt->format('H:i:s'),
+                    'customer_name' => $data['customer_name'] ?? null,
+                    'customer_email' => $data['customer_email'] ?? null,
+                    'customer_phone' => $data['customer_phone'] ?? null,
+                    'user_id' => auth()->id(),
+                    'payment_method' => $data['payment_method'],
+                    'amount_received' => (int) $data['amount_received'],
+                    'total' => $total,
+                    'change_due' => max(0, (int) $data['amount_received'] - $total),
+                    'notes' => $data['notes'] ?? null,
                 ]);
 
-                if ($lineData['sector'] === 'papeleria') {
-                    $this->inventory->out($lineData['item']->id, $lineData['quantity'], 'sale', $sale->id);
-                }
-            }
+                foreach ($lines as $lineData) {
+                    SaleItem::create([
+                        'sale_id' => $sale->id,
+                        'item_id' => $lineData['item']->id,
+                        'description' => $lineData['description'],
+                        'quantity' => $lineData['quantity'],
+                        'unit_price' => $lineData['unit_price'],
+                        'line_total' => $lineData['line_total'],
+                        'category' => $lineData['sector'],
+                        'sheets_used' => $lineData['sheets_used'],
+                    ]);
 
-            return $sale;
-        });
+                    if ($lineData['sector'] === 'papeleria') {
+                        $this->inventory->out($lineData['item']->id, $lineData['quantity'], 'sale', $sale->id, true);
+                    }
+                }
+
+                return $sale;
+            });
+        } catch (RuntimeException $e) {
+            abort(422, $e->getMessage());
+        }
 
         return response()->json([
             'ok' => true,
@@ -155,7 +160,7 @@ class SaleController extends Controller
 
     private function nextSaleCode(): string
     {
-        $lastId = (int) optional(Sale::latest('id')->first())->id;
+        $lastId = (int) DB::table('sales')->lockForUpdate()->max('id');
 
         return 'DW-' . str_pad((string) ($lastId + 1), 6, '0', STR_PAD_LEFT);
     }

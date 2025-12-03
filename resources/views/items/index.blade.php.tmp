@@ -1,12 +1,12 @@
 {{-- resources/views/items/index.blade.php
-     Gestor de Productos - conectado a la API
+     Gestor de Productos — conectado a la API
      - Tabs por sector (Diseño, Impresión, Papelería)
      - Tabla con datos reales usando Axios sobre /api/items
      - Modal Crear/Editar con envíos POST/PUT y confirmación de borrado
 --}}
 @extends('layouts.admin')
 
-@section('title','Ítems - DecoWandy')
+@section('title','Ítems — DecoWandy')
 
 @php
     /** Normaliza paginator para evitar errores si llega una colección plana */
@@ -169,10 +169,10 @@
   </div>
 
   {{-- Modal Crear/Editar --}}
-  <div id="itemModal" class="hidden fixed inset-0 z-50 flex items-start justify-center">
-    <div class="absolute inset-0 bg-black/30 z-40" data-close="true"></div>
-    <div class="relative z-50 mx-auto mt-16 w-[min(720px,92%)] rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-4 sticky top-0 bg-white">
+  <div id="itemModal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-black/30" data-close="true"></div>
+    <div class="relative mx-auto mt-16 w-[min(720px,92%)] rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4">
         <h2 id="modalTitle" class="text-xl font-semibold">Nuevo producto</h2>
         <button id="modalClose" type="button" class="h-9 w-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
           <span class="material-symbols-outlined">close</span>
@@ -183,7 +183,7 @@
 
       <form id="itemForm" class="space-y-5">
         @include('items.partials.form', ['item' => null])
-        <div class="flex items-center justify-end gap-3 sticky bottom-0 bg-white pt-2">
+        <div class="flex items-center justify-end gap-3">
           <button id="modalCancel" type="button" class="rounded-xl bg-white px-4 py-2 border hover:bg-slate-50">Cancelar</button>
           <button id="modalSave" type="submit" class="rounded-xl bg-indigo-600 text-white px-4 py-2 shadow hover:bg-indigo-700">
             Guardar
@@ -194,9 +194,9 @@
   </div>
 
   {{-- Modal confirmación rentabilidad --}}
-  <div id="priceConfirmModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center">
-    <div class="absolute inset-0 bg-black/50" data-pc-close="true"></div>
-    <div class="relative z-10 mx-auto w-[min(520px,92%)] rounded-2xl bg-white p-6 shadow-2xl">
+  <div id="priceConfirmModal" class="hidden fixed inset-0 z-60">
+    <div class="absolute inset-0 bg-black/40" data-pc-close="true"></div>
+    <div class="relative mx-auto mt-28 w-[min(480px,92%)] rounded-2xl bg-white p-6 shadow-2xl">
       <h3 class="text-lg font-semibold text-gray-900 mb-2">Atención</h3>
       <p id="priceConfirmMessage" class="text-sm text-gray-700"></p>
       <div class="mt-5 flex justify-end gap-3">
@@ -265,9 +265,7 @@
       items: Array.isArray(initialPayload.items) ? initialPayload.items : [],
       loading: false,
       editing: null,
-      priceWarningAcknowledged: false,
-      priceWarningSignature: null,
-      priceWarningOpen: false,
+      overridePriceWarning: false,
       pendingPayload: null,
     };
 
@@ -329,24 +327,10 @@
       fields.stockFields.classList.toggle('hidden', !shouldShow);
     }
 
-    function shouldWarn(cost, sale) {
-      const hasNumbers = Number.isFinite(cost) && Number.isFinite(sale);
-      const hasMeaningfulValue = (cost !== 0 || sale !== 0);
-      return hasNumbers && hasMeaningfulValue && sale <= cost;
-    }
-
     function updatePriceWarning() {
       if (!fields.priceWarning) return;
       const cost = Number(fields.cost.value || 0);
       const sale = Number(fields.salePrice.value || 0);
-      const signature = `${cost}|${sale}`;
-      const valuesChanged = signature !== state.priceWarningSignature;
-
-      if (valuesChanged) {
-        state.priceWarningAcknowledged = false;
-        state.priceWarningSignature = signature;
-      }
-
       fields.priceWarning.classList.add('hidden');
       fields.priceWarning.textContent = '';
 
@@ -356,12 +340,6 @@
       } else if (sale === cost && sale !== 0) {
         fields.priceWarning.textContent = 'Atención: este precio no genera ganancia (precio igual al costo).';
         fields.priceWarning.classList.remove('hidden');
-      }
-
-      if (shouldWarn(cost, sale) && !state.priceWarningAcknowledged) {
-        openPriceConfirm(cost, sale);
-      } else if (!shouldWarn(cost, sale) && state.priceWarningOpen) {
-        closePriceConfirm(true);
       }
     }
 
@@ -398,7 +376,7 @@
         const stockBadge = stockNumber === null
           ? '<span class="px-2 py-1 rounded-full bg-slate-100 text-gray-600 text-xs">Servicio</span>'
           : `<div class="font-semibold ${stockNumber <= minStock ? 'text-rose-600' : 'text-emerald-700'}">${stockNumber}</div>`;
-        const minStockLabel = stockNumber === null ? '-' : minStock;
+        const minStockLabel = stockNumber === null ? '—' : minStock;
 
         tr.innerHTML = `
           <td class="py-2 pr-4">
@@ -430,7 +408,7 @@
 
       const from = (state.page - 1) * state.perPage + 1;
       const to = Math.min(state.page * state.perPage, state.total);
-      paginationInfo.textContent = `Mostrando ${from} - ${to} de ${state.total} ítems`;
+      paginationInfo.textContent = `Mostrando ${from} – ${to} de ${state.total} ítems`;
 
       btnPrev.disabled = state.page <= 1;
       btnNext.disabled = state.page >= state.lastPage;
@@ -491,9 +469,7 @@
       fields.minStock.value = '';
       fields.description.value = '';
       state.editing = null;
-      state.priceWarningAcknowledged = false;
-      state.priceWarningSignature = null;
-      state.priceWarningOpen = false;
+      state.overridePriceWarning = false;
       state.pendingPayload = null;
       updateStockVisibility();
       clearModalAlert();
@@ -508,9 +484,6 @@
       modal.classList.add('hidden');
       document.body.classList.remove('overflow-hidden');
       clearModalAlert();
-      closePriceConfirm(true);
-      state.priceWarningAcknowledged = false;
-      state.priceWarningOpen = false;
     }
 
     function openNew() {
@@ -532,7 +505,6 @@
       fields.stock.value = item.stock ?? '';
       fields.minStock.value = item.min_stock ?? '';
       fields.description.value = item.description ?? '';
-      state.priceWarningAcknowledged = false;
       updateStockVisibility();
       updatePriceWarning();
       clearModalAlert();
@@ -572,27 +544,6 @@
       return payload;
     }
 
-    function openPriceConfirm(cost, sale) {
-      if (!priceConfirmModal || !priceConfirmMsg) return;
-      if (state.priceWarningOpen) return;
-
-      priceConfirmMsg.textContent = sale < cost
-        ? 'Atención: este precio genera pérdidas (el costo es mayor que el precio de venta). ¿Deseas continuar de todos modos?'
-        : 'Atención: este precio no genera ganancia (precio igual al costo). ¿Deseas continuar de todos modos?';
-
-      priceConfirmModal.classList.remove('hidden');
-      state.priceWarningOpen = true;
-    }
-
-    function closePriceConfirm(resetPending = false) {
-      if (!priceConfirmModal) return;
-      priceConfirmModal.classList.add('hidden');
-      state.priceWarningOpen = false;
-      if (resetPending) {
-        state.pendingPayload = null;
-      }
-    }
-
     async function saveItem(event) {
       event.preventDefault();
       clearModalAlert();
@@ -602,8 +553,13 @@
       const sale = Number(fields.salePrice.value || 0);
       state.pendingPayload = payload;
 
-      if (!state.priceWarningAcknowledged && shouldWarn(cost, sale)) {
-        openPriceConfirm(cost, sale);
+      if (!state.overridePriceWarning && sale > 0 && (sale < cost || sale === cost)) {
+        if (priceConfirmMsg && priceConfirmModal) {
+          priceConfirmMsg.textContent = sale < cost
+            ? 'Atención: este precio genera pérdidas (el costo es mayor que el precio de venta). ¿Deseas continuar de todos modos?'
+            : 'Atención: este precio no genera ganancia (precio igual al costo). ¿Deseas continuar de todos modos?';
+          priceConfirmModal.classList.remove('hidden');
+        }
         return;
       }
 
@@ -630,7 +586,7 @@
       } finally {
         modalSave.disabled = false;
         modalSave.textContent = 'Guardar';
-        state.priceWarningOpen = false;
+        state.overridePriceWarning = false;
         state.pendingPayload = null;
       }
     }
@@ -738,26 +694,27 @@
       }
     });
 
+    form.addEventListener('submit', saveItem);
+
     priceConfirmCancel?.addEventListener('click', () => {
-      closePriceConfirm(true);
-      state.priceWarningAcknowledged = false;
-      fields.salePrice?.focus();
+      priceConfirmModal?.classList.add('hidden');
+      state.overridePriceWarning = false;
+      state.pendingPayload = null;
     });
     priceConfirmModal?.addEventListener('click', (e) => {
       if (e.target.dataset.pcClose) {
-        closePriceConfirm(true);
-        state.priceWarningAcknowledged = false;
+        priceConfirmModal.classList.add('hidden');
+        state.overridePriceWarning = false;
+        state.pendingPayload = null;
       }
     });
     priceConfirmProceed?.addEventListener('click', () => {
-      state.priceWarningAcknowledged = true;
-      closePriceConfirm(false);
+      priceConfirmModal?.classList.add('hidden');
+      state.overridePriceWarning = true;
       if (state.pendingPayload) {
         form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
       }
     });
-
-    form.addEventListener('submit', saveItem);
 
     // Estado inicial
     toggleTabs();
@@ -766,3 +723,4 @@
   });
 </script>
 @endpush
+

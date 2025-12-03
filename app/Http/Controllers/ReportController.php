@@ -7,15 +7,18 @@ use App\Models\Investment;
 use App\Models\Purchase;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use Carbon\Carbon;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Carbon;
 
 class ReportController extends Controller
 {
+    public function __construct(private readonly FinanceService $finance) {}
+
     public function index(Request $request)
     {
-        [$from, $to] = $this->resolveRange($request);
+        [$from, $to] = $this->finance->resolveRange($request->date('from'), $request->date('to'));
         $categoria = $this->sanitizeCategory($request->query('category', 'all'));
         $metodo = $this->sanitizePayment($request->query('payment', 'all'));
 
@@ -39,26 +42,10 @@ class ReportController extends Controller
         $egresos = (int) ($expenses->sum('amount') + $purchases->sum('total'));
         $invertido = (int) $investments->sum('amount');
 
-        $utilidad = $ingresos - $egresos;
-        $recuperado = max(0, $utilidad);
-        $porRecuperar = max($invertido - $recuperado, 0);
-        $porcentajeRecuperado = $invertido > 0 ? round(($recuperado / $invertido) * 100, 1) : 0;
-        $estadoCaja = $ingresos - $egresos - $invertido;
-
-        $movimientosCaja = $this->composeMovements($sales, $expenses, $purchases, $investments)
-            ->sortByDesc('fecha')
-            ->values();
-
-        $cashflowDataset = $this->cashflowDataset($sales, $expenses, $purchases, $investments, $from, $to);
-
-        $ingresosVsGastosDataset = [
-            'labels' => ['Ingresos', 'Egresos', 'Inversión'],
-            'data' => [
-                $ingresos,
-                $egresos,
-                $invertido,
-            ],
-        ];
+        $resumen = $this->finance->resumen($sales, $expenses, $purchases, $investments);
+        $movimientosCaja = $this->finance->movimientos($sales, $expenses, $purchases, $investments);
+        $cashflowDataset = $this->finance->cashflowDataset($sales, $expenses, $purchases, $investments, $from, $to);
+        $ingresosVsGastosDataset = $this->finance->ingresosVsGastosDataset($ingresos, $egresos, $invertido);
 
         $ventas = (int) $saleItems->sum('line_total');
         $costoVenta = (int) $saleItems->sum(function (SaleItem $item) {
@@ -88,14 +75,7 @@ class ReportController extends Controller
                 'category' => $categoria,
                 'payment' => $metodo,
             ],
-            'resumen' => [
-                'caja' => $estadoCaja,
-                'invertido' => $invertido,
-                'recuperado' => $recuperado,
-                'por_recuperar' => $porRecuperar,
-                'porcentaje_recuperado' => $porcentajeRecuperado,
-                'utilidad' => $utilidad,
-            ],
+            'resumen' => $resumen,
             'totales' => [
                 'ingresos' => $ventas,
                 'cogs' => $costoVenta,
@@ -109,24 +89,6 @@ class ReportController extends Controller
             'ventasListado' => $ventasListado,
             'gastosListado' => $gastosListado,
         ]);
-    }
-
-    private function resolveRange(Request $request): array
-    {
-        $from = $request->date('from');
-        $to = $request->date('to');
-
-        if (!$from || !$to) {
-            $start = now()->startOfMonth();
-            $end = now()->endOfMonth();
-
-            return [$start, $end];
-        }
-
-        $start = Carbon::parse($from)->startOfDay();
-        $end = Carbon::parse($to)->endOfDay();
-
-        return [$start, $end];
     }
 
     private function sanitizeCategory(string $category): string
@@ -145,11 +107,7 @@ class ReportController extends Controller
 
     private function ventasPorCategoria(Collection $items): array
     {
-        $labels = [
-            'diseno' => 'Diseño',
-            'impresion' => 'Impresión',
-            'papeleria' => 'Papelería',
-        ];
+        $labels = config('decowandy.sectors');
 
         $dataset = ['labels' => [], 'data' => []];
 
@@ -159,83 +117,6 @@ class ReportController extends Controller
         }
 
         return $dataset;
-    }
-
-    private function cashflowDataset(Collection $sales, Collection $expenses, Collection $purchases, Collection $investments, Carbon $from, Carbon $to): array
-    {
-        $period = new \DatePeriod($from->copy()->startOfDay(), new \DateInterval('P1D'), $to->copy()->addDay());
-
-        $labels = [];
-        $entradas = [];
-        $salidas = [];
-
-        foreach ($period as $day) {
-            $dateKey = $day->format('Y-m-d');
-            $labels[] = $day->format('d/m');
-
-            $dailyIncome = (int) $sales->filter(fn (Sale $sale) => $sale->sold_at && $sale->sold_at->toDateString() === $dateKey)
-                ->sum('total');
-
-            $dailyExpenses = (int) $expenses->where('date', $dateKey)->sum('amount');
-            $dailyPurchases = (int) $purchases->where('date', $dateKey)->sum('total');
-            $dailyInvestments = (int) $investments->where('date', $dateKey)->sum('amount');
-
-            $entradas[] = $dailyIncome;
-            $salidas[] = $dailyExpenses + $dailyPurchases + $dailyInvestments;
-        }
-
-        return [
-            'labels' => $labels,
-            'entradas' => $entradas,
-            'salidas' => $salidas,
-        ];
-    }
-
-    private function composeMovements(Collection $sales, Collection $expenses, Collection $purchases, Collection $investments): Collection
-    {
-        $listado = collect();
-
-        foreach ($sales as $sale) {
-            $listado->push([
-                'fecha' => $sale->sold_at instanceof Carbon ? $sale->sold_at : Carbon::parse($sale->sold_at),
-                'concepto' => $sale->sale_code ? 'Venta ' . $sale->sale_code : 'Venta #' . $sale->id,
-                'metodo' => $sale->payment_method,
-                'monto' => (int) $sale->total,
-                'tipo' => 'entrada',
-            ]);
-        }
-
-        foreach ($expenses as $expense) {
-            $listado->push([
-                'fecha' => Carbon::parse($expense->date),
-                'concepto' => $expense->concept,
-                'metodo' => 'gasto',
-                'monto' => (int) $expense->amount * -1,
-                'tipo' => 'salida',
-            ]);
-        }
-
-        foreach ($purchases as $purchase) {
-            $listado->push([
-                'fecha' => Carbon::parse($purchase->date),
-                'concepto' => 'Compra ' . ($purchase->supplier ?: $purchase->category),
-                'metodo' => $purchase->to_inventory ? 'inventario' : 'gasto',
-                'monto' => (int) $purchase->total * -1,
-                'tipo' => 'salida',
-            ]);
-        }
-
-        foreach ($investments as $investment) {
-            $listado->push([
-                'fecha' => Carbon::parse($investment->date),
-                'concepto' => 'Inversión: ' . $investment->concept,
-                'metodo' => 'inversión',
-                'monto' => (int) $investment->amount * -1,
-                'tipo' => 'salida',
-            ]);
-        }
-
-        return $listado;
     }
 
     private function composeGastosListado(Collection $expenses, Collection $purchases): Collection

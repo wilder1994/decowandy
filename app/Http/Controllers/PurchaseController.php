@@ -47,7 +47,7 @@ class PurchaseController extends Controller
             ->filter()
             ->values();
 
-        $defaultCategories = collect(['Papelería', 'Impresión', 'Diseño']);
+        $defaultCategories = collect(array_keys(config('decowandy.catalog_categories')));
 
         $categoryOptions = $defaultCategories
             ->merge($existingCategories)

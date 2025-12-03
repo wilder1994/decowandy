@@ -10,12 +10,14 @@ return new class extends Migration {
         Schema::create('sale_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sale_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('item_id')->constrained()->cascadeOnUpdate();
+            $table->foreignId('item_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
 
             $table->string('description')->nullable();     // para servicios personalizados
+            $table->string('category', 30)->nullable();
             $table->decimal('quantity', 12, 2)->default(1);
-            $table->decimal('unit_price', 12, 2)->default(0);
-            $table->decimal('line_total', 12, 2)->default(0);
+            $table->integer('unit_price')->default(0);
+            $table->integer('line_total')->default(0);
+            $table->integer('sheets_used')->nullable();
 
             $table->timestamps();
             $table->index(['sale_id','item_id']);
@@ -26,4 +28,3 @@ return new class extends Migration {
         Schema::dropIfExists('sale_items');
     }
 };
-

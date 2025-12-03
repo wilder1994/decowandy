@@ -39,27 +39,38 @@ class InventoryService
     /**
      * Salida de inventario (OUT)
      */
-    public function out(int $itemId, int $quantity, string $reason = 'sale', ?int $relatedId = null): void
+    public function out(int $itemId, int $quantity, string $reason = 'sale', ?int $relatedId = null, bool $strict = true): void
     {
         if ($quantity <= 0) return;
 
 
-        DB::transaction(function () use ($itemId, $quantity, $reason, $relatedId) {
-            $stock = Stock::firstOrCreate(['item_id' => $itemId], ['quantity' => 0]);
+        DB::transaction(function () use ($itemId, $quantity, $reason, $relatedId, $strict) {
+            $stock = Stock::where('item_id', $itemId)->lockForUpdate()->first();
 
+            if (!$stock) {
+                $stock = Stock::create(['item_id' => $itemId, 'quantity' => 0]);
+            }
 
-            $newQty = max(0, $stock->quantity - $quantity); // evita negativos en F1
-            $delta = $newQty - $stock->quantity; // será negativo o cero
+            if ($strict && $stock->quantity < $quantity) {
+                throw new RuntimeException('No hay stock suficiente para completar la salida.');
+            }
 
+            $newQty = max(0, $stock->quantity - $quantity);
+            $delta = $stock->quantity - $newQty;
 
-            StockMovement::create([
-                'item_id' => $itemId,
-                'type' => 'out',
-                'quantity' => abs($delta),
-                'reason' => $reason,
-                'ref_id' => $relatedId,
-            ]);
+            if ($delta <= 0 && $strict) {
+                throw new RuntimeException('No hay stock suficiente para completar la salida.');
+            }
 
+            if ($delta > 0) {
+                StockMovement::create([
+                    'item_id' => $itemId,
+                    'type' => 'out',
+                    'quantity' => $delta,
+                    'reason' => $reason,
+                    'ref_id' => $relatedId,
+                ]);
+            }
 
             $stock->quantity = $newQty;
             $stock->save();

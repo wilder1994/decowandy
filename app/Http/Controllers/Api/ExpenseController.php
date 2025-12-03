@@ -15,12 +15,17 @@ class ExpenseController extends Controller
     {
         $expense = Expense::create([
             'date' => $request->date('date'),
-            'concept' => $request->string('concept'),
-            'category' => $request->string('category'),
-            'amount' => (int)$request->integer('amount'),
+            'concept' => $request->string('concept')->value(),
+            'category' => $request->string('category')->value(),
+            'amount' => (int) $request->integer('amount'),
             'note' => $request->input('note'),
             'user_id' => optional(auth()->user())->id,
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'expense' => $expense], 201);
+        }
+
         return redirect()
             ->route('expenses.index')
             ->with('status', 'Gasto registrado correctamente.');
@@ -30,38 +35,33 @@ class ExpenseController extends Controller
     {
         // --- 1) Datos completos para las tarjetas (mes actual) ---
 
-        // Todos los gastos, del más nuevo al más viejo
-        $allExpenses = Expense::orderBy('date', 'desc')
-            ->orderBy('id', 'desc')
-            ->get();
-
         // Rango de fechas del mes actual
         $startOfMonth = now()->startOfMonth()->toDateString();
         $endOfMonth   = now()->endOfMonth()->toDateString();
 
-        // Gastos del mes actual
-        $monthExpenses = $allExpenses->whereBetween('date', [$startOfMonth, $endOfMonth]);
+        $monthQuery = Expense::query()
+            ->whereBetween('date', [$startOfMonth, $endOfMonth]);
 
-        // Total del mes
-        $totalMonth = $monthExpenses->sum('amount');
+        $totalMonth = (int) $monthQuery->clone()->sum('amount');
 
-        // Promedio diario: total / días con gasto
-        $daysWithExpenses = $monthExpenses->groupBy('date')->count();
+        $daysWithExpenses = (int) $monthQuery->clone()
+            ->select('date')
+            ->distinct()
+            ->count();
+
         $avgDaily = $daysWithExpenses > 0
             ? intdiv($totalMonth, $daysWithExpenses)
             : 0;
 
-        // Categoría con más gasto (en el mes)
-        $topCategory = $monthExpenses
+        $topCategory = $monthQuery->clone()
+            ->select('category', \DB::raw('SUM(amount) as total'))
             ->groupBy('category')
-            ->sortByDesc(function ($group) {
-                return $group->sum('amount');
-            })
-            ->keys()
-            ->first(); // puede ser null
+            ->orderByDesc('total')
+            ->value('category');
 
-        // Último gasto registrado (de todos)
-        $lastExpense = $allExpenses->first(); // o null si no hay gastos
+        $lastExpense = Expense::orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
 
         // --- 2) Filtros para la tabla de abajo ---
 
