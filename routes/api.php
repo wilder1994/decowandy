@@ -8,6 +8,7 @@ use App\Http\Controllers\SaleController;
 use App\Http\Controllers\Api\PurchaseController;
 use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\CustomerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,10 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::post('/items', [ItemController::class, 'store'])->name('api.items.store');
     Route::put('/items/{item}', [ItemController::class, 'update'])->name('api.items.update');
     Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('api.items.destroy');
+
+    // Clientes
+    Route::get('/customers', [CustomerController::class, 'search'])->name('api.customers.search');
+    Route::post('/customers', [CustomerController::class, 'store'])->name('api.customers.store');
 
     // Inventario
     Route::get('/stocks/low', [InventoryController::class, 'lowStock'])->name('api.stocks.low');

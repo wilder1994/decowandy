@@ -26,7 +26,7 @@
     </div>
     <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4">
       <div class="text-sm text-gray-500">Última actualización</div>
-      <div class="mt-1 text-2xl font-bold" id="inv_last_update">{{ optional($investments->first())->date?->format('d/m/Y') ?? '—' }}</div>
+      <div class="mt-1 text-2xl font-bold" id="inv_last_update">{{ optional($investments->first())->date?->format('d/m/Y') ?? '-' }}</div>
       <div class="text-xs text-gray-500 mt-1">Ordenado por fecha y creación.</div>
     </div>
   </div>
@@ -150,7 +150,7 @@
       total += Number(item.amount || 0);
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="py-2 pr-4">${item.date}</td>
+        <td class="py-2 pr-4">${formatDate(item.date)}</td>
         <td class="py-2 pr-4">${escapeHtml(item.concept)}</td>
         <td class="py-2 pr-4">$ ${fmt(item.amount)}</td>
         <td class="py-2 pr-4 text-gray-500">${escapeHtml(item.note || '')}</td>
@@ -163,7 +163,7 @@
 
     document.getElementById('inv_total').textContent = '$' + fmt(total);
     const last = investmentsState.list[0];
-    document.getElementById('inv_last_update').textContent = last?.date ?? '—';
+    document.getElementById('inv_last_update').textContent = formatDate(last?.date) ?? '-';
 
     tb.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEdit(Number(btn.dataset.edit))));
     tb.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => deleteInvestment(Number(btn.dataset.del))));
@@ -171,6 +171,13 @@
 
   function escapeHtml(str) {
     return (str || '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+  }
+
+  function formatDate(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return value;
+    return d.toLocaleDateString('es-CO', { day:'2-digit', month:'2-digit', year:'numeric' });
   }
 
   function openNew() {

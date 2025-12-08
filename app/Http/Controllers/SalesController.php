@@ -12,6 +12,11 @@ use Carbon\Carbon;
 
 class SalesController extends Controller
 {
+    public function show(Sale $sale)
+    {
+        $sale->load('items.item');
+        return view('sales.show', compact('sale'));
+    }
     public function index(Request $request)
     {
         $sectorLabels = config('decowandy.sectors');

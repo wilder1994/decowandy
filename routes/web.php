@@ -12,6 +12,9 @@ use App\Http\Controllers\ItemController;
 use App\Http\Controllers\InvestmentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SettingsUserController;
+use App\Http\Controllers\SalesController as SalesViewController;
 
 /*
 |--------------------------------------------------------------------------
@@ -29,9 +32,9 @@ Route::get('/catalogo/categoria/{category}', [CatalogController::class, 'categor
 //
 // DASHBOARD (autenticado)
 //
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
 
@@ -48,6 +51,7 @@ Route::middleware('auth')->group(function () {
         return redirect()->route('sales.index', ['open' => 'create']);
     })->name('sales.create');
     Route::get('/ventas', [SalesController::class, 'index'])->name('sales.index');
+    Route::get('/ventas/{sale}', [SalesViewController::class, 'show'])->name('sales.show');
     Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/compras/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
@@ -59,6 +63,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/finanzas', [FinanceController::class, 'index'])->name('finance.index');
     Route::get('/finanzas/inversiones', [InvestmentController::class, 'index'])->name('finance.investments');
     Route::get('/gastos', [ExpenseController::class, 'index'])->name('expenses.index');
+    Route::get('/ajustes/usuarios', [SettingsUserController::class, 'index'])->name('settings.users');
+    Route::post('/ajustes/usuarios', [SettingsUserController::class, 'store'])->name('settings.users.store');
+    Route::put('/ajustes/usuarios/{user}', [SettingsUserController::class, 'update'])->name('settings.users.update');
+    Route::delete('/ajustes/usuarios/{user}', [SettingsUserController::class, 'destroy'])->name('settings.users.destroy');
+    Route::resource('/clientes', CustomerController::class)
+        ->parameters(['clientes' => 'customer'])
+        ->names('customers')
+        ->only(['index', 'show', 'store', 'update']);
+    Route::post('/clientes/{customer}/archive', [CustomerController::class, 'archive'])->name('customers.archive');
+    Route::post('/clientes/{customer}/unarchive', [CustomerController::class, 'unarchive'])->name('customers.unarchive');
 
         
     // API gastos (usa sesión web, pero conserva el nombre api.expenses.store)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreSaleRequest;
+use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -34,6 +35,14 @@ class SaleController extends Controller
     {
         $data = $request->validated();
         $soldAt = isset($data['sold_at']) ? Carbon::parse($data['sold_at']) : now();
+        $customer = null;
+
+        if (!empty($data['customer_id'])) {
+            $customer = Customer::find($data['customer_id']);
+        }
+        $customerName = $customer->name ?? ($data['customer_name'] ?? null);
+        $customerEmail = $customer->email ?? ($data['customer_email'] ?? null);
+        $customerPhone = $customer->phone ?? ($data['customer_phone'] ?? null);
 
         $itemIds = collect($data['items'])->pluck('item_id')->all();
         $catalog = Item::whereIn('id', $itemIds)->get()->keyBy('id');
@@ -74,7 +83,7 @@ class SaleController extends Controller
         }
 
         try {
-            $sale = DB::transaction(function () use ($data, $catalog, $soldAt) {
+            $sale = DB::transaction(function () use ($data, $catalog, $soldAt, $customer, $customerName, $customerEmail, $customerPhone) {
                 $total = 0;
                 $lines = [];
 
@@ -115,9 +124,10 @@ class SaleController extends Controller
                     'sold_at' => $soldAt,
                     'date' => $soldAt->toDateString(),
                     'time' => $soldAt->format('H:i:s'),
-                    'customer_name' => $data['customer_name'] ?? null,
-                    'customer_email' => $data['customer_email'] ?? null,
-                    'customer_phone' => $data['customer_phone'] ?? null,
+                    'customer_id' => $customer?->id,
+                    'customer_name' => $customerName,
+                    'customer_email' => $customerEmail,
+                    'customer_phone' => $customerPhone,
                     'user_id' => auth()->id(),
                     'payment_method' => $data['payment_method'],
                     'amount_received' => (int) $data['amount_received'],
@@ -141,6 +151,12 @@ class SaleController extends Controller
                     if ($lineData['sector'] === 'papeleria') {
                         $this->inventory->out($lineData['item']->id, $lineData['quantity'], 'sale', $sale->id, true);
                     }
+                }
+
+                if ($customer) {
+                    $customer->last_purchase_at = $soldAt;
+                    $customer->archived_at = null;
+                    $customer->save();
                 }
 
                 return $sale;

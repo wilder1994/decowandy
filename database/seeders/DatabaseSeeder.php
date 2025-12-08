@@ -7,18 +7,10 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seeder principal con datos de ejemplo listos para pruebas end-to-end.
+     * Seeder vacio para producción. Se eliminan datos de prueba.
      */
     public function run(): void
     {
-        $this->call([
-            UserSeeder::class,
-            ItemSeeder::class,
-            CatalogSeeder::class,
-            PurchaseSeeder::class,
-            SaleSeeder::class,
-            ExpenseSeeder::class,
-            InvestmentSeeder::class,
-        ]);
+        // Sin seeders: se cargará información real en producción.
     }
 }

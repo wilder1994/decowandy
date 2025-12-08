@@ -19,6 +19,8 @@
   <div class="flex items-center gap-2">
     <a href="{{ url('/#catalogo') }}" target="_blank"
        class="px-4 py-2 rounded-xl border hover:bg-gray-50">Ver vista pública</a>
+    <a href="{{ route('settings.users') }}"
+       class="px-4 py-2 rounded-xl border text-[color:var(--dw-primary)] hover:bg-gray-50">Panel de usuarios</a>
     <button id="btnAdd"
        class="px-4 py-2 rounded-xl text-white brand-gradient shadow">Nuevo ítem</button>
   </div>
@@ -38,26 +40,7 @@
     <div id="cardsGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
   </div>
 
-  <aside class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 h-fit space-y-6">
-    <div>
-      <h2 class="text-lg font-semibold">Vista previa</h2>
-      <p class="text-xs text-gray-500">Así se verá la sección pública para la categoría activa.</p>
-    </div>
-    <div class="space-y-6">
-      <div id="previewCard">
-        @if($initialCategory)
-          @include('welcome.partials.category-card', ['category' => $initialCategory])
-        @else
-          <p class="text-sm text-gray-500">Selecciona una categoría para ver su vista previa.</p>
-        @endif
-      </div>
-      <div id="previewList" class="border-t pt-6">
-        @if($initialCategory)
-          @include('welcome.partials.category-list', ['category' => $initialCategory])
-        @endif
-      </div>
-    </div>
-  </aside>
+  {{-- Bloque de vista previa eliminado según solicitud --}}
 </div>
 
 {{-- Modal CRUD --}}
