@@ -76,7 +76,11 @@
         </div>
         <div>
           <label class="block text-sm text-gray-600 mb-1">Monto (COP)</label>
-          <input id="f_amount" type="number" min="0" step="1" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="0">
+          <input id="f_amount"
+                 type="text"
+                 inputmode="numeric"
+                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
+                 placeholder="0">
         </div>
         <div>
           <label class="block text-sm text-gray-600 mb-1">Notas (opcional)</label>
@@ -111,6 +115,11 @@
     return formatter.format(Number.isFinite(n) ? n : 0);
   }
 
+  function fmtInput(value) {
+    const digits = String(value ?? '').replace(/\D/g, '');
+    return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
   function showAlert(box, type, message) {
     box.textContent = message;
     box.classList.remove('hidden', 'border-red-200', 'text-red-700', 'bg-red-50', 'border-emerald-200', 'text-emerald-700', 'bg-emerald-50');
@@ -131,12 +140,13 @@
     document.getElementById('invTitle').textContent = 'Nueva inversión';
   }
 
-  function openModal() {
+  // Prefijo inv para evitar colisiones con otros modales globales (ej. ventas)
+  function openInvModal() {
     document.getElementById('invModal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
   }
 
-  function closeModal() {
+  function closeInvModal() {
     document.getElementById('invModal').classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
   }
@@ -182,7 +192,7 @@
 
   function openNew() {
     resetModal();
-    openModal();
+    openInvModal();
   }
 
   function openEdit(id) {
@@ -192,10 +202,10 @@
     document.getElementById('invTitle').textContent = 'Editar inversión';
     document.getElementById('f_date').value = item.date;
     document.getElementById('f_concept').value = item.concept;
-    document.getElementById('f_amount').value = item.amount;
+    document.getElementById('f_amount').value = fmtInput(item.amount);
     document.getElementById('f_notes').value = item.note || '';
     document.getElementById('invModalAlert').classList.add('hidden');
-    openModal();
+    openInvModal();
   }
 
   async function loadInvestments() {
@@ -217,10 +227,11 @@
   }
 
   function getPayload() {
+    const rawAmount = document.getElementById('f_amount').value || '';
     return {
       date: document.getElementById('f_date').value,
       concept: document.getElementById('f_concept').value.trim(),
-      amount: Number(document.getElementById('f_amount').value || 0),
+      amount: Number((rawAmount.match(/\d+/g) || []).join('')) || 0,
       note: document.getElementById('f_notes').value.trim() || null,
     };
   }
@@ -257,7 +268,8 @@
       }
 
       await loadInvestments();
-      closeModal();
+      closeInvModal();
+      resetModal();
       showAlert(document.getElementById('invAlert'), 'success', 'Inversión guardada correctamente.');
     } catch (error) {
       console.error(error);
@@ -293,11 +305,17 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btnNewInv').addEventListener('click', openNew);
     document.getElementById('invSave').addEventListener('click', saveInvestment);
-    document.getElementById('invCancel').addEventListener('click', () => { closeModal(); resetModal(); });
-    document.getElementById('invClose').addEventListener('click', () => { closeModal(); resetModal(); });
+    document.getElementById('invCancel').addEventListener('click', () => { closeInvModal(); resetModal(); });
+    document.getElementById('invClose').addEventListener('click', () => { closeInvModal(); resetModal(); });
+    document.getElementById('f_amount').addEventListener('input', (e) => {
+      const cursor = e.target.selectionStart;
+      const formatted = fmtInput(e.target.value);
+      e.target.value = formatted;
+      e.target.setSelectionRange(cursor, cursor);
+    });
     document.getElementById('invModal').addEventListener('click', (event) => {
       if (event.target.dataset.close) {
-        closeModal();
+        closeInvModal();
         resetModal();
       }
     });
