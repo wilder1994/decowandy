@@ -11,6 +11,7 @@ use App\Models\Stock;
 use App\Services\InventoryService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class SaleController extends Controller
@@ -36,6 +37,7 @@ class SaleController extends Controller
         $data = $request->validated();
         $soldAt = isset($data['sold_at']) ? Carbon::parse($data['sold_at']) : now();
         $customer = null;
+        $isAdmin = auth()->user()?->role === 'admin';
 
         if (!empty($data['customer_id'])) {
             $customer = Customer::find($data['customer_id']);
@@ -96,9 +98,11 @@ class SaleController extends Controller
                     }
 
                     $quantity = (int) $line['quantity'];
-                    $unitPrice = array_key_exists('unit_price', $line) && $line['unit_price'] !== null
-                        ? (int) $line['unit_price']
-                        : (int) round($item->sale_price);
+                    if ($isAdmin && array_key_exists('unit_price', $line) && $line['unit_price'] !== null) {
+                        $unitPrice = (int) $line['unit_price'];
+                    } else {
+                        $unitPrice = (int) round($item->sale_price);
+                    }
 
                     $lineTotal = $unitPrice * $quantity;
 
@@ -119,8 +123,13 @@ class SaleController extends Controller
                     abort(422, 'La venta debe tener al menos un ítem con valor.');
                 }
 
+                $amountReceived = (int) $data['amount_received'];
+                if ($amountReceived < $total) {
+                    abort(422, 'El pago debe cubrir el total de la venta.');
+                }
+
                 $sale = Sale::create([
-                    'sale_code' => $this->nextSaleCode(),
+                    'sale_code' => 'DW-' . Str::upper((string) Str::ulid()),
                     'sold_at' => $soldAt,
                     'date' => $soldAt->toDateString(),
                     'time' => $soldAt->format('H:i:s'),
@@ -129,10 +138,10 @@ class SaleController extends Controller
                     'customer_email' => $customerEmail,
                     'customer_phone' => $customerPhone,
                     'user_id' => auth()->id(),
-                    'payment_method' => $data['payment_method'],
-                    'amount_received' => (int) $data['amount_received'],
+                    'payment_method' => 'cash',
+                    'amount_received' => $amountReceived,
                     'total' => $total,
-                    'change_due' => max(0, (int) $data['amount_received'] - $total),
+                    'change_due' => max(0, $amountReceived - $total),
                     'notes' => $data['notes'] ?? null,
                 ]);
 
@@ -174,10 +183,4 @@ class SaleController extends Controller
         ], 201);
     }
 
-    private function nextSaleCode(): string
-    {
-        $lastId = (int) DB::table('sales')->lockForUpdate()->max('id');
-
-        return 'DW-' . str_pad((string) ($lastId + 1), 6, '0', STR_PAD_LEFT);
-    }
 }

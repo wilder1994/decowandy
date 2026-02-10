@@ -4,31 +4,32 @@
 <div id="saleModal" class="fixed inset-0 z-[70] hidden">
   <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-  <div class="absolute inset-0 flex items-center justify-center p-4">
-    <div class="w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+  <div class="absolute inset-0 flex items-start justify-center p-4 overflow-y-auto">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-      <div class="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-indigo-50 to-white">
-        <div class="space-y-1">
-          <h3 class="text-xl font-bold text-slate-800">Registrar venta</h3>
-          <p class="text-sm text-slate-500">Construye la venta en tres pasos: cliente, productos y pago.</p>
+      <div class="flex items-center justify-between px-5 py-3 border-b bg-gradient-to-r from-indigo-50 to-white">
+        <div class="space-y-0.5">
+          <h3 class="text-lg font-bold text-slate-800">Registrar venta</h3>
+          <p class="text-sm text-slate-500">Cliente · productos · pago</p>
         </div>
         <button id="closeSaleModal"
-                class="h-10 w-10 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-800 flex items-center justify-center"
+                class="h-9 w-9 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-800 flex items-center justify-center"
                 aria-label="Cerrar modal">
-          ✕
+          &times;
         </button>
       </div>
 
-      <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="max-h-[calc(100vh-7rem)] overflow-y-auto">
+        <div class="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-        <div class="lg:col-span-2 space-y-6">
-          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-3">
+          <div class="lg:col-span-2 space-y-4">
+            <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
               <div>
                 <h4 class="font-semibold text-slate-800">Cliente</h4>
                 <p class="text-xs text-slate-500">Opcional. Busca por cédula o registra uno nuevo.</p>
               </div>
-              <div id="customerInfoPill" class="text-xs px-3 py-2 rounded-full bg-white border text-slate-600 min-w-[160px] text-center">
+              <div id="customerInfoPill" class="text-xs px-3 py-1.5 rounded-full bg-white border text-slate-600 min-w-[160px] text-center">
                 Sin cliente obligatorio
               </div>
             </div>
@@ -36,46 +37,38 @@
             <input type="hidden" id="c_name">
             <input type="hidden" id="c_email">
             <input type="hidden" id="c_phone">
-            <div class="space-y-2 mb-3">
-              <div>
-                <label class="block text-sm text-slate-600 mb-1" for="c_document">Cédula / ID</label>
-                <input id="c_document" type="text"
-                       placeholder="Ej: 123456789"
-                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
-                <button id="searchCustomer"
-                        type="button"
-                        class="w-full rounded-lg border px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white shadow-sm">
-                  Buscar
-                </button>
-                <button id="newCustomer"
-                        type="button"
-                        class="w-full rounded-lg bg-indigo-600 text-white px-3 py-2 text-sm font-semibold shadow hover:bg-indigo-700">
-                  Nuevo
-                </button>
-                <button id="clearCustomer"
-                        type="button"
-                        class="w-full rounded-lg border px-3 py-2 text-sm text-slate-600 hover:bg-white">
-                  Limpiar
-                </button>
+              <div class="space-y-2">
+                <div>
+                  <label class="block text-sm text-slate-600 mb-1" for="c_document">Cédula / ID</label>
+                  <input id="c_document" type="text"
+                         placeholder="Ej: 123456789"
+                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+                  <button id="searchCustomer"
+                          type="button"
+                          class="w-full rounded-lg border px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white shadow-sm">
+                    Buscar
+                  </button>
+                  <button id="newCustomer"
+                          type="button"
+                          class="w-full rounded-lg bg-indigo-600 text-white px-3 py-2 text-sm font-semibold shadow hover:bg-indigo-700">
+                    Nuevo
+                  </button>
+                  <button id="clearCustomer"
+                          type="button"
+                          class="w-full rounded-lg border px-3 py-2 text-sm text-slate-600 hover:bg-white">
+                    Limpiar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="bg-white rounded-2xl border p-4 shadow-sm space-y-4">
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+            <div class="bg-white rounded-xl border p-4 shadow-sm space-y-3">
+              <div class="flex flex-col gap-1">
                 <h4 class="font-semibold text-slate-800">Agregar productos</h4>
-                <p class="text-xs text-slate-500">Selecciona, ajusta cantidad/valor y agrega a la venta.</p>
+                <p class="text-xs text-slate-500">Escribe y selecciona el producto, ajusta cantidad/valor y presiona Enter para agregar.</p>
               </div>
-              <button id="addSaleItem"
-                      type="button"
-                      class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 text-white px-4 py-2 text-sm font-semibold shadow hover:bg-indigo-700">
-                <span class="material-symbols-outlined text-base">add</span>
-                Agregar línea
-              </button>
-            </div>
 
             <div class="flex justify-center">
               <span id="p_category_badge"
@@ -84,65 +77,72 @@
               </span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm text-slate-600 mb-1" for="p_product">Producto</label>
-                  <select id="p_product"
-                          class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
-                  </select>
-                  <p id="stock_info" class="mt-1 text-xs text-slate-500 hidden"></p>
-                </div>
-
-                <div>
-                  <label class="block text-sm text-slate-600 mb-1" for="p_qty">Cantidad</label>
-                  <input id="p_qty" type="number" min="1" value="1"
-                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
-                  <p id="qty_error" class="mt-1 text-xs text-rose-600 hidden"></p>
-                </div>
+            <div class="grid grid-cols-12 gap-3 items-end">
+              <div class="col-span-6 min-w-0">
+                <label class="block text-sm text-slate-600 mb-1" for="p_product">Producto</label>
+                <input id="p_product" type="text" list="product_list" placeholder="Escribe para filtrar"
+                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                <datalist id="product_list"></datalist>
+                <p id="stock_info" class="mt-1 text-xs text-slate-500 min-h-[1rem] invisible"></p>
               </div>
 
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm text-slate-600 mb-1" for="p_unit">Valor unidad (COP)</label>
-                  <input id="p_unit" type="text" inputmode="numeric" placeholder="0"
-                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
-                </div>
+              <div class="col-span-2 min-w-0">
+                <label class="block text-sm text-slate-600 mb-1" for="p_qty">Cantidad</label>
+                <input id="p_qty" type="number" min="1" value="1"
+                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                <p id="qty_error" class="mt-1 text-xs text-rose-600 hidden"></p>
+                <p class="mt-1 text-xs text-transparent select-none">.</p>
+              </div>
 
-                <div>
-                  <label class="block text-sm text-slate-600 mb-1" for="p_total">Total linea (COP)</label>
-                  <input id="p_total" type="text" inputmode="numeric" placeholder="0"
-                         class="w-full rounded-lg border-slate-300 bg-slate-100 text-slate-700" readonly>
-                </div>
+              <div class="col-span-2 min-w-0">
+                <label class="block text-sm text-slate-600 mb-1" for="p_unit">Unidad</label>
+                <input id="p_unit" type="text" inputmode="numeric" placeholder="0"
+                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                <p class="mt-1 text-xs text-transparent select-none">.</p>
+              </div>
+
+              <div class="col-span-2 min-w-0">
+                <label class="block text-sm text-slate-600 mb-1" for="p_total">Total</label>
+                <input id="p_total" type="text" inputmode="numeric" placeholder="0"
+                       class="w-full rounded-lg border-slate-300 bg-slate-100 text-slate-700" readonly>
+                <p class="mt-1 text-xs text-transparent select-none">.</p>
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl border p-4 shadow-sm">
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <h4 class="font-semibold text-slate-800">Resumen de productos</h4>
-                <p class="text-xs text-slate-500">Edita cantidades y valores antes de registrar.</p>
+            <div class="bg-white rounded-xl border p-4 shadow-sm">
+              <div class="flex items-center justify-between mb-2">
+                <div>
+                  <h4 class="font-semibold text-slate-800">Resumen de productos</h4>
+                  <p class="text-xs text-slate-500">Edita cantidades y valores antes de registrar.</p>
+                </div>
+                <span id="saleItemsCounter" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700">Sin productos</span>
               </div>
-              <span id="saleItemsCounter" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700">Sin productos</span>
+            <div class="hidden md:grid md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 text-[11px] text-slate-500 pb-2 border-b border-slate-100">
+              <div>Producto</div>
+              <div>Categoría</div>
+              <div class="text-center">Cantidad</div>
+              <div class="text-center">Unidad</div>
+              <div class="text-right">Total</div>
+              <div class="text-right">Acciones</div>
             </div>
-            <div id="saleItemsList" class="space-y-2">
+            <div id="saleItemsList" class="space-y-2 max-h-72 overflow-y-auto pr-1 pt-2">
               <p class="text-sm text-slate-500">Aún no has agregado productos.</p>
             </div>
-          </div>
-        </div>
-
-        <div class="lg:col-span-1">
-          <div class="bg-indigo-50 rounded-2xl border border-indigo-100 p-4 space-y-4 shadow-sm">
-            <div class="flex items-center justify-between">
-              <h4 class="font-semibold text-indigo-900">Pago</h4>
-              <span class="text-xs text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-100">Paso 3</span>
             </div>
+          </div>
+
+          <div class="lg:col-span-1">
+            <div class="bg-indigo-50 rounded-xl border border-indigo-100 p-4 space-y-3 shadow-sm lg:sticky lg:top-6">
+              <div class="flex items-center justify-between">
+                <h4 class="font-semibold text-indigo-900">Pago</h4>
+                <span class="text-xs text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-100">Paso 3</span>
+              </div>
 
             <div class="rounded-xl bg-white border border-indigo-100 p-3">
               <label class="block text-xs text-indigo-900 mb-1" for="sale_total">Total venta</label>
               <input id="sale_total" type="text" inputmode="numeric" placeholder="0"
-                     class="w-full rounded-lg border-indigo-200 bg-slate-100 text-slate-800 font-semibold" readonly>
+                     class="w-full rounded-lg border-indigo-200 bg-slate-100 text-slate-800 font-semibold text-lg" readonly>
             </div>
 
             <div class="space-y-3">
@@ -159,20 +159,21 @@
               </div>
             </div>
 
-            <div class="pt-3 flex flex-col gap-2">
-              <button id="saveSale"
-                      class="rounded-xl bg-indigo-600 text-white font-semibold px-4 py-3 shadow hover:bg-indigo-700">
-                Registrar venta
-              </button>
-              <button id="cancelSale"
-                      class="rounded-xl bg-white text-slate-700 font-semibold px-4 py-3 border hover:bg-slate-50">
-                Cancelar
-              </button>
-              <p class="text-xs text-slate-500 text-center">Puedes registrar sin cliente si lo prefieres.</p>
+              <div class="pt-2 flex flex-col gap-2">
+                <button id="saveSale"
+                        class="rounded-xl bg-indigo-600 text-white font-semibold px-4 py-2.5 shadow hover:bg-indigo-700">
+                  Registrar venta
+                </button>
+                <button id="cancelSale"
+                        class="rounded-xl bg-white text-slate-700 font-semibold px-4 py-2.5 border hover:bg-slate-50">
+                  Cancelar
+                </button>
+                <p class="text-xs text-slate-500 text-center">Puedes registrar sin cliente si lo prefieres.</p>
+              </div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
     </div>
   </div>
@@ -237,11 +238,12 @@ function formatCOP(num){
 const DATASET = @json($modalCatalogDataset, JSON_UNESCAPED_UNICODE);
 const DEFAULT_BADGE = 'Selecciona un producto';
 let productDataset = JSON.parse(JSON.stringify(DATASET));
+const IS_ADMIN = @json((auth()->user()?->role ?? '') === 'admin');
 
 const SECTOR_LABELS = {
-  impresion: 'Impresion',
-  papeleria: 'Papeleria',
-  diseno: 'Diseno',
+  impresion: 'Impresión',
+  papeleria: 'Papelería',
+  diseno: 'Diseño',
 };
 
 const saleModal = document.getElementById('saleModal');
@@ -251,6 +253,7 @@ const cancelBtn = document.getElementById('cancelSale');
 const saveBtn   = document.getElementById('saveSale');
 
 const selProduct = document.getElementById('p_product');
+const productList = document.getElementById('product_list');
 const badgeCat   = document.getElementById('p_category_badge');
 const inpQty     = document.getElementById('p_qty');
 const inpUnit    = document.getElementById('p_unit');
@@ -267,7 +270,6 @@ const stockInfo  = document.getElementById('stock_info');
 const qtyError   = document.getElementById('qty_error');
 const saleItemsList = document.getElementById('saleItemsList');
 const saleItemsCounter = document.getElementById('saleItemsCounter');
-const addItemBtn = document.getElementById('addSaleItem');
 const btnSearchCustomer = document.getElementById('searchCustomer');
 const btnNewCustomer = document.getElementById('newCustomer');
 const btnClearCustomer = document.getElementById('clearCustomer');
@@ -288,6 +290,8 @@ let saleLines = [];
 let saleLineId = 1;
 let selectedCustomerId = null;
 const customerInfoPill = document.getElementById('customerInfoPill');
+let productIndex = [];
+let productById = new Map();
 
 function showSaleToast(message) {
   if (!saleToast || !saleToastText) return;
@@ -333,56 +337,46 @@ function clearCustomer(){
 }
 
 function renderProducts(){
-  selProduct.innerHTML = "";
-
-  const placeholder = document.createElement('option');
-  placeholder.value = "";
-  placeholder.textContent = 'Selecciona un producto';
-  placeholder.disabled = true;
-  placeholder.selected = true;
-  placeholder.hidden = true;
-  selProduct.appendChild(placeholder);
+  if (!productList) return;
+  productList.innerHTML = '';
+  productIndex = [];
+  productById = new Map();
 
   Object.keys(productDataset).forEach(cat => {
     productDataset[cat].forEach(p => {
+      const label = `${p.name}`;
+      const item = {
+        id: p.id,
+        name: p.name,
+        category: cat,
+        unit: p.unit,
+        stock: p.stock ?? null,
+        type: p.type || '',
+        label,
+      };
+      productIndex.push(item);
+      productById.set(String(p.id), item);
+
       const opt = document.createElement('option');
-      opt.value = String(p.id);
-      opt.textContent = p.name;
-      opt.dataset.category = cat;
-      opt.dataset.unit = String(p.unit);
-      opt.dataset.type = p.type || '';
-      if (p.stock !== undefined && p.stock !== null) {
-        opt.dataset.stock = String(p.stock);
-      }
-      selProduct.appendChild(opt);
+      opt.value = label;
+      productList.appendChild(opt);
     });
   });
 }
 
-function getSelectedOption(){
-  const opt = selProduct.options[selProduct.selectedIndex];
-  return opt && opt.value ? opt : null;
-}
-
-function getAvailableStock(opt){
-  if (!opt) return null;
-  const raw = opt.dataset.stock;
-  if (raw === undefined || raw === null || raw === '') return null;
-  const parsed = parseInt(raw, 10);
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
 function getSelectedProductMeta(){
-  const opt = getSelectedOption();
-  if (!opt) return null;
-  return {
-    id: parseInt(opt.value || "0", 10),
-    name: opt.textContent || 'Producto',
-    category: opt.dataset.category || '',
-    unit: parseInt(opt.dataset.unit || "0", 10),
-    stock: getAvailableStock(opt),
-    type: opt.dataset.type || '',
-  };
+  const raw = (selProduct?.value || '').trim();
+  if (!raw) return null;
+
+  let id = null;
+  const normalized = raw.toLowerCase();
+  const match = productIndex.find(item =>
+    item.name.toLowerCase() === normalized || item.label.toLowerCase() === normalized
+  );
+  if (match) id = String(match.id);
+
+  if (!id) return null;
+  return productById.get(String(id)) || null;
 }
 
 function getCategoryLabel(code){
@@ -408,98 +402,63 @@ function renderSaleItems(){
   if (!saleLines.length) {
     const empty = document.createElement('p');
     empty.className = 'text-sm text-slate-500';
-    empty.textContent = 'Aun no has agregado productos.';
+    empty.textContent = 'Aún no has agregado productos.';
     saleItemsList.appendChild(empty);
   } else {
     saleLines.forEach(line => {
       const row = document.createElement('div');
-      row.className = 'rounded-lg border border-slate-200 p-3 flex flex-col gap-3 md:flex-row md:items-center md:gap-4';
+      row.className = 'rounded-lg border border-slate-200 p-3 grid grid-cols-1 md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 items-center text-xs text-slate-700';
 
-      const info = document.createElement('div');
-      info.className = 'flex-1';
-
-      const title = document.createElement('div');
-      title.className = 'flex items-center gap-2 justify-between md:justify-start';
-      const nameEl = document.createElement('span');
-      nameEl.className = 'font-semibold text-slate-800';
+      const nameWrap = document.createElement('div');
+      nameWrap.className = '';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'text-slate-700';
       nameEl.textContent = line.name;
-      const badge = document.createElement('span');
-      badge.className = 'px-2 py-1 rounded-full text-xs bg-slate-100 text-slate-700';
-      badge.textContent = getCategoryLabel(line.category);
-      title.appendChild(nameEl);
-      title.appendChild(badge);
+      nameWrap.appendChild(nameEl);
 
-      const stockText = document.createElement('div');
-      stockText.className = 'text-xs text-slate-500 mt-1';
-      if (line.stock === null) {
-        stockText.textContent = 'Servicio sin control de stock';
-      } else {
-        stockText.textContent = `Stock disponible: ${line.stock} unidad${line.stock === 1 ? '' : 'es'}`;
-      }
-
-      info.appendChild(title);
-      info.appendChild(stockText);
+      const categoryWrap = document.createElement('div');
+      categoryWrap.className = '';
+      const categoryText = document.createElement('div');
+      categoryText.className = 'text-slate-700';
+      categoryText.textContent = getCategoryLabel(line.category);
+      categoryWrap.appendChild(categoryText);
 
       const qtyWrap = document.createElement('div');
-      qtyWrap.className = 'flex items-center gap-2';
-      const qtyLabel = document.createElement('span');
-      qtyLabel.className = 'text-xs text-slate-500';
-      qtyLabel.textContent = 'Cantidad';
-      const qtyInput = document.createElement('input');
-      qtyInput.type = 'number';
-      qtyInput.min = '1';
-      qtyInput.value = String(line.quantity);
-      qtyInput.className = 'w-24 rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500';
-      qtyInput.addEventListener('input', () => {
-        const nextQty = Math.max(1, parseInt(qtyInput.value || '1', 10));
-        updateLine(line.id, { quantity: nextQty });
-      });
-      qtyWrap.appendChild(qtyLabel);
-      qtyWrap.appendChild(qtyInput);
+      qtyWrap.className = 'text-center';
+      const qtyValue = document.createElement('div');
+      qtyValue.className = 'w-full rounded-lg bg-slate-100 text-slate-700 px-2 py-2 text-xs text-center';
+      qtyValue.textContent = String(line.quantity);
+      qtyWrap.appendChild(qtyValue);
 
       const unitWrap = document.createElement('div');
-      unitWrap.className = 'flex items-center gap-2';
-      const unitLabel = document.createElement('span');
-      unitLabel.className = 'text-xs text-slate-500';
-      unitLabel.textContent = 'Valor';
-      const unitInput = document.createElement('input');
-      unitInput.type = 'text';
-      unitInput.inputMode = 'numeric';
-      unitInput.value = formatCOP(line.unitPrice);
-      unitInput.className = 'w-28 rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500';
-      unitInput.addEventListener('input', () => {
-        const nextUnit = Math.max(0, toInt(unitInput.value));
-        updateLine(line.id, { unitPrice: nextUnit });
-      });
-      unitWrap.appendChild(unitLabel);
-      unitWrap.appendChild(unitInput);
+      unitWrap.className = 'text-center';
+      const unitValue = document.createElement('div');
+      unitValue.className = 'w-full rounded-lg bg-slate-100 text-slate-700 px-2 py-2 text-xs text-center';
+      unitValue.textContent = formatCOP(line.unitPrice);
+      unitWrap.appendChild(unitValue);
 
       const totalWrap = document.createElement('div');
       totalWrap.className = 'text-right';
-      const totalLabel = document.createElement('div');
-      totalLabel.className = 'text-xs text-slate-500';
-      totalLabel.textContent = 'Total';
       const totalValue = document.createElement('div');
-      totalValue.className = 'font-semibold text-slate-900';
+      totalValue.className = 'text-slate-700';
       totalValue.textContent = '$' + formatCOP(line.quantity * line.unitPrice);
-      totalWrap.appendChild(totalLabel);
       totalWrap.appendChild(totalValue);
 
+      const actionsWrap = document.createElement('div');
+      actionsWrap.className = 'text-right';
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'text-rose-600 text-sm hover:underline';
+      removeBtn.className = 'text-slate-700 hover:underline';
       removeBtn.textContent = 'Quitar';
       removeBtn.addEventListener('click', () => removeLine(line.id));
+      actionsWrap.appendChild(removeBtn);
 
-      const controls = document.createElement('div');
-      controls.className = 'flex flex-wrap items-center gap-4';
-      controls.appendChild(qtyWrap);
-      controls.appendChild(unitWrap);
-      controls.appendChild(totalWrap);
-      controls.appendChild(removeBtn);
-
-      row.appendChild(info);
-      row.appendChild(controls);
+      row.appendChild(nameWrap);
+      row.appendChild(categoryWrap);
+      row.appendChild(qtyWrap);
+      row.appendChild(unitWrap);
+      row.appendChild(totalWrap);
+      row.appendChild(actionsWrap);
 
       saleItemsList.appendChild(row);
     });
@@ -527,7 +486,7 @@ function updateSaleTotals(){
 }
 
 function resetSaleForm(){
-  selProduct.selectedIndex = 0;
+  if (selProduct) selProduct.value = '';
   if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
 
   saleLines = [];
@@ -536,11 +495,15 @@ function resetSaleForm(){
 
   clearCustomer();
   inpQty.value = "1";
+  if (!IS_ADMIN && inpUnit) {
+    inpUnit.readOnly = true;
+    inpUnit.classList.add('bg-slate-100', 'text-slate-600');
+  }
   inpUnit.value = "";
   inpTotal.value = "";
   inpGiven.value = "";
   inpChange.value = "";
-  if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('hidden'); stockInfo.classList.remove('text-rose-600'); }
+  if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('invisible'); stockInfo.classList.remove('text-rose-600'); }
   if (qtyError) { qtyError.textContent = ''; qtyError.classList.add('hidden'); }
 }
 
@@ -573,7 +536,7 @@ function recalcLinePreview(){
     inpTotal.value = "";
     if (stockInfo) {
       stockInfo.textContent = 'Sin stock disponible.';
-      stockInfo.classList.remove('hidden');
+      stockInfo.classList.remove('invisible');
       stockInfo.classList.add('text-rose-600');
     }
     return;
@@ -585,9 +548,9 @@ function recalcLinePreview(){
     if (qty > maxForLine) {
       qty = maxForLine || 1;
       inpQty.value = String(qty);
-      showSaleToast(`Solo hay ${maxForLine} unidad${maxForLine === 1 ? '' : 'es'} disponibles despues de las lineas agregadas.`);
+      showSaleToast(`Solo hay ${maxForLine} unidad${maxForLine === 1 ? '' : 'es'} disponibles después de las líneas agregadas.`);
       if (qtyError) {
-        qtyError.textContent = `Solo puedes agregar ${maxForLine} unidad${maxForLine === 1 ? '' : 'es'} mas.`;
+        qtyError.textContent = `Solo puedes agregar ${maxForLine} unidad${maxForLine === 1 ? '' : 'es'} más.`;
         qtyError.classList.remove('hidden');
       }
     } else if (qtyError) {
@@ -682,7 +645,7 @@ function addLineToSale(){
   }
 
   const qty    = Math.max(1, parseInt(inpQty.value || "1", 10));
-  const unit   = toInt(inpUnit.value);
+  const unit   = IS_ADMIN ? toInt(inpUnit.value) : (meta.unit || 0);
   const available = meta.stock;
   const alreadyAdded = getUsedQty(meta.id);
   const isService = meta.type === 'service' || available === null;
@@ -698,13 +661,13 @@ function addLineToSale(){
       return;
     }
     if (qty > remaining) {
-      showSaleToast(`Solo puedes agregar ${remaining} unidad${remaining === 1 ? '' : 'es'} mas.`);
+      showSaleToast(`Solo puedes agregar ${remaining} unidad${remaining === 1 ? '' : 'es'} más.`);
       return;
     }
   }
 
   if (!meta.id) {
-    showSaleToast('Producto invalido.');
+    showSaleToast('Producto inválido.');
     return;
   }
   if (unit <= 0) {
@@ -725,7 +688,12 @@ function addLineToSale(){
 
   renderSaleItems();
   inpQty.value = "1";
-  inpTotal.value = formatCOP(unit);
+  inpUnit.value = "";
+  inpTotal.value = "";
+  if (selProduct) selProduct.value = "";
+  if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
+  if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('invisible'); stockInfo.classList.remove('text-rose-600'); }
+  selProduct?.focus();
   recalcChange();
 }
 
@@ -740,7 +708,7 @@ function updateLine(lineId, changes){
 
   const current = saleLines[idx];
   let quantity = changes.quantity !== undefined ? Math.max(1, changes.quantity) : current.quantity;
-  let unitPrice = changes.unitPrice !== undefined ? Math.max(0, changes.unitPrice) : current.unitPrice;
+  let unitPrice = IS_ADMIN && changes.unitPrice !== undefined ? Math.max(0, changes.unitPrice) : current.unitPrice;
 
   if (current.stock !== null) {
     const usedElse = getUsedQty(current.itemId, current.id);
@@ -768,7 +736,7 @@ async function submitSale(event){
 
   const axiosInstance = window.axios;
   if (!axiosInstance) {
-    showSaleToast('No se encontro Axios en la pagina.');
+    showSaleToast('No se encontró Axios en la página.');
     return;
   }
 
@@ -778,6 +746,11 @@ async function submitSale(event){
   }
 
   const given  = toInt(inpGiven.value);
+  const total = calcSaleTotal();
+  if (given < total) {
+    showSaleToast('El pago debe cubrir el total de la venta.');
+    return;
+  }
 
   const payload = {
     customer_id: selectedCustomerId || null,
@@ -803,7 +776,7 @@ async function submitSale(event){
     }
     const response = await axiosInstance.post("{{ route('sales.store') }}", payload, { withCredentials: true });
 
-    showSaleToast('Venta registrada. Codigo: ' + (response.data.sale_code || 'N/A'));
+    showSaleToast('Venta registrada. Código: ' + (response.data.sale_code || 'N/A'));
     closeModal();
 
     setTimeout(() => {
@@ -834,7 +807,7 @@ function onProductChange(){
     inpUnit.value = "";
     inpQty.value = "1";
     inpTotal.value = "";
-    if (stockInfo) stockInfo.classList.add('hidden');
+    if (stockInfo) stockInfo.classList.add('invisible');
     return;
   }
 
@@ -848,11 +821,11 @@ function onProductChange(){
 
   if (available !== null && stockInfo) {
     stockInfo.textContent = `Stock disponible: ${available} unidad${available === 1 ? '' : 'es'}`;
-    stockInfo.classList.remove('hidden');
+    stockInfo.classList.remove('invisible');
     stockInfo.classList.remove('text-rose-600');
   } else if (stockInfo) {
     stockInfo.textContent = 'Servicio (sin control de stock)';
-    stockInfo.classList.remove('hidden');
+    stockInfo.classList.remove('invisible');
     stockInfo.classList.remove('text-rose-600');
   }
 
@@ -870,10 +843,18 @@ function onProductChange(){
   }
 
   recalcLinePreview();
+  inpQty?.focus();
+  inpQty?.select();
 }
 
 function formatOnUnit(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcLinePreview(); }
 function formatOnGiven(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcChange(); }
+function handleAddOnEnter(e){
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    addLineToSale();
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   saleToast     = document.getElementById('saleToast');
@@ -883,10 +864,15 @@ document.addEventListener('DOMContentLoaded', () => {
   resetSaleForm();
 
   selProduct.addEventListener('change', onProductChange);
+  selProduct.addEventListener('input', onProductChange);
+  selProduct.addEventListener('keydown', handleAddOnEnter);
   inpQty.addEventListener('input', recalcLinePreview);
-  inpUnit.addEventListener('input', formatOnUnit);
+  inpQty.addEventListener('keydown', handleAddOnEnter);
+  if (IS_ADMIN) {
+    inpUnit.addEventListener('input', formatOnUnit);
+    inpUnit.addEventListener('keydown', handleAddOnEnter);
+  }
   inpGiven.addEventListener('input', formatOnGiven);
-  addItemBtn?.addEventListener('click', addLineToSale);
   btnSearchCustomer?.addEventListener('click', searchCustomerByDocument);
   btnNewCustomer?.addEventListener('click', openCustomerModal);
   btnClearCustomer?.addEventListener('click', clearCustomer);
@@ -921,7 +907,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProducts();
       }
     } catch (e) {
-      console.warn('No se pudo actualizar el catalogo en vivo', e);
+      console.warn('No se pudo actualizar el catálogo en vivo', e);
     }
     openModal();
   });

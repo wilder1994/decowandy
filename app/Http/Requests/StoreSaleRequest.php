@@ -28,7 +28,7 @@ class StoreSaleRequest extends FormRequest
             'customer_email' => ['nullable', 'email', 'max:255'],
             'customer_phone' => ['nullable', 'string', 'max:50'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
-            'payment_method' => ['required', 'string', Rule::in(['cash', 'transfer', 'card', 'mixed', 'other'])],
+            'payment_method' => ['required', 'string', Rule::in(['cash'])],
             'amount_received' => ['required', 'integer', 'min:0'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.item_id' => ['required', 'integer', 'exists:items,id'],
