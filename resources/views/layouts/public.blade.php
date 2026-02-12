@@ -45,6 +45,11 @@
                 <a href="#contacto" class="hover:text-[color:var(--dw-accent)] transition">Contacto</a>
             </nav>
             <div class="flex items-center gap-3">
+                <a href="{{ route('login') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl border border-[color:var(--dw-lilac-2)] text-[color:var(--dw-accent)] hover:bg-[color:var(--dw-lilac)] transition">
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3" stroke-linecap="round"/></svg>
+                    Ingresar
+                </a>
                 {{-- CTA a WhatsApp (reemplaza TU_NUMERO con el real, solo dígitos con código país, ej: 57xxxxxxxxxx) --}}
                 <a href="https://wa.me/TU_NUMERO?text=Hola%20DecoWandy,%20quiero%20realizar%20un%20pedido%20🙂"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-white brand-gradient shadow hover:opacity-90 transition"
