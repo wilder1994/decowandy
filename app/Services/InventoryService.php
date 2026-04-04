@@ -2,22 +2,18 @@
 
 namespace App\Services;
 
-
 use App\Models\Stock;
 use App\Models\StockMovement;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
-
 class InventoryService
 {
-    /**
-     * Entrada a inventario (IN)
-     */
     public function in(int $itemId, int $quantity, ?int $unitCost = null, string $reason = 'purchase', ?int $relatedId = null): void
     {
-        if ($quantity <= 0) return;
-
+        if ($quantity <= 0) {
+            return;
+        }
 
         DB::transaction(function () use ($itemId, $quantity, $unitCost, $reason, $relatedId) {
             StockMovement::create([
@@ -29,25 +25,21 @@ class InventoryService
                 'ref_id' => $relatedId,
             ]);
 
-
             $stock = Stock::firstOrCreate(['item_id' => $itemId], ['quantity' => 0]);
             $stock->increment('quantity', $quantity);
         });
     }
 
-
-    /**
-     * Salida de inventario (OUT)
-     */
     public function out(int $itemId, int $quantity, string $reason = 'sale', ?int $relatedId = null, bool $strict = true): void
     {
-        if ($quantity <= 0) return;
-
+        if ($quantity <= 0) {
+            return;
+        }
 
         DB::transaction(function () use ($itemId, $quantity, $reason, $relatedId, $strict) {
             $stock = Stock::where('item_id', $itemId)->lockForUpdate()->first();
 
-            if (!$stock) {
+            if (! $stock) {
                 $stock = Stock::create(['item_id' => $itemId, 'quantity' => 0]);
             }
 
@@ -77,19 +69,45 @@ class InventoryService
         });
     }
 
+    public function adjustToQuantity(int $itemId, int $targetQuantity, ?string $note = null): void
+    {
+        $targetQuantity = max(0, $targetQuantity);
 
-    /**
-     * Recalcular stock desde movimientos (opcional, F2)
-     */
+        DB::transaction(function () use ($itemId, $targetQuantity, $note) {
+            $stock = Stock::where('item_id', $itemId)->lockForUpdate()->first();
+
+            if (! $stock) {
+                $stock = Stock::create(['item_id' => $itemId, 'quantity' => 0]);
+            }
+
+            $currentQuantity = (int) $stock->quantity;
+            $delta = $targetQuantity - $currentQuantity;
+
+            if ($delta === 0) {
+                return;
+            }
+
+            StockMovement::create([
+                'item_id' => $itemId,
+                'type' => $delta > 0 ? 'in' : 'out',
+                'quantity' => abs($delta),
+                'reason' => 'adjustment',
+                'notes' => $note,
+            ]);
+
+            $stock->quantity = $targetQuantity;
+            $stock->save();
+        });
+    }
+
     public function recalcStock(int $itemId): void
     {
         $totals = StockMovement::selectRaw(
             "SUM(CASE WHEN type='in' THEN quantity ELSE 0 END) as tin, " .
-                "SUM(CASE WHEN type='out' THEN quantity ELSE 0 END) as tout"
+            "SUM(CASE WHEN type='out' THEN quantity ELSE 0 END) as tout"
         )->where('item_id', $itemId)->first();
 
-
-        $qty = (int)$totals->tin - (int)$totals->tout;
+        $qty = (int) $totals->tin - (int) $totals->tout;
         $stock = Stock::firstOrCreate(['item_id' => $itemId], ['quantity' => 0]);
         $stock->quantity = max(0, $qty);
         $stock->save();

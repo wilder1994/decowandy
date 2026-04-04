@@ -83,7 +83,7 @@
   <div id="stockFields" class="md:col-span-2 rounded-xl border border-gray-100 p-3 bg-slate-50 hidden">
     <div class="grid gap-4 md:grid-cols-2">
       <div>
-        <label class="block text-sm text-gray-600 mb-1">Stock actual</label>
+        <label class="block text-sm text-gray-600 mb-1">Stock actual / ajuste manual</label>
         <input id="f_stock"
                name="stock"
                type="number"
@@ -103,7 +103,7 @@
                placeholder="0">
       </div>
     </div>
-    <p class="text-[11px] text-gray-500 mt-2">Se usa para alertas de inventario y aplica únicamente cuando controla stock.</p>
+    <p class="text-[11px] text-gray-500 mt-2">Al guardar se registra un ajuste trazable de inventario y el stock mínimo se usa para alertas.</p>
   </div>
 
   <div class="md:col-span-2">

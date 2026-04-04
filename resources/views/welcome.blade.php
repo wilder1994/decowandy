@@ -4,6 +4,13 @@
 @section('title', 'DecoWandy — Diseñar es crear, aprender es crecer')
 
 @section('content')
+    @php
+        $dwWhatsappNumber = preg_replace('/\D+/', '', env('DW_WHATSAPP', ''));
+        $dwHasWhatsapp = strlen($dwWhatsappNumber) >= 10;
+        $dwHeroWhatsappHref = $dwHasWhatsapp
+            ? "https://wa.me/{$dwWhatsappNumber}?text=" . rawurlencode('Hola DecoWandy, quiero cotizar un diseño o impresión')
+            : '#contacto';
+    @endphp
     {{-- HERO --}}
     <section class="relative overflow-hidden">
         <div class="max-w-7xl mx-auto px-4 pt-12 pb-16 grid gap-10 md:grid-cols-2 items-center">
@@ -49,11 +56,11 @@
                 </div>
 
                 <div class="mt-6 flex flex-wrap gap-3">
-                    <a href="https://wa.me/{{ env('DW_WHATSAPP','57XXXXXXXXXX') }}?text={{ urlencode('Hola DecoWandy, quiero cotizar un diseño o impresión ✨') }}"
-                       target="_blank" rel="noopener"
+                    <a href="{{ $dwHeroWhatsappHref }}"
+                       @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
                        class="inline-flex items-center px-5 py-3 rounded-2xl text-white brand-gradient shadow hover:opacity-90 transition gap-2">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2.01h-.08a10 10 0 00-8.9 14.5l-1 3.65a.75.75 0 00.92.92l3.58-.97a10 10 0 104.48-18.1zM18 16.57c-.2.57-.99 1.04-1.61 1.18-.43.1-.99.17-3.05-.65-2.56-1.06-4.2-3.66-4.33-3.83-.13-.17-1.03-1.37-1.03-2.61s.65-1.85.88-2.11c.23-.26.5-.32.67-.32.17 0 .34 0 .49.01.16.01.37-.06.58.45.22.53.75 1.84.82 1.98.07.14.11.3.02.47-.08.17-.12.28-.24.43-.12.14-.26.31-.37.42-.12.12-.25.24-.11.47.13.23.57.93 1.21 1.51.83.74 1.52.97 1.75 1.08.23.11.36.09.49-.05.13-.14.57-.66.72-.89.15-.23.3-.19.51-.11.21.08 1.34.63 1.57.74.23.12.38.17.44.26.06.09.06.52-.14 1.09z"/></svg>
-                        Solicitar por WhatsApp
+                        {{ $dwHasWhatsapp ? 'Solicitar por WhatsApp' : 'Ver contacto' }}
                     </a>
                     <a href="#catalogo"
                        class="inline-flex items-center px-5 py-3 rounded-2xl border border-[color:var(--dw-lilac-2)] text-[color:var(--dw-accent)] hover:bg-[color:var(--dw-lilac)] transition gap-2">
@@ -108,9 +115,9 @@
                                     Cotizar
                                 @endif
                             </span>
-                            <a href="https://wa.me/{{ env('DW_WHATSAPP','57XXXXXXXXXX') }}?text={{ urlencode('Hola, me interesa: '.$d->title) }}"
-                               target="_blank" rel="noopener"
-                               class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">Pedir</a>
+                            <a href="{{ $dwHasWhatsapp ? 'https://wa.me/'.$dwWhatsappNumber.'?text='.rawurlencode('Hola, me interesa: '.$d->title) : '#contacto' }}"
+                               @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
+                               class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">{{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}</a>
                         </div>
                     </div>
                 </div>
@@ -120,4 +127,3 @@
         </div>
     </section>
 @endsection
-

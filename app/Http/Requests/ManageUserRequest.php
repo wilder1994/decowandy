@@ -2,14 +2,16 @@
 
 namespace App\Http\Requests;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class ManageUserRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return (bool) $this->user()?->can('manage-users');
     }
 
     public function rules(): array
@@ -24,11 +26,11 @@ class ManageUserRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($userId),
             ],
-            'role' => ['nullable', 'string', 'max:50'],
+            'role' => ['required', 'string', Rule::in(User::allowedRoles())],
             'password' => [
                 $this->isMethod('post') ? 'required' : 'nullable',
-                'string',
-                'min:6',
+                'confirmed',
+                Password::defaults(),
             ],
         ];
     }

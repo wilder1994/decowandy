@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePurchaseRequest;
+use App\Models\Item;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Services\InventoryService;
@@ -44,8 +45,17 @@ class PurchaseController extends Controller
         $toInventory = $request->boolean('to_inventory');
 
         $items = collect($request->validated()['items'] ?? []);
+        $linkedItemIds = $items->pluck('item_id')->filter()->unique()->values()->all();
+        $catalog = Item::whereIn('id', $linkedItemIds)
+            ->where('active', true)
+            ->get()
+            ->keyBy('id');
 
-        $purchase = DB::transaction(function () use ($purchaseDate, $category, $supplier, $note, $toInventory, $items) {
+        if (count($linkedItemIds) !== $catalog->count()) {
+            abort(422, 'Uno o mas items asociados ya no estan disponibles para inventario.');
+        }
+
+        $purchase = DB::transaction(function () use ($purchaseDate, $category, $supplier, $note, $toInventory, $items, $catalog) {
             $purchase = Purchase::create([
                 'date' => $purchaseDate,
                 'category' => $category,
@@ -76,7 +86,10 @@ class PurchaseController extends Controller
 
                 // Stock IN si aplica: Papelería o insumo de Impresión y hay item_id
                 if ($toInventory && isset($line['item_id'])) {
-                    // Nota: en F1 solo agregamos a inventario si explicitamente viene item_id
+                    if (! $catalog->has((int) $line['item_id'])) {
+                        abort(422, 'Uno o mas items asociados ya no estan disponibles para inventario.');
+                    }
+
                     $this->inventory->in((int)$line['item_id'], $qty, $ucost, 'purchase', $purchase->id);
                 }
             }

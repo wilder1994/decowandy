@@ -19,6 +19,7 @@ class PurchaseApiTest extends TestCase
         $item = Item::factory()->create([
             'type' => 'product',
             'sector' => 'papeleria',
+            'active' => true,
         ]);
 
         $payload = [
@@ -70,6 +71,40 @@ class PurchaseApiTest extends TestCase
             'quantity' => 3,
             'reason' => 'purchase',
             'ref_id' => $response->json('purchase_id'),
+        ]);
+    }
+
+    public function test_purchase_rejects_inactive_inventory_item(): void
+    {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $item = Item::factory()->create([
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'active' => false,
+        ]);
+
+        $payload = [
+            'date' => now()->toDateString(),
+            'category' => 'Papeleria',
+            'to_inventory' => true,
+            'items' => [
+                [
+                    'product_name' => 'Producto inactivo',
+                    'quantity' => 2,
+                    'total_cost' => 8000,
+                    'item_id' => $item->id,
+                ],
+            ],
+        ];
+
+        $response = $this->postJson(route('api.purchases.store'), $payload);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseCount('purchases', 0);
+        $this->assertDatabaseMissing('stocks', [
+            'item_id' => $item->id,
         ]);
     }
 }

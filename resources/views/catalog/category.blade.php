@@ -4,6 +4,10 @@
 @section('title', $categoryName . ' — DecoWandy')
 
 @section('content')
+@php
+    $dwWhatsappNumber = preg_replace('/\D+/', '', env('DW_WHATSAPP', ''));
+    $dwHasWhatsapp = strlen($dwWhatsappNumber) >= 10;
+@endphp
 <section class="max-w-7xl mx-auto px-4 py-12">
     <div class="flex items-center justify-between mb-8">
         <h1 class="text-3xl font-bold">{{ $categoryName }}</h1>
@@ -41,10 +45,10 @@
                                     $ —
                                 @endif
                             </span>
-                            <a href="https://wa.me/{{ env('DW_WHATSAPP','57XXXXXXXXXX') }}?text={{ urlencode('Hola, me interesa: '.$d->title) }}"
-                               target="_blank" rel="noopener"
+                            <a href="{{ $dwHasWhatsapp ? 'https://wa.me/'.$dwWhatsappNumber.'?text='.rawurlencode('Hola, me interesa: '.$d->title) : '#contacto' }}"
+                               @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
                                class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">
-                               Pedir
+                               {{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}
                             </a>
                         </div>
                     </div>

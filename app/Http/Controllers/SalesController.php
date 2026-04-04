@@ -121,6 +121,7 @@ class SalesController extends Controller
             'items.sector',
             DB::raw('COALESCE(stocks.quantity, 0) as stock_qty')
         )
+            ->where('items.active', true)
             ->leftJoin('stocks', 'stocks.item_id', '=', 'items.id')
             ->orderBy('items.name')
             ->get();

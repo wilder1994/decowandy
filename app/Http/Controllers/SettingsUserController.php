@@ -26,12 +26,12 @@ class SettingsUserController extends Controller
     public function store(ManageUserRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'role' => $data['role'] ?? null,
-            'password' => bcrypt($data['password']),
-        ]);
+        $user = new User();
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->role = $data['role'];
+        $user->password = $data['password'];
+        $user->save();
 
         return redirect()->route('settings.users')->with('status', 'Usuario creado: '.$user->name);
     }
@@ -42,9 +42,9 @@ class SettingsUserController extends Controller
 
         $user->name = $data['name'];
         $user->email = $data['email'];
-        $user->role = $data['role'] ?? null;
+        $user->role = $data['role'];
         if (!empty($data['password'])) {
-            $user->password = bcrypt($data['password']);
+            $user->password = $data['password'];
         }
         $user->save();
 

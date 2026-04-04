@@ -55,7 +55,9 @@ class PurchaseController extends Controller
             ->sort()
             ->values();
 
-        $itemsCatalog = Item::orderBy('name')->get(['id', 'name', 'sector']);
+        $itemsCatalog = Item::where('active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'sector']);
 
         return view('purchases.index', [
             'purchases' => $purchases,

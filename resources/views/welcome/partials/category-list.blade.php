@@ -4,6 +4,8 @@
     $items = collect($category['items'] ?? []);
     $slug = $category['slug'] ?? \Illuminate\Support\Str::slug($category['name'] ?? '');
     $emptyMessage = $category['list_empty'] ?? 'No hay elementos disponibles.';
+    $dwWhatsappNumber = preg_replace('/\D+/', '', env('DW_WHATSAPP', ''));
+    $dwHasWhatsapp = strlen($dwWhatsappNumber) >= 10;
 @endphp
 
 <div id="{{ $slug }}-full">
@@ -29,9 +31,9 @@
                                 $ —
                             @endif
                         </span>
-                        <a href="https://wa.me/{{ env('DW_WHATSAPP','57XXXXXXXXXX') }}?text={{ urlencode('Hola, me interesa: '.$item->title) }}"
-                           target="_blank" rel="noopener"
-                           class="text-sm px-3 py-1 rounded-xl bg-[color:var(--dw-primary)] text-white">Pedir</a>
+                        <a href="{{ $dwHasWhatsapp ? 'https://wa.me/'.$dwWhatsappNumber.'?text='.rawurlencode('Hola, me interesa: '.$item->title) : '#contacto' }}"
+                           @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
+                           class="text-sm px-3 py-1 rounded-xl bg-[color:var(--dw-primary)] text-white">{{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}</a>
                     </div>
                 </div>
             </div>

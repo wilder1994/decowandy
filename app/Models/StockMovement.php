@@ -20,6 +20,7 @@ class StockMovement extends Model
         'unit_cost',
         'type',
         'ref_id',
+        'notes',
     ];
 
     protected $casts = [

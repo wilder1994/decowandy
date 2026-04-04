@@ -36,21 +36,21 @@ class FinanceServiceTest extends TestCase
     {
         $service = new FinanceService();
         $from = Carbon::parse('2025-02-01');
-        $to = Carbon::parse('2025-02-03');
+        $to = Carbon::parse('2025-02-03')->endOfDay();
 
         $sales = collect([
             new \App\Models\Sale(['sold_at' => Carbon::parse('2025-02-01 10:00:00'), 'total' => 10000]),
             new \App\Models\Sale(['sold_at' => Carbon::parse('2025-02-03 09:00:00'), 'total' => 20000]),
         ]);
 
-        $expenses = collect([(object) ['date' => '2025-02-02', 'amount' => 5000]]);
-        $purchases = collect([(object) ['date' => '2025-02-03', 'total' => 3000]]);
-        $investments = collect();
+        $expenses = collect([(object) ['date' => Carbon::parse('2025-02-02'), 'amount' => 5000]]);
+        $purchases = collect([(object) ['date' => Carbon::parse('2025-02-03'), 'total' => 3000]]);
+        $investments = collect([(object) ['date' => Carbon::parse('2025-02-01'), 'amount' => 1000]]);
 
         $dataset = $service->cashflowDataset($sales, $expenses, $purchases, $investments, $from, $to);
 
         $this->assertSame(['01/02', '02/02', '03/02'], $dataset['labels']);
         $this->assertSame([10000, 0, 20000], $dataset['entradas']);
-        $this->assertSame([0, 5000, 3000], $dataset['salidas']);
+        $this->assertSame([1000, 5000, 3000], $dataset['salidas']);
     }
 }

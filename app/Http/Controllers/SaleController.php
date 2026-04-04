@@ -18,20 +18,6 @@ class SaleController extends Controller
 {
     public function __construct(private readonly InventoryService $inventory) {}
 
-    /**
-     * POST /ventas
-     * Request esperado (ejemplo):
-     * {
-     * sold_at: '2025-10-25 13:05:00',
-     * customer_name?, customer_email?, customer_phone?,
-     * payment_method: 'cash'|'transfer'|'card'|'mixed'|'other',
-     * amount_received: 25000,
-     * items: [
-     *   { item_id:1, quantity:2 },
-     *   { item_id:3, quantity:1, unit_price:5000, sheets_used:1 }
-     * ]
-     * }
-     */
     public function store(StoreSaleRequest $request)
     {
         $data = $request->validated();
@@ -39,15 +25,23 @@ class SaleController extends Controller
         $customer = null;
         $isAdmin = auth()->user()?->role === 'admin';
 
-        if (!empty($data['customer_id'])) {
+        if (! empty($data['customer_id'])) {
             $customer = Customer::find($data['customer_id']);
         }
+
         $customerName = $customer->name ?? ($data['customer_name'] ?? null);
         $customerEmail = $customer->email ?? ($data['customer_email'] ?? null);
         $customerPhone = $customer->phone ?? ($data['customer_phone'] ?? null);
 
         $itemIds = collect($data['items'])->pluck('item_id')->all();
-        $catalog = Item::whereIn('id', $itemIds)->get()->keyBy('id');
+        $catalog = Item::whereIn('id', $itemIds)
+            ->where('active', true)
+            ->get()
+            ->keyBy('id');
+
+        if ($catalog->count() !== count(array_unique($itemIds))) {
+            abort(422, 'Uno o mas items seleccionados no estan disponibles para la venta.');
+        }
 
         $papeleriaIds = $catalog->where('sector', 'papeleria')->keys();
 
@@ -57,7 +51,7 @@ class SaleController extends Controller
             foreach ($data['items'] as $line) {
                 $item = $catalog->get($line['item_id']);
 
-                if (!$item || $item->sector !== 'papeleria') {
+                if (! $item || $item->sector !== 'papeleria') {
                     continue;
                 }
 
@@ -73,6 +67,7 @@ class SaleController extends Controller
 
                     if ($neededQty > $availableQty) {
                         $itemName = $catalog[$itemId]->name ?? 'Producto';
+
                         abort(422, sprintf(
                             'Stock insuficiente para %s. Solo quedan %d unidad%s.',
                             $itemName,
@@ -85,16 +80,15 @@ class SaleController extends Controller
         }
 
         try {
-            $sale = DB::transaction(function () use ($data, $catalog, $soldAt, $customer, $customerName, $customerEmail, $customerPhone) {
+            $sale = DB::transaction(function () use ($data, $catalog, $soldAt, $customer, $customerName, $customerEmail, $customerPhone, $isAdmin) {
                 $total = 0;
                 $lines = [];
 
                 foreach ($data['items'] as $line) {
                     $item = $catalog->get($line['item_id']);
 
-                    if (!$item) {
-                        // Si el ítem fue eliminado entre la validación y la transacción, ignoramos la línea.
-                        continue;
+                    if (! $item) {
+                        abort(422, 'Uno o mas items seleccionados ya no estan disponibles para la venta.');
                     }
 
                     $quantity = (int) $line['quantity'];
@@ -120,7 +114,7 @@ class SaleController extends Controller
                 }
 
                 if ($total <= 0) {
-                    abort(422, 'La venta debe tener al menos un ítem con valor.');
+                    abort(422, 'La venta debe tener al menos un item con valor.');
                 }
 
                 $amountReceived = (int) $data['amount_received'];
@@ -138,7 +132,7 @@ class SaleController extends Controller
                     'customer_email' => $customerEmail,
                     'customer_phone' => $customerPhone,
                     'user_id' => auth()->id(),
-                    'payment_method' => 'cash',
+                    'payment_method' => $data['payment_method'],
                     'amount_received' => $amountReceived,
                     'total' => $total,
                     'change_due' => max(0, $amountReceived - $total),
@@ -182,5 +176,4 @@ class SaleController extends Controller
             'change_due' => $sale->change_due,
         ], 201);
     }
-
 }

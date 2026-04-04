@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -10,7 +9,7 @@ class FinanceService
 {
     public function resolveRange(?string $from, ?string $to): array
     {
-        if (!$from || !$to) {
+        if (! $from || ! $to) {
             $start = now()->startOfMonth();
             $end = now()->endOfMonth();
 
@@ -84,8 +83,8 @@ class FinanceService
         foreach ($investments as $investment) {
             $listado->push([
                 'fecha' => Carbon::parse($investment->date),
-                'concepto' => 'Inversión: ' . $investment->concept,
-                'metodo' => 'inversión',
+                'concepto' => 'Inversion: ' . $investment->concept,
+                'metodo' => 'inversion',
                 'monto' => (int) $investment->amount * -1,
                 'tipo' => 'salida',
             ]);
@@ -96,7 +95,11 @@ class FinanceService
 
     public function cashflowDataset(Collection $sales, Collection $expenses, Collection $purchases, Collection $investments, Carbon $from, Carbon $to): array
     {
-        $period = new \DatePeriod($from->copy()->startOfDay(), new \DateInterval('P1D'), $to->copy()->addDay());
+        $period = new \DatePeriod(
+            $from->copy()->startOfDay(),
+            new \DateInterval('P1D'),
+            $to->copy()->startOfDay()->addDay()
+        );
 
         $labels = [];
         $entradas = [];
@@ -106,12 +109,21 @@ class FinanceService
             $dateKey = $day->format('Y-m-d');
             $labels[] = $day->format('d/m');
 
-            $dailyIncome = (int) $sales->filter(fn (Sale $sale) => $sale->sold_at && $sale->sold_at->toDateString() === $dateKey)
+            $dailyIncome = (int) $sales
+                ->filter(fn ($sale) => $this->dateKey($sale->sold_at ?? null) === $dateKey)
                 ->sum('total');
 
-            $dailyExpenses = (int) $expenses->where('date', $dateKey)->sum('amount');
-            $dailyPurchases = (int) $purchases->where('date', $dateKey)->sum('total');
-            $dailyInvestments = (int) $investments->where('date', $dateKey)->sum('amount');
+            $dailyExpenses = (int) $expenses
+                ->filter(fn ($expense) => $this->dateKey($expense->date ?? null) === $dateKey)
+                ->sum('amount');
+
+            $dailyPurchases = (int) $purchases
+                ->filter(fn ($purchase) => $this->dateKey($purchase->date ?? null) === $dateKey)
+                ->sum('total');
+
+            $dailyInvestments = (int) $investments
+                ->filter(fn ($investment) => $this->dateKey($investment->date ?? null) === $dateKey)
+                ->sum('amount');
 
             $entradas[] = $dailyIncome;
             $salidas[] = $dailyExpenses + $dailyPurchases + $dailyInvestments;
@@ -127,12 +139,25 @@ class FinanceService
     public function ingresosVsGastosDataset(int $ingresos, int $egresos, int $invertido): array
     {
         return [
-            'labels' => ['Ingresos', 'Egresos', 'Inversión'],
+            'labels' => ['Ingresos', 'Egresos', 'Inversion'],
             'data' => [
                 $ingresos,
                 $egresos,
                 $invertido,
             ],
         ];
+    }
+
+    private function dateKey(mixed $value): ?string
+    {
+        if (! $value) {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            return $value->toDateString();
+        }
+
+        return Carbon::parse($value)->toDateString();
     }
 }

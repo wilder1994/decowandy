@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Item extends Model
 {
@@ -24,18 +26,16 @@ class Item extends Model
 
     protected $casts = [
         'sale_price' => 'decimal:2',
-        'cost'       => 'decimal:2',
-        'featured'   => 'boolean',
-        'active'     => 'boolean',
+        'cost' => 'decimal:2',
+        'featured' => 'boolean',
+        'active' => 'boolean',
     ];
 
-    // 👈 RELACIÓN CORRECTA (añadir esto)
-    public function stock()
+    public function stock(): HasOne
     {
         return $this->hasOne(Stock::class, 'item_id');
     }
 
-    // 👈 Para acceder de forma bonita: $item->quantity
     public function getQuantityAttribute()
     {
         if (array_key_exists('stock', $this->attributes)) {
@@ -48,5 +48,27 @@ class Item extends Model
     public function getMinThresholdAttribute()
     {
         return $this->stock?->min_threshold ?? 0;
+    }
+
+    public function saleItems(): HasMany
+    {
+        return $this->hasMany(SaleItem::class);
+    }
+
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    public function purchaseItems(): HasMany
+    {
+        return $this->hasMany(PurchaseItem::class);
+    }
+
+    public function hasProtectedHistory(): bool
+    {
+        return $this->saleItems()->exists()
+            || $this->stockMovements()->exists()
+            || $this->purchaseItems()->exists();
     }
 }

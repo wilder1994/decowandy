@@ -147,6 +147,18 @@
 
             <div class="space-y-3">
               <div>
+                <label class="block text-sm text-indigo-900 mb-1" for="pay_method">Metodo de pago</label>
+                <select id="pay_method"
+                        class="w-full rounded-lg border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                  <option value="cash">Efectivo</option>
+                  <option value="transfer">Transferencia</option>
+                  <option value="card">Tarjeta</option>
+                  <option value="mixed">Mixto</option>
+                  <option value="other">Otro</option>
+                </select>
+              </div>
+
+              <div>
                 <label class="block text-sm text-indigo-900 mb-1" for="pay_given">Paga con (COP)</label>
                 <input id="pay_given" type="text" inputmode="numeric" placeholder="0"
                        class="w-full rounded-lg border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
@@ -258,6 +270,7 @@ const badgeCat   = document.getElementById('p_category_badge');
 const inpQty     = document.getElementById('p_qty');
 const inpUnit    = document.getElementById('p_unit');
 const inpTotal   = document.getElementById('p_total');
+const selPayMethod = document.getElementById('pay_method');
 const inpGiven   = document.getElementById('pay_given');
 const inpChange  = document.getElementById('pay_change');
 const saleTotal  = document.getElementById('sale_total');
@@ -501,6 +514,7 @@ function resetSaleForm(){
   }
   inpUnit.value = "";
   inpTotal.value = "";
+  if (selPayMethod) selPayMethod.value = 'cash';
   inpGiven.value = "";
   inpChange.value = "";
   if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('invisible'); stockInfo.classList.remove('text-rose-600'); }
@@ -757,7 +771,7 @@ async function submitSale(event){
     customer_name: inpName?.value || null,
     customer_email: inpEmail?.value || null,
     customer_phone: inpPhone?.value || null,
-    payment_method: 'cash',
+    payment_method: selPayMethod?.value || 'cash',
     amount_received: given || 0,
     items: saleLines.map(line => ({
       item_id: line.itemId,

@@ -9,8 +9,8 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\FinanceService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 class ReportController extends Controller
 {
@@ -32,19 +32,21 @@ class ReportController extends Controller
             ->when($categoria !== 'all', fn ($query) => $query->where('category', $categoria))
             ->get();
 
+        $reportSales = $this->buildReportSales($saleItems);
+
         $expenses = Expense::whereBetween('date', [$from->toDateString(), $to->toDateString()])->get();
         $purchases = Purchase::where('to_inventory', false)
             ->whereBetween('date', [$from->toDateString(), $to->toDateString()])
             ->get();
         $investments = Investment::whereBetween('date', [$from->toDateString(), $to->toDateString()])->get();
 
-        $ingresos = (int) $sales->sum('total');
+        $ingresos = (int) $reportSales->sum('total');
         $egresos = (int) ($expenses->sum('amount') + $purchases->sum('total'));
         $invertido = (int) $investments->sum('amount');
 
-        $resumen = $this->finance->resumen($sales, $expenses, $purchases, $investments);
-        $movimientosCaja = $this->finance->movimientos($sales, $expenses, $purchases, $investments);
-        $cashflowDataset = $this->finance->cashflowDataset($sales, $expenses, $purchases, $investments, $from, $to);
+        $resumen = $this->finance->resumen($reportSales, $expenses, $purchases, $investments);
+        $movimientosCaja = $this->finance->movimientos($reportSales, $expenses, $purchases, $investments);
+        $cashflowDataset = $this->finance->cashflowDataset($reportSales, $expenses, $purchases, $investments, $from, $to);
         $ingresosVsGastosDataset = $this->finance->ingresosVsGastosDataset($ingresos, $egresos, $invertido);
 
         $ventas = (int) $saleItems->sum('line_total');
@@ -58,13 +60,10 @@ class ReportController extends Controller
         $utilidadNeta = $ventas - $costoVenta - $gastos;
 
         $ventasPorCategoria = $this->ventasPorCategoria($saleItems);
-
-        $ventasListado = Sale::withCount('items')
-            ->whereBetween('sold_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
-            ->when($metodo !== 'all', fn ($query) => $query->where('payment_method', $metodo))
-            ->orderByDesc('sold_at')
-            ->limit(8)
-            ->get();
+        $ventasListado = $reportSales
+            ->sortByDesc(fn ($sale) => optional($sale->sold_at)?->timestamp ?? 0)
+            ->values()
+            ->take(8);
 
         $gastosListado = $this->composeGastosListado($expenses, $purchases);
 
@@ -105,10 +104,29 @@ class ReportController extends Controller
         return in_array($payment, $allowed, true) ? $payment : 'all';
     }
 
+    private function buildReportSales(Collection $saleItems): Collection
+    {
+        return $saleItems
+            ->groupBy('sale_id')
+            ->map(function (Collection $items, int|string $saleId) {
+                $sale = $items->first()?->sale;
+
+                return (object) [
+                    'id' => (int) $saleId,
+                    'sale_code' => $sale?->sale_code,
+                    'sold_at' => $sale?->sold_at,
+                    'customer_name' => $sale?->customer_name,
+                    'payment_method' => $sale?->payment_method ?? 'other',
+                    'total' => (int) $items->sum('line_total'),
+                    'items_count' => (int) $items->count(),
+                ];
+            })
+            ->values();
+    }
+
     private function ventasPorCategoria(Collection $items): array
     {
         $labels = config('decowandy.sectors');
-
         $dataset = ['labels' => [], 'data' => []];
 
         foreach ($labels as $key => $label) {

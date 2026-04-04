@@ -413,7 +413,7 @@
           <td class="py-2 pr-4">${activeBadge}</td>
           <td class="py-2 pr-2 text-right">
             <button type="button" class="text-[color:var(--dw-primary)] hover:underline mr-2" data-edit-id="${item.id}">Editar</button>
-            <button type="button" class="text-rose-500 hover:underline" data-delete-id="${item.id}">Eliminar</button>
+            <button type="button" class="text-rose-500 hover:underline" data-delete-id="${item.id}">Desactivar</button>
           </td>
         `;
         tableBody.appendChild(tr);
@@ -640,15 +640,13 @@
       if (!item) {
         return;
       }
-      const confirmed = confirm(`¿Eliminar "${item.name}"?`);
+      const confirmed = confirm(`¿Desactivar "${item.name}"?`);
       if (!confirmed) {
         return;
       }
       try {
-        await axiosInstance.delete(`/api/items/${item.id}`, {
-          params: { force: 1 },
-        });
-        showPageAlert('success', 'Ítem eliminado.');
+        await axiosInstance.delete(`/api/items/${item.id}`);
+        showPageAlert('success', 'Ítem desactivado.');
         const shouldGoBack = state.items.length === 1 && state.page > 1;
         await loadItems(shouldGoBack ? state.page - 1 : state.page);
       } catch (error) {

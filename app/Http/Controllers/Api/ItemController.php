@@ -7,11 +7,15 @@ use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
 use App\Models\Stock;
+use App\Services\InventoryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ItemController extends Controller
 {
+    public function __construct(private readonly InventoryService $inventory) {}
+
     public function index(Request $request)
     {
         $perPage = (int) $request->integer('per_page', 15);
@@ -32,7 +36,7 @@ class ItemController extends Controller
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
                 $builder->where('name', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -53,7 +57,7 @@ class ItemController extends Controller
             $items->getCollection()->map(fn ($item) => $this->transformItem($item))
         );
 
-        $payload = [
+        return response()->json([
             'ok' => true,
             'data' => $items->items(),
             'pagination' => [
@@ -73,16 +77,14 @@ class ItemController extends Controller
                 'sector' => $sector,
                 'type' => $type,
             ],
-        ];
-
-        return response()->json($payload);
+        ]);
     }
 
     public function store(StoreItemRequest $request)
     {
         $data = $request->validated();
 
-        $data['slug'] = Str::slug($data['name']).'-'.Str::random(6);
+        $data['slug'] = Str::slug($data['name']) . '-' . Str::random(6);
         $data['sale_price'] = (float) $request->input('sale_price', 0);
         $data['cost'] = (float) $request->input('cost', 0);
         $data['stock'] = (int) $request->input('stock', 0);
@@ -90,8 +92,12 @@ class ItemController extends Controller
         $data['featured'] = $request->boolean('featured', false);
         $data['active'] = $request->boolean('active', true);
 
-        $item = Item::create($data);
-        $this->syncStock($item, $data);
+        $item = DB::transaction(function () use ($data) {
+            $item = Item::create($data);
+            $this->syncStock($item, $data, true);
+
+            return $item;
+        });
 
         return response()->json(['ok' => true, 'item' => $this->transformItem($item->fresh('stock'))], 201);
     }
@@ -119,40 +125,85 @@ class ItemController extends Controller
             $data['active'] = $request->boolean('active');
         }
 
-        $item->fill($data);
-        $item->save();
-        $this->syncStock($item, $data);
+        $previousType = $item->type;
+
+        $item = DB::transaction(function () use ($item, $data, $previousType) {
+            $item->fill($data);
+            $item->save();
+            $this->syncStock($item, $data, false, $previousType);
+
+            return $item;
+        });
 
         return response()->json(['ok' => true, 'item' => $this->transformItem($item->refresh()->load('stock'))]);
     }
 
-    /**
-     * Inactivar por defecto; eliminar duro si ?force=1
-     */
     public function destroy(Request $request, Item $item)
     {
         if ($request->boolean('force')) {
+            if ($item->hasProtectedHistory()) {
+                return response()->json([
+                    'ok' => false,
+                    'message' => 'No se puede eliminar este item porque ya tiene historial asociado. Desactivalo en su lugar.',
+                ], 409);
+            }
+
             $item->delete();
+
             return response()->json(['ok' => true, 'deleted' => true]);
         }
+
+        if (! $item->active) {
+            return response()->json(['ok' => true, 'active' => false, 'deleted' => false]);
+        }
+
         $item->active = false;
         $item->save();
-        return response()->json(['ok' => true, 'active' => false]);
+
+        return response()->json(['ok' => true, 'active' => false, 'deleted' => false]);
     }
 
-    private function syncStock(Item $item, array $data): void
+    private function syncStock(Item $item, array $data, bool $isCreate, ?string $previousType = null): void
     {
-        if (($data['type'] ?? $item->type) !== 'product') {
+        $previousType ??= $item->type;
+        $nextType = $data['type'] ?? $item->type;
+        $wasProduct = $previousType === 'product';
+        $isProduct = $nextType === 'product';
+
+        if (! $wasProduct && ! $isProduct) {
             return;
         }
 
-        $qty = (int) ($data['stock'] ?? $item->stock ?? 0);
-        $min = (int) ($data['min_stock'] ?? $item->min_stock ?? 0);
-
         $stock = Stock::firstOrCreate(['item_id' => $item->id], ['quantity' => 0]);
-        $stock->quantity = $qty;
-        $stock->min_threshold = $min;
+
+        if (! $isProduct) {
+            $stock->min_threshold = 0;
+            $stock->save();
+            $this->inventory->adjustToQuantity(
+                $item->id,
+                0,
+                'Conversion del item a servicio. Inventario ajustado a cero.'
+            );
+
+            return;
+        }
+
+        $targetQty = array_key_exists('stock', $data)
+            ? (int) $data['stock']
+            : (int) $stock->quantity;
+
+        $minThreshold = array_key_exists('min_stock', $data)
+            ? (int) $data['min_stock']
+            : (int) $stock->min_threshold;
+
+        $stock->min_threshold = $minThreshold;
         $stock->save();
+
+        $note = $isCreate
+            ? 'Stock inicial registrado desde el editor de items.'
+            : 'Ajuste manual registrado desde el editor de items.';
+
+        $this->inventory->adjustToQuantity($item->id, $targetQty, $note);
     }
 
     private function transformItem(Item $item): array
