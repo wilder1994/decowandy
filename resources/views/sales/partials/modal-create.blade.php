@@ -1,183 +1,138 @@
 {{-- resources/views/sales/partials/modal-create.blade.php --}}
-{{-- Modal: Registrar venta --}}
+{{-- Modal: Registrar venta (POS pro) --}}
 
 <div id="saleModal" class="fixed inset-0 z-[70] hidden">
-  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" data-pos-dismiss></div>
 
-  <div class="absolute inset-0 flex items-start justify-center p-4 overflow-y-auto">
-    <div class="w-full max-w-4xl overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon dw-hairline-neon">
+  <div class="dw-pos-center">
+    <div class="dw-pos-modal" role="dialog" aria-labelledby="saleModalTitle" aria-modal="true">
 
-      <div class="subtle-gradient flex items-center justify-between border-b px-4 py-3 dw-hairline">
-        <div class="space-y-0.5">
-          <h3 class="font-display text-lg font-bold text-dw-text">Registrar venta</h3>
-          <p class="text-sm text-dw-muted">Cliente · productos · pago</p>
+      <header class="dw-pos-header">
+        <div class="flex items-center gap-2.5">
+          <h3 id="saleModalTitle" class="font-display text-base font-bold text-dw-text">Registrar venta</h3>
+          <span id="saleItemsCounter" class="dw-badge-primary text-[10px]">0 productos</span>
         </div>
-        <button id="closeSaleModal"
-                class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft hover:text-dw-text"
-                aria-label="Cerrar modal">
-          &times;
+        <button id="closeSaleModal" type="button" class="dw-pos-btn-square" aria-label="Cerrar">
+          <span class="material-symbols-outlined text-[18px]">close</span>
         </button>
-      </div>
+      </header>
 
-      <div class="max-h-[calc(100vh-7rem)] overflow-y-auto">
-        <div class="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-
-          <div class="lg:col-span-2 space-y-4">
-            <div class="bg-dw-lilac-soft rounded-xl p-4 border border-dw-border">
-              <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
-              <div>
-                <h4 class="font-semibold text-dw-text">Cliente</h4>
-                <p class="text-xs text-dw-muted">Opcional. Busca por cédula o registra uno nuevo.</p>
-              </div>
-              <div id="customerInfoPill" class="text-xs px-3 py-1.5 rounded-full bg-dw-card border border-dw-border text-dw-muted min-w-[160px] text-center">
-                Sin cliente obligatorio
-              </div>
-            </div>
-            <input type="hidden" id="c_id">
-            <input type="hidden" id="c_name">
-            <input type="hidden" id="c_email">
-            <input type="hidden" id="c_phone">
-              <div class="space-y-2">
-                <div>
-                  <label class="block text-sm text-dw-muted mb-1" for="c_document">Cédula / ID</label>
-                  <input id="c_document" type="text"
-                         placeholder="Ej: 123456789"
-                         class="dw-input">
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
-                  <button id="searchCustomer"
-                          type="button"
-                          class="dw-btn-secondary w-full text-sm">
-                    Buscar
-                  </button>
-                  <button id="newCustomer"
-                          type="button"
-                          class="dw-btn-primary w-full text-sm">
-                    Nuevo
-                  </button>
-                  <button id="clearCustomer"
-                          type="button"
-                          class="dw-btn-secondary w-full text-sm">
-                    Limpiar
-                  </button>
-                </div>
+      <div class="dw-pos-body">
+        <div class="dw-pos-work">
+          <div class="dw-pos-toolbar">
+            <div class="dw-pos-customer-zone">
+              <button id="toggleCustomerBar" type="button" class="dw-pos-customer-toggle" aria-expanded="false" aria-controls="customerBarPanel">
+                <span class="material-symbols-outlined text-[18px]">person</span>
+                <span id="customerToggleLabel" class="max-w-[9rem] truncate">Cliente</span>
+                <span class="material-symbols-outlined text-[16px] text-dw-muted">expand_more</span>
+              </button>
+              <div id="customerBarPanel" class="dw-pos-customer-panel hidden">
+                <input type="hidden" id="c_id">
+                <input type="hidden" id="c_name">
+                <input type="hidden" id="c_email">
+                <input type="hidden" id="c_phone">
+                <input id="c_document" type="text" placeholder="Cédula" aria-label="Cédula del cliente"
+                       class="dw-pos-input dw-pos-input--doc">
+                <button id="searchCustomer" type="button" class="dw-pos-btn-square" title="Buscar cliente">
+                  <span class="material-symbols-outlined text-[18px]">search</span>
+                </button>
+                <button id="newCustomer" type="button" class="dw-pos-btn-square dw-pos-btn-square--primary" title="Nuevo cliente">
+                  <span class="material-symbols-outlined text-[18px]">person_add</span>
+                </button>
+                <button id="clearCustomer" type="button" class="dw-pos-btn-square" title="Quitar cliente">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
               </div>
             </div>
 
-            <div class="rounded-xl border border-dw-border bg-dw-card p-4 shadow-sm space-y-3">
-              <div class="flex flex-col gap-1">
-                <h4 class="font-semibold text-dw-text">Agregar productos</h4>
-                <p class="text-xs text-dw-muted">Escribe y selecciona el producto, ajusta cantidad/valor y presiona Enter para agregar.</p>
-              </div>
+            <div class="dw-pos-toolbar-divider" aria-hidden="true"></div>
 
-            <div class="flex justify-center">
-              <span id="p_category_badge"
-                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-dw-lilac-soft text-dw-text">
-                Selecciona un producto
-              </span>
+            <div class="dw-pos-product-wrap" id="productCombobox">
+              <input id="p_product" type="text" placeholder="Buscar producto…"
+                     class="dw-pos-input dw-pos-input--product w-full" autocomplete="off" spellcheck="false"
+                     role="combobox" aria-expanded="false" aria-controls="productComboboxList"
+                     aria-autocomplete="list" aria-label="Buscar producto">
+              <span id="p_category_badge" class="dw-pos-input-badge hidden"></span>
+              <ul id="productComboboxList" class="dw-pos-combobox hidden" role="listbox" aria-label="Productos"></ul>
             </div>
-
-            <div class="grid grid-cols-12 gap-3 items-end">
-              <div class="col-span-6 min-w-0">
-                <label class="block text-sm text-dw-muted mb-1" for="p_product">Producto</label>
-                <input id="p_product" type="text" list="product_list" placeholder="Escribe para filtrar"
-                       class="dw-input">
-                <datalist id="product_list"></datalist>
-                <p id="stock_info" class="mt-1 text-xs text-dw-muted min-h-[1rem] invisible"></p>
-              </div>
-
-              <div class="col-span-2 min-w-0">
-                <label class="block text-sm text-dw-muted mb-1" for="p_qty">Cantidad</label>
-                <input id="p_qty" type="number" min="1" value="1"
-                       class="dw-input">
-                <p id="qty_error" class="mt-1 text-xs text-rose-600 hidden"></p>
-                <p class="mt-1 text-xs text-transparent select-none">.</p>
-              </div>
-
-              <div class="col-span-2 min-w-0">
-                <label class="block text-sm text-dw-muted mb-1" for="p_unit">Unidad</label>
-                <input id="p_unit" type="text" inputmode="numeric" placeholder="0"
-                       class="dw-input">
-                <p class="mt-1 text-xs text-transparent select-none">.</p>
-              </div>
-
-              <div class="col-span-2 min-w-0">
-                <label class="block text-sm text-dw-muted mb-1" for="p_total">Total</label>
-                <input id="p_total" type="text" inputmode="numeric" placeholder="0"
-                       class="dw-input bg-dw-lilac-soft" readonly>
-                <p class="mt-1 text-xs text-transparent select-none">.</p>
-              </div>
-            </div>
+            <input id="p_qty" type="number" min="1" value="1" aria-label="Cantidad"
+                   class="dw-pos-input dw-pos-input--qty">
+            <input id="p_unit" type="text" inputmode="numeric" placeholder="0" aria-label="Valor unitario"
+                   class="dw-pos-input dw-pos-input--money">
+            <input id="p_total" type="text" inputmode="numeric" placeholder="0" aria-label="Subtotal" readonly
+                   class="dw-pos-input dw-pos-input--money dw-pos-input--money-readonly">
+            <button id="addProductLine" type="button" class="dw-pos-btn-square dw-pos-btn-square--primary" title="Agregar (Enter)">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+            </button>
+            <p id="qty_error" class="dw-pos-toolbar-error hidden"></p>
+            <p id="stock_info" class="sr-only" aria-live="polite"></p>
           </div>
 
-            <div class="rounded-xl border border-dw-border bg-dw-card p-4 shadow-sm">
-              <div class="flex items-center justify-between mb-2">
-                <div>
-                  <h4 class="font-semibold text-dw-text">Resumen de productos</h4>
-                  <p class="text-xs text-dw-muted">Edita cantidades y valores antes de registrar.</p>
-                </div>
-                <span id="saleItemsCounter" class="text-xs px-3 py-1 rounded-full bg-dw-lilac-soft text-dw-text">Sin productos</span>
-              </div>
-            <div class="hidden md:grid md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 text-[11px] text-dw-muted pb-2 border-b border-dw-border">
-              <div>Producto</div>
-              <div>Categoría</div>
-              <div class="text-center">Cantidad</div>
-              <div class="text-center">Unidad</div>
-              <div class="text-right">Total</div>
-              <div class="text-right">Acciones</div>
+          <div class="dw-pos-cart">
+            <div id="saleCartEmpty" class="dw-pos-empty">
+              <span class="material-symbols-outlined text-xl text-dw-muted/60">shopping_cart</span>
+              <span class="text-xs"><kbd class="rounded bg-dw-lilac-soft px-1">↑↓</kbd> <kbd class="rounded bg-dw-lilac-soft px-1">Enter</kbd> seleccionar · cantidad · <strong>+</strong> agregar</span>
             </div>
-            <div id="saleItemsList" class="space-y-2 max-h-72 overflow-y-auto pr-1 pt-2">
-              <p class="text-sm text-dw-muted">Aún no has agregado productos.</p>
-            </div>
-            </div>
+            <table id="saleCartTable" class="dw-pos-table hidden">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th class="w-12 text-center">Cant.</th>
+                  <th class="w-20 text-right">Valor</th>
+                  <th class="w-24 text-right">Total</th>
+                  <th class="w-8"></th>
+                </tr>
+              </thead>
+              <tbody id="saleItemsList"></tbody>
+            </table>
           </div>
-
-          <div class="lg:col-span-1">
-            <div class="bg-dw-lilac-soft rounded-dw border-hairline border-dw-border p-4 space-y-3 shadow-dw-neon-sm lg:sticky lg:top-6">
-              <div class="flex items-center justify-between">
-                <h4 class="font-semibold text-dw-text">Pago</h4>
-                <span class="dw-badge-primary text-xs">Paso 3</span>
-              </div>
-
-            <div class="rounded-dw border-hairline border-dw-border bg-dw-card p-3">
-              <label class="dw-label mb-1" for="sale_total">Total venta</label>
-              <input id="sale_total" type="text" inputmode="numeric" placeholder="0"
-                     class="dw-input bg-dw-lilac-soft font-semibold text-lg" readonly>
-            </div>
-
-            <div class="space-y-3">
-              <div>
-                <label class="dw-label mb-1" for="pay_method">Metodo de pago</label>
-                <select id="pay_method" class="dw-select">
-                  <option value="cash">Efectivo</option>
-                  <option value="transfer">Transferencia</option>
-                  <option value="card">Tarjeta</option>
-                  <option value="mixed">Mixto</option>
-                  <option value="other">Otro</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="dw-label mb-1" for="pay_given">Paga con (COP)</label>
-                <input id="pay_given" type="text" inputmode="numeric" placeholder="0" class="dw-input">
-              </div>
-
-              <div>
-                <label class="dw-label mb-1" for="pay_change">Devuelta (COP)</label>
-                <input id="pay_change" type="text" inputmode="numeric" placeholder="0"
-                       class="dw-input bg-dw-lilac-soft" readonly>
-              </div>
-            </div>
-
-              <div class="pt-2 flex flex-col gap-2">
-                <button id="saveSale" type="button" class="dw-btn-primary w-full">Registrar venta</button>
-                <button id="cancelSale" type="button" class="dw-btn-secondary w-full">Cancelar</button>
-                <p class="text-xs text-dw-muted text-center">Puedes registrar sin cliente si lo prefieres.</p>
-              </div>
-            </div>
-          </div>
-
         </div>
+
+        <aside class="dw-pos-rail">
+          <div>
+            <p class="dw-label mb-1">Total venta</p>
+            <p id="sale_total" class="dw-pos-total">$0</p>
+          </div>
+
+          <div>
+            <p class="dw-label mb-1.5">Método</p>
+            <div class="dw-pos-segments" id="payMethodSegments" role="group" aria-label="Método de pago">
+              <button type="button" class="dw-pos-segment is-active" data-pay-method="cash">Efectivo</button>
+              <button type="button" class="dw-pos-segment" data-pay-method="transfer">Transf.</button>
+              <button type="button" class="dw-pos-segment" data-pay-method="card">Tarjeta</button>
+            </div>
+            <select id="pay_method_extra" class="dw-pos-input mt-1.5 w-full text-xs" aria-label="Otros métodos de pago">
+              <option value="">Más opciones…</option>
+              <option value="mixed">Mixto</option>
+              <option value="other">Otro</option>
+            </select>
+            <select id="pay_method" class="sr-only" tabindex="-1" aria-hidden="true">
+              <option value="cash">Efectivo</option>
+              <option value="transfer">Transferencia</option>
+              <option value="card">Tarjeta</option>
+              <option value="mixed">Mixto</option>
+              <option value="other">Otro</option>
+            </select>
+          </div>
+
+          <div id="payCashFields" class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="dw-label mb-1" for="pay_given">Recibido</label>
+              <input id="pay_given" type="text" inputmode="numeric" placeholder="0"
+                     class="dw-pos-input dw-pos-input--money w-full">
+            </div>
+            <div>
+              <label class="dw-label mb-1" for="pay_change">Devuelta</label>
+              <input id="pay_change" type="text" inputmode="numeric" placeholder="0" readonly
+                     class="dw-pos-input dw-pos-input--money dw-pos-input--money-readonly w-full">
+            </div>
+          </div>
+
+          <div class="dw-pos-rail-actions">
+            <button id="saveSale" type="button" class="dw-btn-primary w-full py-2.5" disabled>Registrar venta</button>
+            <button id="cancelSale" type="button" class="dw-btn-ghost w-full py-1.5 text-xs">Cancelar</button>
+          </div>
+        </aside>
       </div>
     </div>
   </div>
@@ -234,7 +189,7 @@ function formatCOP(num){
 
 @php $modalCatalogDataset = $catalogDataset ?? []; @endphp
 const DATASET = @json($modalCatalogDataset, JSON_UNESCAPED_UNICODE);
-const DEFAULT_BADGE = 'Selecciona un producto';
+const DEFAULT_BADGE = '';
 let productDataset = JSON.parse(JSON.stringify(DATASET));
 const IS_ADMIN = @json(auth()->user()?->isAdmin() ?? false);
 
@@ -251,7 +206,8 @@ const cancelBtn = document.getElementById('cancelSale');
 const saveBtn   = document.getElementById('saveSale');
 
 const selProduct = document.getElementById('p_product');
-const productList = document.getElementById('product_list');
+const productComboboxList = document.getElementById('productComboboxList');
+const productComboboxRoot = document.getElementById('productCombobox');
 const badgeCat   = document.getElementById('p_category_badge');
 const inpQty     = document.getElementById('p_qty');
 const inpUnit    = document.getElementById('p_unit');
@@ -260,6 +216,11 @@ const selPayMethod = document.getElementById('pay_method');
 const inpGiven   = document.getElementById('pay_given');
 const inpChange  = document.getElementById('pay_change');
 const saleTotal  = document.getElementById('sale_total');
+const saleCartEmpty = document.getElementById('saleCartEmpty');
+const saleCartTable = document.getElementById('saleCartTable');
+const payMethodSegments = document.getElementById('payMethodSegments');
+const payMethodExtra = document.getElementById('pay_method_extra');
+const payCashFields = document.getElementById('payCashFields');
 const inpCustomerId = document.getElementById('c_id');
 const inpCustomerDocument = document.getElementById('c_document');
 const inpName    = document.getElementById('c_name');
@@ -271,6 +232,7 @@ const saleItemsList = document.getElementById('saleItemsList');
 const saleItemsCounter = document.getElementById('saleItemsCounter');
 const btnSearchCustomer = document.getElementById('searchCustomer');
 const btnNewCustomer = document.getElementById('newCustomer');
+const btnAddProductLine = document.getElementById('addProductLine');
 const btnClearCustomer = document.getElementById('clearCustomer');
 const customerModal = document.getElementById('customerCreateModal');
 const customerModalClose = document.getElementById('closeCustomerModal');
@@ -288,9 +250,16 @@ let saleToastTimer = null;
 let saleLines = [];
 let saleLineId = 1;
 let selectedCustomerId = null;
-const customerInfoPill = document.getElementById('customerInfoPill');
+const customerToggle = document.getElementById('toggleCustomerBar');
+const customerToggleLabel = document.getElementById('customerToggleLabel');
+const customerBarPanel = document.getElementById('customerBarPanel');
 let productIndex = [];
 let productById = new Map();
+let activeProductId = null;
+let comboboxOpen = false;
+let comboboxResults = [];
+let comboboxHighlight = -1;
+const COMBOBOX_LIMIT = 8;
 
 function showSaleToast(message) {
   if (!saleToast || !saleToastText) return;
@@ -305,19 +274,85 @@ function showSaleToast(message) {
   }, 3500);
 }
 
-function updateCustomerPill(){
-  if (!customerInfoPill) return;
-  if (selectedCustomerId) {
-    const name = (inpName?.value || '').trim() || 'Cliente cargado';
-    const doc = (inpCustomerDocument?.value || '').trim();
-    customerInfoPill.textContent = doc ? `${name} · ${doc}` : name;
-    customerInfoPill.classList.remove('bg-dw-card', 'border', 'border-dw-border', 'text-dw-muted');
-    customerInfoPill.classList.add('dw-badge-primary');
-  } else {
-    customerInfoPill.textContent = 'Sin cliente obligatorio';
-    customerInfoPill.classList.remove('dw-badge-primary');
-    customerInfoPill.classList.add('bg-dw-card', 'border', 'border-dw-border', 'text-dw-muted');
+function setCategoryBadge(label) {
+  if (!badgeCat) return;
+  const text = (label || '').trim();
+  if (!text) {
+    badgeCat.textContent = '';
+    badgeCat.classList.add('hidden');
+    return;
   }
+  badgeCat.textContent = text;
+  badgeCat.classList.remove('hidden');
+}
+
+function setCustomerBarOpen(open) {
+  if (!customerBarPanel || !customerToggle) return;
+  customerBarPanel.classList.toggle('hidden', !open);
+  customerToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function toggleCustomerBar() {
+  if (!customerBarPanel) return;
+  setCustomerBarOpen(customerBarPanel.classList.contains('hidden'));
+}
+
+function updateCustomerToggle(){
+  if (!customerToggleLabel || !customerToggle) return;
+  if (selectedCustomerId) {
+    const name = (inpName?.value || '').trim() || 'Cliente';
+    const doc = (inpCustomerDocument?.value || '').trim();
+    customerToggleLabel.textContent = doc ? `${name}` : name;
+    customerToggle.classList.add('is-active');
+  } else {
+    customerToggleLabel.textContent = 'Cliente';
+    customerToggle.classList.remove('is-active');
+  }
+}
+
+function initCustomerBar() {
+  customerToggle?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCustomerBar();
+  });
+
+  document.addEventListener('mousedown', (e) => {
+    if (!customerBarPanel || customerBarPanel.classList.contains('hidden')) return;
+    if (customerToggle?.contains(e.target) || customerBarPanel.contains(e.target)) return;
+    setCustomerBarOpen(false);
+  });
+}
+
+function setPayMethod(method) {
+  const value = method || 'cash';
+  if (selPayMethod) selPayMethod.value = value;
+
+  const isSegment = ['cash', 'transfer', 'card'].includes(value);
+  payMethodSegments?.querySelectorAll('[data-pay-method]').forEach((btn) => {
+    btn.classList.toggle('is-active', btn.dataset.payMethod === value);
+  });
+
+  if (payMethodExtra) {
+    payMethodExtra.value = isSegment ? '' : value;
+  }
+
+  const showCash = value === 'cash';
+  if (payCashFields) {
+    payCashFields.classList.toggle('hidden', !showCash);
+  }
+}
+
+function initPayMethodControls() {
+  payMethodSegments?.querySelectorAll('[data-pay-method]').forEach((btn) => {
+    btn.addEventListener('click', () => setPayMethod(btn.dataset.payMethod));
+  });
+
+  payMethodExtra?.addEventListener('change', () => {
+    const value = payMethodExtra.value;
+    if (value) {
+      setPayMethod(value);
+    }
+  });
 }
 
 function setCustomer(data){
@@ -327,23 +362,20 @@ function setCustomer(data){
   if (inpName) inpName.value = data?.name || '';
   if (inpEmail) inpEmail.value = data?.email || '';
   if (inpPhone) inpPhone.value = data?.phone || '';
-  updateCustomerPill();
+  updateCustomerToggle();
+  if (selectedCustomerId) setCustomerBarOpen(false);
 }
 
 function clearCustomer(){
   setCustomer({ id:null, document:'', name:'', email:'', phone:'' });
-  updateCustomerPill();
 }
 
 function renderProducts(){
-  if (!productList) return;
-  productList.innerHTML = '';
   productIndex = [];
   productById = new Map();
 
   Object.keys(productDataset).forEach(cat => {
     productDataset[cat].forEach(p => {
-      const label = `${p.name}`;
       const item = {
         id: p.id,
         name: p.name,
@@ -351,31 +383,301 @@ function renderProducts(){
         unit: p.unit,
         stock: p.stock ?? null,
         type: p.type || '',
-        label,
+        label: p.name,
       };
       productIndex.push(item);
       productById.set(String(p.id), item);
-
-      const opt = document.createElement('option');
-      opt.value = label;
-      productList.appendChild(opt);
     });
+  });
+
+  productIndex.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+}
+
+function normalizeSearch(value) {
+  return (value || '').trim().toLowerCase();
+}
+
+function filterProducts(query) {
+  const q = normalizeSearch(query);
+  if (!q) {
+    return productIndex.slice(0, COMBOBOX_LIMIT);
+  }
+
+  const starts = [];
+  const contains = [];
+
+  productIndex.forEach((item) => {
+    const name = item.name.toLowerCase();
+    if (name.startsWith(q)) {
+      starts.push(item);
+    } else if (name.includes(q)) {
+      contains.push(item);
+    }
+  });
+
+  return [...starts, ...contains].slice(0, COMBOBOX_LIMIT);
+}
+
+function highlightQuery(text, query) {
+  const q = normalizeSearch(query);
+  if (!q || !text) return text;
+
+  const lower = text.toLowerCase();
+  const idx = lower.indexOf(q);
+  if (idx === -1) return text;
+
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + q.length);
+  const after = text.slice(idx + q.length);
+  return `${before}<mark>${match}</mark>${after}`;
+}
+
+function formatProductMeta(item) {
+  const parts = [getCategoryLabel(item.category)];
+  parts.push('$' + formatCOP(item.unit || 0));
+
+  if (item.stock === null || item.type === 'service') {
+    parts.push('Servicio');
+  } else if (item.stock <= 0) {
+    parts.push('Sin stock');
+  } else {
+    parts.push(`Stock ${item.stock}`);
+  }
+
+  return parts.join(' · ');
+}
+
+function setComboboxAria(open) {
+  if (!selProduct) return;
+  selProduct.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function closeProductCombobox() {
+  comboboxOpen = false;
+  comboboxHighlight = -1;
+  comboboxResults = [];
+  productComboboxList?.classList.add('hidden');
+  productComboboxList && (productComboboxList.innerHTML = '');
+  setComboboxAria(false);
+}
+
+function highlightComboboxItem(index) {
+  comboboxHighlight = index;
+  productComboboxList?.querySelectorAll('[data-combobox-option]').forEach((el, i) => {
+    el.classList.toggle('is-highlighted', i === index);
+    if (i === index) {
+      el.scrollIntoView({ block: 'nearest' });
+    }
   });
 }
 
+function renderProductCombobox(results) {
+  if (!productComboboxList) return;
+
+  comboboxResults = results;
+  comboboxHighlight = results.length ? 0 : -1;
+  productComboboxList.innerHTML = '';
+
+  if (!results.length) {
+    const empty = document.createElement('li');
+    empty.className = 'dw-pos-combobox-empty';
+    empty.textContent = selProduct?.value.trim() ? 'Sin coincidencias' : 'No hay productos activos';
+    productComboboxList.appendChild(empty);
+    comboboxOpen = true;
+    productComboboxList.classList.remove('hidden');
+    setComboboxAria(true);
+    return;
+  }
+
+  const query = selProduct?.value || '';
+
+  results.forEach((item, index) => {
+    const option = document.createElement('li');
+    option.className = 'dw-pos-combobox-option' + (index === 0 ? ' is-highlighted' : '');
+    option.setAttribute('role', 'option');
+    option.dataset.comboboxOption = '1';
+    option.dataset.productId = String(item.id);
+
+    const name = document.createElement('span');
+    name.className = 'dw-pos-combobox-name';
+    name.innerHTML = highlightQuery(item.name, query);
+
+    const meta = document.createElement('span');
+    meta.className = 'dw-pos-combobox-meta';
+    meta.textContent = formatProductMeta(item);
+
+    option.appendChild(name);
+    option.appendChild(meta);
+    option.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      selectProductById(item.id);
+    });
+
+    productComboboxList.appendChild(option);
+  });
+
+  comboboxOpen = true;
+  productComboboxList.classList.remove('hidden');
+  setComboboxAria(true);
+}
+
+function openProductCombobox(query) {
+  renderProductCombobox(filterProducts(query));
+}
+
+function clearProductSelection() {
+  activeProductId = null;
+  setCategoryBadge('');
+  inpUnit.value = '';
+  inpQty.value = '1';
+  inpTotal.value = '';
+  if (stockInfo) {
+    stockInfo.textContent = '';
+    stockInfo.classList.add('invisible');
+    stockInfo.classList.remove('text-rose-600');
+  }
+}
+
+function applyProductMeta(meta) {
+  if (!meta) {
+    clearProductSelection();
+    return;
+  }
+
+  activeProductId = meta.id;
+  if (selProduct) selProduct.value = meta.name;
+
+  const catLabel = getCategoryLabel(meta.category || '');
+  setCategoryBadge(catLabel);
+  inpUnit.value = formatCOP(meta.unit);
+
+  const available = meta.stock;
+  if (available !== null && stockInfo) {
+    stockInfo.textContent = `Stock: ${available}`;
+    stockInfo.classList.remove('invisible', 'text-rose-600');
+  } else if (stockInfo) {
+    stockInfo.textContent = 'Servicio';
+    stockInfo.classList.remove('invisible', 'text-rose-600');
+  }
+
+  if (available !== null && available <= 0) {
+    inpQty.value = '1';
+    inpTotal.value = '';
+    if (stockInfo) stockInfo.classList.add('text-rose-600');
+    showSaleToast('Este producto no tiene stock disponible.');
+    return;
+  }
+
+  if (!inpQty.value || parseInt(inpQty.value, 10) < 1) {
+    inpQty.value = '1';
+  }
+
+  recalcLinePreview();
+}
+
+function selectProductById(id, options = {}) {
+  const meta = productById.get(String(id));
+  if (!meta) return;
+
+  closeProductCombobox();
+  applyProductMeta(meta);
+
+  if (options.focusQty !== false) {
+    requestAnimationFrame(() => {
+      inpQty?.focus();
+      inpQty?.select();
+    });
+  }
+}
+
 function getSelectedProductMeta(){
+  if (activeProductId) {
+    return productById.get(String(activeProductId)) || null;
+  }
+
   const raw = (selProduct?.value || '').trim();
   if (!raw) return null;
 
-  let id = null;
   const normalized = raw.toLowerCase();
-  const match = productIndex.find(item =>
-    item.name.toLowerCase() === normalized || item.label.toLowerCase() === normalized
-  );
-  if (match) id = String(match.id);
+  const match = productIndex.find(item => item.name.toLowerCase() === normalized);
+  return match || null;
+}
 
-  if (!id) return null;
-  return productById.get(String(id)) || null;
+function onProductInput() {
+  const query = selProduct?.value || '';
+  const selected = activeProductId ? productById.get(String(activeProductId)) : null;
+
+  if (selected && query !== selected.name) {
+    activeProductId = null;
+    setCategoryBadge('');
+    if (stockInfo) stockInfo.classList.add('invisible');
+  }
+
+  if (!query.trim()) {
+    clearProductSelection();
+  }
+
+  openProductCombobox(query);
+}
+
+function onProductKeydown(e) {
+  if (comboboxOpen && comboboxResults.length) {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const next = comboboxHighlight < comboboxResults.length - 1 ? comboboxHighlight + 1 : 0;
+      highlightComboboxItem(next);
+      return;
+    }
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prev = comboboxHighlight > 0 ? comboboxHighlight - 1 : comboboxResults.length - 1;
+      highlightComboboxItem(prev);
+      return;
+    }
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const pick = comboboxHighlight >= 0 ? comboboxResults[comboboxHighlight] : comboboxResults[0];
+      if (pick) selectProductById(pick.id);
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      closeProductCombobox();
+      return;
+    }
+  }
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (getSelectedProductMeta()) {
+      inpQty?.focus();
+      inpQty?.select();
+    } else {
+      openProductCombobox(selProduct?.value || '');
+    }
+    return;
+  }
+
+  if (e.key === 'ArrowDown' && !comboboxOpen) {
+    e.preventDefault();
+    openProductCombobox(selProduct?.value || '');
+  }
+}
+
+function initProductCombobox() {
+  selProduct?.addEventListener('input', onProductInput);
+  selProduct?.addEventListener('keydown', onProductKeydown);
+  selProduct?.addEventListener('focus', () => openProductCombobox(selProduct.value || ''));
+
+  document.addEventListener('mousedown', (e) => {
+    if (!comboboxOpen) return;
+    if (productComboboxRoot?.contains(e.target)) return;
+    closeProductCombobox();
+  });
 }
 
 function getCategoryLabel(code){
@@ -398,70 +700,53 @@ function renderSaleItems(){
   if (!saleItemsList) return;
   saleItemsList.innerHTML = '';
 
-  if (!saleLines.length) {
-    const empty = document.createElement('p');
-    empty.className = 'text-sm text-dw-muted';
-    empty.textContent = 'Aún no has agregado productos.';
-    saleItemsList.appendChild(empty);
-  } else {
-    saleLines.forEach(line => {
-      const row = document.createElement('div');
-      row.className = 'rounded-dw border-hairline border-dw-border p-3 grid grid-cols-1 md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 items-center text-xs text-dw-text';
+  const hasItems = saleLines.length > 0;
+  saleCartEmpty?.classList.toggle('hidden', hasItems);
+  saleCartTable?.classList.toggle('hidden', !hasItems);
 
-      const nameWrap = document.createElement('div');
-      nameWrap.className = '';
-      const nameEl = document.createElement('div');
-      nameEl.className = 'text-dw-text';
-      nameEl.textContent = line.name;
-      nameWrap.appendChild(nameEl);
-
-      const categoryWrap = document.createElement('div');
-      categoryWrap.className = '';
-      const categoryText = document.createElement('div');
-      categoryText.className = 'text-dw-text';
-      categoryText.textContent = getCategoryLabel(line.category);
-      categoryWrap.appendChild(categoryText);
-
-      const qtyWrap = document.createElement('div');
-      qtyWrap.className = 'text-center';
-      const qtyValue = document.createElement('div');
-      qtyValue.className = 'w-full rounded-lg bg-dw-lilac-soft text-dw-text px-2 py-2 text-xs text-center';
-      qtyValue.textContent = String(line.quantity);
-      qtyWrap.appendChild(qtyValue);
-
-      const unitWrap = document.createElement('div');
-      unitWrap.className = 'text-center';
-      const unitValue = document.createElement('div');
-      unitValue.className = 'w-full rounded-lg bg-dw-lilac-soft text-dw-text px-2 py-2 text-xs text-center';
-      unitValue.textContent = formatCOP(line.unitPrice);
-      unitWrap.appendChild(unitValue);
-
-      const totalWrap = document.createElement('div');
-      totalWrap.className = 'text-right';
-      const totalValue = document.createElement('div');
-      totalValue.className = 'text-dw-text';
-      totalValue.textContent = '$' + formatCOP(line.quantity * line.unitPrice);
-      totalWrap.appendChild(totalValue);
-
-      const actionsWrap = document.createElement('div');
-      actionsWrap.className = 'text-right';
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'text-dw-text hover:underline';
-      removeBtn.textContent = 'Quitar';
-      removeBtn.addEventListener('click', () => removeLine(line.id));
-      actionsWrap.appendChild(removeBtn);
-
-      row.appendChild(nameWrap);
-      row.appendChild(categoryWrap);
-      row.appendChild(qtyWrap);
-      row.appendChild(unitWrap);
-      row.appendChild(totalWrap);
-      row.appendChild(actionsWrap);
-
-      saleItemsList.appendChild(row);
-    });
+  if (!hasItems) {
+    updateItemsCounter();
+    updateSaleTotals();
+    return;
   }
+
+  saleLines.forEach(line => {
+    const row = document.createElement('tr');
+
+    const nameCell = document.createElement('td');
+    nameCell.className = 'font-medium text-dw-text';
+    nameCell.textContent = line.name;
+
+    const qtyCell = document.createElement('td');
+    qtyCell.className = 'text-center';
+    qtyCell.textContent = String(line.quantity);
+
+    const unitCell = document.createElement('td');
+    unitCell.className = 'text-right text-dw-muted';
+    unitCell.textContent = '$' + formatCOP(line.unitPrice);
+
+    const totalCell = document.createElement('td');
+    totalCell.className = 'text-right font-semibold text-dw-text';
+    totalCell.textContent = '$' + formatCOP(line.quantity * line.unitPrice);
+
+    const actionsCell = document.createElement('td');
+    actionsCell.className = 'text-right';
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'text-dw-muted hover:text-rose-600';
+    removeBtn.title = 'Quitar';
+    removeBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">delete</span>';
+    removeBtn.addEventListener('click', () => removeLine(line.id));
+    actionsCell.appendChild(removeBtn);
+
+    row.appendChild(nameCell);
+    row.appendChild(qtyCell);
+    row.appendChild(unitCell);
+    row.appendChild(totalCell);
+    row.appendChild(actionsCell);
+
+    saleItemsList.appendChild(row);
+  });
 
   updateItemsCounter();
   updateSaleTotals();
@@ -470,23 +755,26 @@ function renderSaleItems(){
 function updateItemsCounter(){
   if (!saleItemsCounter) return;
   if (!saleLines.length) {
-    saleItemsCounter.textContent = 'Sin productos';
+    saleItemsCounter.textContent = '0 productos';
     return;
   }
   const totalUnits = saleLines.reduce((sum, line) => sum + line.quantity, 0);
-  saleItemsCounter.textContent = `${saleLines.length} producto${saleLines.length === 1 ? '' : 's'} (${totalUnits} unidades)`;
+  saleItemsCounter.textContent = `${saleLines.length} prod. · ${totalUnits} u.`;
 }
 
 function updateSaleTotals(){
   const total = calcSaleTotal();
-  if (saleTotal) saleTotal.value = formatCOP(total);
+  if (saleTotal) saleTotal.textContent = total > 0 ? '$' + formatCOP(total) : '$0';
   recalcChange(total);
   if (saveBtn) saveBtn.disabled = !saleLines.length;
 }
 
 function resetSaleForm(){
+  closeProductCombobox();
+  setCustomerBarOpen(false);
+  activeProductId = null;
   if (selProduct) selProduct.value = '';
-  if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
+  clearProductSelection();
 
   saleLines = [];
   saleLineId = 1;
@@ -496,11 +784,11 @@ function resetSaleForm(){
   inpQty.value = "1";
   if (!IS_ADMIN && inpUnit) {
     inpUnit.readOnly = true;
-    inpUnit.classList.add('bg-dw-lilac-soft', 'text-dw-muted');
+    inpUnit.classList.add('dw-pos-input--money-readonly');
   }
   inpUnit.value = "";
   inpTotal.value = "";
-  if (selPayMethod) selPayMethod.value = 'cash';
+  setPayMethod('cash');
   inpGiven.value = "";
   inpChange.value = "";
   if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('invisible'); stockInfo.classList.remove('text-rose-600'); }
@@ -512,12 +800,28 @@ function openModal(){
   closeCustomerModal();
   saleModal.classList.remove('hidden');
   document.body.classList.add('overflow-hidden');
+  requestAnimationFrame(() => selProduct?.focus());
 }
-function closeModal(){ saleModal.classList.add('hidden'); document.body.classList.remove('overflow-hidden'); }
+function closeModal(){
+  closeProductCombobox();
+  saleModal.classList.add('hidden');
+  document.body.classList.remove('overflow-hidden');
+}
 closeBtn?.addEventListener('click', closeModal);
 cancelBtn?.addEventListener('click', closeModal);
-saleModal.addEventListener('click', e => { if(e.target === saleModal) closeModal(); });
-window.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+saleModal.querySelector('[data-pos-dismiss]')?.addEventListener('click', closeModal);
+document.querySelector('.dw-pos-center')?.addEventListener('click', (e) => {
+  if (e.target.classList.contains('dw-pos-center')) closeModal();
+});
+document.querySelector('.dw-pos-modal')?.addEventListener('click', (e) => e.stopPropagation());
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' || saleModal.classList.contains('hidden')) return;
+  if (comboboxOpen) {
+    closeProductCombobox();
+    return;
+  }
+  closeModal();
+});
 
 function recalcLinePreview(){
   const meta = getSelectedProductMeta();
@@ -687,11 +991,13 @@ function addLineToSale(){
   });
 
   renderSaleItems();
+  closeProductCombobox();
+  activeProductId = null;
   inpQty.value = "1";
   inpUnit.value = "";
   inpTotal.value = "";
   if (selProduct) selProduct.value = "";
-  if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
+  setCategoryBadge('');
   if (stockInfo) { stockInfo.textContent = ''; stockInfo.classList.add('invisible'); stockInfo.classList.remove('text-rose-600'); }
   selProduct?.focus();
   recalcChange();
@@ -745,9 +1051,10 @@ async function submitSale(event){
     return;
   }
 
-  const given  = toInt(inpGiven.value);
+  const payMethod = selPayMethod?.value || 'cash';
   const total = calcSaleTotal();
-  if (given < total) {
+  const given = payMethod === 'cash' ? toInt(inpGiven.value) : total;
+  if (payMethod === 'cash' && given < total) {
     showSaleToast('El pago debe cubrir el total de la venta.');
     return;
   }
@@ -757,7 +1064,7 @@ async function submitSale(event){
     customer_name: inpName?.value || null,
     customer_email: inpEmail?.value || null,
     customer_phone: inpPhone?.value || null,
-    payment_method: selPayMethod?.value || 'cash',
+    payment_method: payMethod,
     amount_received: given || 0,
     items: saleLines.map(line => ({
       item_id: line.itemId,
@@ -799,56 +1106,21 @@ async function submitSale(event){
   }
 }
 
-function onProductChange(){
-  const meta = getSelectedProductMeta();
+function formatOnUnit(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcLinePreview(); }
 
-  if(!meta){
-    if (badgeCat) badgeCat.textContent = DEFAULT_BADGE;
-    inpUnit.value = "";
-    inpQty.value = "1";
-    inpTotal.value = "";
-    if (stockInfo) stockInfo.classList.add('invisible');
-    return;
-  }
-
-  const catCode  = meta.category || "";
-  const unit     = meta.unit;
-  const available = meta.stock;
-  const catLabel = getCategoryLabel(catCode);
-
-  if (badgeCat) badgeCat.textContent = catLabel;
-  inpUnit.value = formatCOP(unit);
-
-  if (available !== null && stockInfo) {
-    stockInfo.textContent = `Stock disponible: ${available} unidad${available === 1 ? '' : 'es'}`;
-    stockInfo.classList.remove('invisible');
-    stockInfo.classList.remove('text-rose-600');
-  } else if (stockInfo) {
-    stockInfo.textContent = 'Servicio (sin control de stock)';
-    stockInfo.classList.remove('invisible');
-    stockInfo.classList.remove('text-rose-600');
-  }
-
-  if (available !== null && available <= 0) {
-    inpQty.value = "1";
-    inpTotal.value = "";
-    showSaleToast('Este producto no tiene stock disponible.');
-    if (stockInfo) stockInfo.classList.add('text-rose-600');
-    return;
-  }
-
-  if (!inpQty.value || parseInt(inpQty.value, 10) < 1) {
-    const defaultQty = available !== null ? Math.min(1, available) : 1;
-    inpQty.value = defaultQty > 0 ? defaultQty : "1";
-  }
-
-  recalcLinePreview();
-  inpQty?.focus();
-  inpQty?.select();
+function formatOnGiven(e){
+  e.target.value = formatCOP(toInt(e.target.value));
+  recalcChange();
 }
 
-function formatOnUnit(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcLinePreview(); }
-function formatOnGiven(e){ e.target.value = formatCOP(toInt(e.target.value)); recalcChange(); }
+function suggestCashReceived() {
+  if (selPayMethod?.value !== 'cash') return;
+  const total = calcSaleTotal();
+  if (total <= 0 || toInt(inpGiven.value) > 0) return;
+  inpGiven.value = formatCOP(total);
+  recalcChange(total);
+}
+
 function handleAddOnEnter(e){
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -860,12 +1132,12 @@ document.addEventListener('DOMContentLoaded', () => {
   saleToast     = document.getElementById('saleToast');
   saleToastText = document.getElementById('saleToastText');
 
+  initPayMethodControls();
+  initCustomerBar();
+  initProductCombobox();
   renderProducts();
   resetSaleForm();
 
-  selProduct.addEventListener('change', onProductChange);
-  selProduct.addEventListener('input', onProductChange);
-  selProduct.addEventListener('keydown', handleAddOnEnter);
   inpQty.addEventListener('input', recalcLinePreview);
   inpQty.addEventListener('keydown', handleAddOnEnter);
   if (IS_ADMIN) {
@@ -873,9 +1145,11 @@ document.addEventListener('DOMContentLoaded', () => {
     inpUnit.addEventListener('keydown', handleAddOnEnter);
   }
   inpGiven.addEventListener('input', formatOnGiven);
+  inpGiven.addEventListener('focus', suggestCashReceived);
   btnSearchCustomer?.addEventListener('click', searchCustomerByDocument);
   btnNewCustomer?.addEventListener('click', openCustomerModal);
   btnClearCustomer?.addEventListener('click', clearCustomer);
+  btnAddProductLine?.addEventListener('click', addLineToSale);
   customerModalClose?.addEventListener('click', closeCustomerModal);
   customerModalCancel?.addEventListener('click', closeCustomerModal);
   customerModalSave?.addEventListener('click', saveCustomerModal);

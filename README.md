@@ -120,6 +120,18 @@ Los colores de superficie (`bg`, `card`, `text`, `muted`, `lilac-soft`, `border`
 
 **Sin tema oscuro (por ahora):** catalogo publico (`/`, `welcome`) y factura de venta (`sales/show`).
 
+**Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`, estilos `dw-pos-*` en `app.css`):
+
+| Caracteristica | Detalle |
+|----------------|---------|
+| Layout | Modal fluido (hasta ~1140px), rail de cobro fijo, scroll solo en carrito |
+| Toolbar | Grid en una fila: cliente colapsable + busqueda de producto + cantidad/valor/subtotal |
+| Cliente | Boton `Cliente` con panel desplegable (cedula, buscar, nuevo, quitar) |
+| Productos | Combobox custom con filtro, resaltado, teclado `↑↓` + `Enter` (sin `datalist`) |
+| Cobro | Total tipografico, segmentos de pago, recibido/devuelta en efectivo |
+
+Logica JS del combobox y del panel de cliente vive en el partial (bloque `@push('scripts')`).
+
 Tras cambios en vistas, CSS o JS del frontend:
 ```bash
 npm run build
