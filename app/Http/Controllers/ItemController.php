@@ -3,37 +3,44 @@
 namespace App\Http\Controllers;
 
 use App\Models\Item;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ItemController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): RedirectResponse
+    {
+        return redirect()->route('inventory.index', $request->query());
+    }
+
+    public function buildCatalogPageData(Request $request): array
     {
         [$sectors, $filters, $items] = $this->getItemsListing($request);
 
-        $inventoryStats = [
-            'stockable' => Item::where('type', 'product')->count(),
-            'services' => Item::where('type', 'service')->count(),
-            'units' => (int) \App\Models\Stock::sum('quantity'),
-            'low_stock' => (int) \App\Models\Stock::whereRaw('quantity <= COALESCE(min_threshold, 0)')->count(),
-        ];
+        $paginated = $items instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
+            ? $items
+            : $items;
 
-        $lowStockItems = Item::query()
-            ->select('items.id', 'items.name', 'items.sector', 'stocks.quantity as stock', 'stocks.min_threshold as min_stock')
-            ->leftJoin('stocks', 'stocks.item_id', '=', 'items.id')
-            ->where('items.type', 'product')
-            ->whereRaw('stocks.quantity <= COALESCE(stocks.min_threshold, 0)')
-            ->orderBy('stocks.quantity')
-            ->limit(5)
-            ->get();
-
-        return view('items.index', [
-            'items'   => $items,
+        return [
+            'items' => $paginated,
             'filters' => $filters,
             'sectors' => $sectors,
-            'inventoryStats' => $inventoryStats,
-            'lowStockItems' => $lowStockItems,
-        ]);
+            'createSectors' => config('decowandy.item_create_sectors', []),
+            'initialPayload' => [
+                'items' => $paginated->items(),
+                'pagination' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                ],
+                'filters' => $filters,
+            ],
+            'inventoryConfig' => [
+                'colors' => config('decowandy.inventory.colors', ['N/A']),
+                'markup_percent' => (int) config('decowandy.inventory.markup_percent', 40),
+            ],
+        ];
     }
 
     /**
@@ -122,7 +129,7 @@ class ItemController extends Controller
         $item->save();
 
         return redirect()
-            ->route('items.index')
+            ->route('inventory.index')
             ->with('status', 'Ítem desactivado correctamente.');
     }
 }

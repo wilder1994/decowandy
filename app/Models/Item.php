@@ -20,6 +20,12 @@ class Item extends Model
         'sale_price',
         'cost',
         'unit',
+        'barcode',
+        'color',
+        'scan_mode',
+        'pack_size',
+        'barcode_source',
+        'internal_sku',
         'featured',
         'active',
     ];

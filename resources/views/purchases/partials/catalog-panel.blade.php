@@ -1,142 +1,29 @@
-{{-- resources/views/items/index.blade.php
-     Gestor de Productos - conectado a la API
-     - Tabs por sector (Diseño, Impresión, Papelería)
-     - Tabla con datos reales usando Axios sobre /api/items
-     - Modal Crear/Editar con envíos POST/PUT y confirmación de borrado
---}}
-@extends('layouts.admin')
-
-@section('title','Ítems - DecoWandy')
-
 @php
-    /** Normaliza paginator para evitar errores si llega una colección plana */
-    $paginated = $items instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator
-        ? $items
-        : new \Illuminate\Pagination\LengthAwarePaginator(
-            $items->values(),
-            $items->count(),
-            $filters['per_page'] ?? 10,
-            1,
-            ['path' => request()->url(), 'query' => request()->query()]
-        );
-
-    $initialPayload = [
-        'items' => $paginated->items(),
-        'pagination' => [
-            'current_page' => $paginated->currentPage(),
-            'last_page' => $paginated->lastPage(),
-            'per_page' => $paginated->perPage(),
-            'total' => $paginated->total(),
-        ],
-        'filters' => $filters,
-    ];
-
-    $inventoryConfig = [
-        'colors' => config('decowandy.inventory.colors', ['N/A']),
-        'markup_percent' => (int) config('decowandy.inventory.markup_percent', 40),
-    ];
+    $sectors = $catalog['sectors'];
+    $filters = $catalog['filters'];
+    $createSectors = $catalog['createSectors'];
+    $initialPayload = $catalog['initialPayload'];
+    $inventoryConfig = $catalog['inventoryConfig'];
 @endphp
 
-@section('content')
-
-  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-    <x-dw-page-header title="Ítems" subtitle="Diseño e impresión se crean aquí. Papelería se registra en Compras." />
-    <div class="flex flex-wrap gap-2">
-      <button id="btnSheetLabels" type="button" class="dw-btn-secondary hidden text-sm">
-        <span class="material-symbols-outlined text-base">picture_as_pdf</span>
-        Etiquetas PDF
-      </button>
-      <x-dw-button id="btnNew" type="button">
-        <span class="material-symbols-outlined text-base">add</span>
-        Nuevo producto
-      </x-dw-button>
-    </div>
-  </div>
-
-  {{-- Inventario --}}
-  <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <div class="dw-card p-3.5">
-      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Productos con stock</div>
-      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ $inventoryStats['stockable'] }}</div>
-      <div class="mt-1 text-xs text-dw-muted">Listos para controlar existencias</div>
-    </div>
-    <div class="dw-card p-3.5">
-      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Servicios</div>
-      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ $inventoryStats['services'] }}</div>
-      <div class="mt-1 text-xs text-dw-muted">Ítems sin stock</div>
-    </div>
-    <div class="dw-card p-3.5">
-      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Unidades en stock</div>
-      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ number_format($inventoryStats['units'], 0, ',', '.') }}</div>
-      <div class="mt-1 text-xs text-dw-muted">Suma de existencias actuales</div>
-    </div>
-    <div class="dw-card p-3.5">
-      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Bajo stock</div>
-      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ $inventoryStats['low_stock'] }}</div>
-      <div class="mt-1 text-xs text-dw-muted">Por debajo del mínimo</div>
-    </div>
-  </div>
-
-  <div class="dw-card mb-4 p-4">
-    <div class="flex items-center justify-between mb-3">
-      <div>
-        <h3 class="font-display text-sm font-semibold">Alertas de inventario</h3>
-        <p class="text-xs text-dw-muted">Items con stock por debajo del mínimo configurado.</p>
-      </div>
-      <span class="text-xs text-dw-muted">Top 5</span>
-    </div>
-    <div class="overflow-x-auto">
-      <table class="dw-table min-w-full text-sm">
-        <thead>
-          <tr class="text-left">
-            <th class="py-2 pr-4">Producto</th>
-            <th class="py-2 pr-4">Sector</th>
-            <th class="py-2 pr-4">Stock</th>
-            <th class="py-2 pr-4">Mínimo</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($lowStockItems as $item)
-            <tr>
-              <td class="py-2 pr-4">{{ $item->name }}</td>
-              <td class="py-2 pr-4 text-dw-muted">{{ $sectors[$item->sector] ?? $item->sector }}</td>
-              <td class="py-2 pr-4 text-rose-600 font-semibold">{{ $item->stock }}</td>
-              <td class="py-2 pr-4 text-dw-muted">{{ $item->min_stock }}</td>
-            </tr>
-          @empty
-            <tr><td colspan="4" class="py-3 text-center text-sm text-dw-muted">Sin alertas de inventario.</td></tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  {{-- Buscador --}}
-  <div class="mb-4 flex flex-wrap items-center gap-3">
+<div id="catalogPanel" class="space-y-4">
+  <div class="flex flex-wrap items-center gap-3">
     <div class="flex flex-wrap gap-2">
       @foreach($sectors as $key => $label)
-        <button data-sector="{{ $key }}"
-                type="button"
-                class="tab-btn dw-tab"
-                data-default="{{ $loop->first ? '1' : '0' }}">
-          {{ $label }}
-        </button>
+        <button data-sector="{{ $key }}" type="button" class="tab-btn dw-tab" data-default="{{ $loop->first ? '1' : '0' }}">{{ $label }}</button>
       @endforeach
     </div>
     <div class="relative ml-auto w-full max-w-xs">
       <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-dw-muted text-base">search</span>
-      <input id="searchBox"
-             type="search"
-             placeholder="Buscar por nombre o descripción"
-             class="dw-input pl-9">
+      <input id="searchBox" type="search" placeholder="Buscar por nombre, código…" class="dw-input pl-9">
     </div>
+    <button id="btnSheetLabels" type="button" class="dw-btn-secondary hidden text-sm">
+      <span class="material-symbols-outlined text-base">picture_as_pdf</span>
+      Etiquetas PDF
+    </button>
   </div>
 
-  <div id="papeleriaCatalogBanner" class="hidden mb-4 rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-4 py-3 text-sm text-dw-muted">
-    Los productos de <strong class="text-dw-text">papelería</strong> se crean al registrar una compra.
-    <a href="{{ route('purchases.index') }}" class="dw-link ml-1">Ir a Compras →</a>
-    Aquí puedes consultar, editar precios y descargar etiquetas.
-  </div>
+  <p class="text-xs text-dw-muted">Consulta y edita precios. Las altas nuevas se hacen con <strong>Agregar</strong> en la barra superior.</p>
 
   {{-- Tabla --}}
   <div class="dw-card p-4">
@@ -216,8 +103,7 @@
       </div>
     </div>
   </div>
-
-@endsection
+</div>
 
 @push('scripts')
 <script>
@@ -231,11 +117,10 @@
     const initialPayload = @json($initialPayload, JSON_UNESCAPED_UNICODE);
     const sectorLabels = @json($sectors, JSON_UNESCAPED_UNICODE);
     const createSectors = @json($createSectors ?? [], JSON_UNESCAPED_UNICODE);
-    const purchasesUrl = @json(route('purchases.index'));
     const inventoryConfig = @json($inventoryConfig, JSON_UNESCAPED_UNICODE);
 
     const tabButtons = Array.from(document.querySelectorAll('[data-sector]'));
-    const papeleriaBanner = document.getElementById('papeleriaCatalogBanner');
+    const papeleriaBanner = null;
     const searchBox = document.getElementById('searchBox');
     const tableBody = document.getElementById('itemsTableBody');
     const paginationInfo = document.getElementById('paginationInfo');
@@ -248,7 +133,7 @@
     const modalSave = document.getElementById('modalSave');
     const modalCancel = document.getElementById('modalCancel');
     const modalClose = document.getElementById('modalClose');
-    const btnNew = document.getElementById('btnNew');
+    const btnNew = null;
     const btnSheetLabels = document.getElementById('btnSheetLabels');
     const form = document.getElementById('itemForm');
     const priceConfirmModal = document.getElementById('priceConfirmModal');
@@ -617,15 +502,19 @@
       state.priceWarningOpen = false;
     }
 
-    function openNew() {
-      if (state.sector === 'papeleria') {
-        window.location.href = purchasesUrl;
-        return;
-      }
+    function openNew(sectorOverride) {
       resetForm();
+      if (sectorOverride && fields.sector) {
+        fields.sector.value = sectorOverride;
+      }
+      state.sector = fields.sector?.value || state.sector;
       modalTitle.textContent = 'Nuevo producto';
+      updateStockVisibility();
       openModal();
     }
+
+    window.catalogOpenCreate = openNew;
+    window.catalogOpenEdit = (item) => fillForm(item);
 
     function fillForm(item) {
       state.editing = item;
@@ -896,10 +785,6 @@
       }
       const query = ids.map((id) => `ids[]=${id}`).join('&');
       window.open(`/api/items/labels/sheet?${query}`, '_blank');
-    });
-
-    btnNew.addEventListener('click', () => {
-      openNew();
     });
 
     modalClose.addEventListener('click', () => {

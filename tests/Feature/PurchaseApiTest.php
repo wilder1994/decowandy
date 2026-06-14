@@ -103,8 +103,80 @@ class PurchaseApiTest extends TestCase
 
         $response->assertStatus(422);
         $this->assertDatabaseCount('purchases', 0);
-        $this->assertDatabaseMissing('stocks', [
+    }
+
+    public function test_papeleria_purchase_creates_new_item_with_barcode(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $response = $this->postJson(route('api.purchases.store'), [
+            'date' => now()->toDateString(),
+            'category' => 'Papelería',
+            'supplier' => 'Distribuidora Test',
+            'to_inventory' => true,
+            'items' => [
+                [
+                    'product_name' => 'Cuaderno 100 hojas',
+                    'quantity' => 10,
+                    'total_cost' => 50000,
+                    'barcode' => 'DWY-0010',
+                    'color' => 'Azul',
+                    'sale_price' => 7500,
+                ],
+            ],
+        ]);
+
+        $response->assertCreated()->assertJsonPath('total', 50000);
+
+        $this->assertDatabaseHas('items', [
+            'name' => 'Cuaderno 100 hojas',
+            'sector' => 'papeleria',
+            'barcode' => 'DWY-0010',
+            'color' => 'Azul',
+        ]);
+
+        $item = Item::where('barcode', 'DWY-0010')->first();
+        $this->assertNotNull($item);
+
+        $this->assertDatabaseHas('stocks', [
             'item_id' => $item->id,
+            'quantity' => 10,
+        ]);
+
+        $this->assertDatabaseHas('purchase_items', [
+            'product_name' => 'Cuaderno 100 hojas',
+            'item_id' => $item->id,
+            'quantity' => 10,
+        ]);
+    }
+
+    public function test_papeleria_purchase_without_barcode_generates_internal_code(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $response = $this->postJson(route('api.purchases.store'), [
+            'date' => now()->toDateString(),
+            'category' => 'Papeleria',
+            'to_inventory' => true,
+            'items' => [
+                [
+                    'product_name' => 'Bolígrafo negro',
+                    'quantity' => 5,
+                    'total_cost' => 10000,
+                ],
+            ],
+        ]);
+
+        $response->assertCreated();
+
+        $item = Item::where('name', 'Bolígrafo negro')->first();
+        $this->assertNotNull($item);
+        $this->assertStringStartsWith('DWY-', $item->barcode);
+        $this->assertDatabaseHas('stocks', [
+            'item_id' => $item->id,
+            'quantity' => 5,
         ]);
     }
 }

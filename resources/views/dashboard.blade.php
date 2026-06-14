@@ -91,7 +91,7 @@
             <div class="flex items-center justify-between">
                 <h3 class="font-display text-sm font-semibold">Stock bajo</h3>
                 @can('manage-inventory')
-                    <a href="{{ route('items.index') }}" class="text-xs font-semibold text-dw-primary hover:underline">Gestionar</a>
+                    <a href="{{ route('inventory.index') }}" class="text-xs font-semibold text-dw-primary hover:underline">Gestionar</a>
                 @endcan
             </div>
             <ul class="mt-3 space-y-2 text-sm">

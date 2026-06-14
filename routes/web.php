@@ -5,6 +5,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InvestmentController;
+use App\Http\Controllers\InventoryPageController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
@@ -51,6 +52,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
         Route::get('/compras/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
 
+        Route::get('/inventario', [InventoryPageController::class, 'index'])->name('inventory.index');
         Route::get('/items', [ItemController::class, 'index'])->name('items.index');
         Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
         Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');

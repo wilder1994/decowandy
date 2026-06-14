@@ -89,6 +89,22 @@ class ItemApiTest extends TestCase
         $this->assertSame(1, StockMovement::where('item_id', $itemId)->count());
     }
 
+    public function test_direct_papeleria_item_create_is_blocked(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $response = $this->postJson('/api/items', [
+            'name' => 'Lápiz',
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'sale_price' => 1200,
+            'stock' => 5,
+        ]);
+
+        $response->assertStatus(422);
+    }
+
     public function test_authenticated_user_can_update_item(): void
     {
         $user = User::factory()->staffInventory()->create();
@@ -325,6 +341,91 @@ class ItemApiTest extends TestCase
         $this->assertDatabaseHas('sale_items', [
             'sale_id' => $sale->id,
             'item_id' => $item->id,
+        ]);
+    }
+
+    public function test_operator_can_lookup_item_by_barcode(): void
+    {
+        $user = User::factory()->staffOperate()->create();
+        $this->actingAs($user);
+
+        $item = Item::factory()->create([
+            'sector' => 'papeleria',
+            'type' => 'product',
+            'barcode' => 'DWY-0001',
+            'active' => true,
+        ]);
+
+        Stock::create(['item_id' => $item->id, 'quantity' => 10, 'min_threshold' => 1]);
+
+        $response = $this->getJson('/api/items/by-barcode/DWY-0001');
+
+        $response->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('item.id', $item->id)
+            ->assertJsonPath('item.barcode', 'DWY-0001');
+    }
+
+    public function test_barcode_lookup_returns_404_for_unknown_code(): void
+    {
+        $user = User::factory()->staffOperate()->create();
+        $this->actingAs($user);
+
+        $this->getJson('/api/items/by-barcode/UNKNOWN-999')
+            ->assertNotFound()
+            ->assertJsonPath('ok', false);
+    }
+
+    public function test_inventory_user_can_get_next_internal_barcode(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        Item::factory()->create([
+            'sector' => 'papeleria',
+            'barcode' => 'DWY-0003',
+        ]);
+
+        $response = $this->getJson('/api/items/next-barcode');
+
+        $response->assertOk()
+            ->assertJsonPath('ok', true)
+            ->assertJsonPath('barcode', 'DWY-0004');
+    }
+
+    public function test_papeleria_purchase_with_existing_barcode_adds_stock(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $item = Item::factory()->create([
+            'sector' => 'papeleria',
+            'barcode' => '7701234567890',
+            'type' => 'product',
+            'active' => true,
+        ]);
+
+        Stock::create(['item_id' => $item->id, 'quantity' => 2, 'min_threshold' => 0]);
+
+        $response = $this->postJson(route('api.purchases.store'), [
+            'date' => now()->toDateString(),
+            'category' => 'Papelería',
+            'to_inventory' => true,
+            'items' => [
+                [
+                    'product_name' => 'Producto existente',
+                    'quantity' => 3,
+                    'total_cost' => 9000,
+                    'barcode' => '7701234567890',
+                ],
+            ],
+        ]);
+
+        $response->assertCreated();
+
+        $this->assertDatabaseHas('stocks', [
+            'item_id' => $item->id,
+            'quantity' => 5,
         ]);
     }
 }

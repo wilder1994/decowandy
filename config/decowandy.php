@@ -7,6 +7,31 @@ return [
         'papeleria' => 'Papelería',
     ],
 
+    'item_create_sectors' => [
+        'diseno' => 'Diseño',
+        'impresion' => 'Impresión',
+    ],
+
+    'inventory' => [
+        'markup_percent' => 40,
+        'internal_barcode_prefix' => 'DWY-',
+        'colors' => [
+            'N/A',
+            'Negro',
+            'Azul',
+            'Rojo',
+            'Verde',
+            'Amarillo',
+            'Rosa',
+            'Morado',
+            'Naranja',
+            'Blanco',
+            'Gris',
+            'Café',
+            'Surtido',
+        ],
+    ],
+
     'catalog_categories' => [
         'Papelería' => [
             'name'            => 'Papelería',

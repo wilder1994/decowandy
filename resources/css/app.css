@@ -340,6 +340,14 @@
         background-color: var(--dw-card);
     }
 
+    .dw-pos-sector-filters {
+        @apply flex flex-wrap gap-1;
+    }
+
+    .dw-pos-sector-filters .dw-pos-segment {
+        @apply px-2 py-1 text-[10px];
+    }
+
     .dw-pos-toolbar-divider {
         grid-area: divider;
         @apply h-8 w-px shrink-0 justify-self-center;
@@ -466,6 +474,19 @@
         color: inherit;
     }
 
+    .dw-color-combobox {
+        @apply absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-dw border border-dw-border bg-dw-card py-1 shadow-dw-neon;
+    }
+
+    .dw-color-combobox-option {
+        @apply cursor-pointer px-3 py-2 text-sm text-dw-text transition hover:bg-dw-lilac-soft;
+    }
+
+    .dw-color-combobox-option.is-highlighted {
+        @apply bg-dw-lilac-soft font-medium;
+        box-shadow: inset 2px 0 0 var(--dw-primary);
+    }
+
     .dw-pos-cart {
         @apply min-h-0 flex-1 overflow-y-auto px-3 py-2;
     }
@@ -532,5 +553,33 @@
 
     .dw-pos-rail-actions {
         @apply mt-auto flex flex-col gap-1.5 pt-1;
+    }
+
+    .dw-admin-sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.2s ease-out;
+    }
+
+    .dw-admin-sidebar.is-open {
+        transform: translateX(0);
+    }
+
+    .dw-admin-backdrop {
+        @apply fixed inset-0 z-30 hidden bg-black/50;
+    }
+
+    .dw-admin-backdrop.is-visible {
+        @apply block;
+    }
+
+    @media (min-width: 768px) {
+        .dw-admin-sidebar {
+            transform: none;
+            transition: none;
+        }
+
+        .dw-admin-sidebar.is-open {
+            transform: none;
+        }
     }
 }

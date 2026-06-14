@@ -1,8 +1,8 @@
 # DecoWandy
 
-Aplicacion Laravel para gestionar catalogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas y reportes financieros.
+Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-06-13
+**Última actualización de esta documentación:** 2026-06-14
 
 ## Requisitos
 - PHP 8.2+
@@ -26,6 +26,8 @@ DB_DATABASE=decowandy
 DB_USERNAME=root
 DB_PASSWORD=
 APP_URL=http://decowandy.test
+SANCTUM_STATEFUL_DOMAINS=decowandy.test,localhost,127.0.0.1
+SESSION_SECURE_COOKIE=
 ```
 
 4) Define el administrador inicial en `.env`:
@@ -57,80 +59,85 @@ No necesitas `php artisan serve` ni `npm run dev` en uso diario si los assets ya
 ### VirtualHost local
 Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entrada `127.0.0.1 decowandy.test` en `hosts`. Tras cambios en Apache, reinicia Laragon.
 
+## Módulos del panel
+
+| Módulo | Ruta | Rol |
+|--------|------|-----|
+| **Compras y catálogo** | `/compras` | Altas por sector, historial de compras, pestaña Catálogo |
+| **Inventario** | `/inventario` | Stock, alertas, ajustes y reordenar |
+| **Ventas (POS)** | `/ventas` | Venta mixta: impresión, diseño y papelería en un ticket |
+
+- `/items` redirige a `/inventario` (compatibilidad).
+- **Papelería** se da de alta desde **Compras** (compra con código de barras); no desde inventario ni alta directa en API.
+- **Impresión / Diseño** se registran en Compras → Agregar, o desde el catálogo en la pestaña Catálogo.
+
+## Códigos de barras y etiquetas
+
+- Códigos internos formato `DWY-XXXXXX` (`ItemBarcodeService`).
+- Búsqueda por código en API y POS (`html5-qrcode` en navegador).
+- Compras de papelería crean o actualizan ítems y stock (`PurchasePapeleriaService`).
+- Etiquetas PNG/PDF por ítem o lote (`ItemLabelService`).
+- Alta rápida papelería: `POST /api/items/papeleria/quick`.
+- Dependencias: `picqer/php-barcode-generator`, `chillerlan/php-qrcode`, `html5-qrcode` (npm).
+
+Tras clonar o actualizar, ejecuta migraciones:
+```bash
+php artisan migrate
+```
+
 ## Usuarios y permisos
 
 | Tipo | Acceso |
 |------|--------|
-| **Administrador** | Todo el sistema (finanzas, reportes, inversiones, usuarios, catalogo publico) |
-| **Personal** | Modulos activables al crear el usuario |
+| **Administrador** | Todo el sistema (finanzas, reportes, inversiones, usuarios, catálogo público) |
+| **Personal** | Módulos activables al crear el usuario |
 
-Modulos para personal (`staff`):
-- **Operacion** (`can_operate`): ventas, clientes y POS.
-- **Inventario** (`can_inventory`): productos, stock y compras.
+Módulos para personal (`staff`):
+- **Operación** (`can_operate`): ventas, clientes y POS.
+- **Inventario** (`can_inventory`): inventario y compras.
 
-Se pueden activar uno, otro o ambos. Finanzas, reportes, inversiones y gestion de usuarios quedan reservados para administradores.
+Se pueden activar uno, otro o ambos. Finanzas, reportes, inversiones y gestión de usuarios quedan reservados para administradores.
 
-Gestion de usuarios: `/ajustes/usuarios` (solo admin).
+Gestión de usuarios: `/ajustes/usuarios` (solo admin).
 
-Comando util si cambias credenciales del admin en `.env`:
+Comando útil si cambias credenciales del admin en `.env`:
 ```bash
 php artisan decowandy:ensure-admin
 ```
 
 ## Testing
 - Suite completa: `php artisan test`
-- La suite usa la BD `decowandy_testing` (configurada en `phpunit.xml`). Creala antes de correr tests:
+- La suite usa la BD `decowandy_testing` (configurada en `phpunit.xml`). Créala antes de correr tests:
 ```bash
 mysql -u root -e "CREATE DATABASE IF NOT EXISTS decowandy_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
 
 ## Funcionalidades clave
-- Items/inventario con control de stock, minimos y alertas.
-- Ventas con modal POS, validacion de stock y reportes por categoria/periodo.
-- Compras y gastos con impacto en inventario y caja.
-- Inversiones y reportes de finanzas (cashflow, ingresos vs gastos, utilidades).
-- API internas para items, compras, ventas y catalogo publico.
-- Permisos modulares por rol (admin / personal con modulos combinables).
+- Inventario con control de stock, mínimos, alertas y ajustes.
+- Compras por sector con impacto en inventario (papelería con barcode).
+- Ventas con modal POS, filtros por sector, venta mixta y validación de stock.
+- Gastos, inversiones y reportes de finanzas (cashflow, ingresos vs gastos, utilidades).
+- API internas para ítems, compras, ventas y catálogo público.
+- Permisos modulares por rol (admin / personal con módulos combinables).
+- Panel responsive: menú lateral tipo drawer en móvil.
 
 ## Interfaz (design system)
 
 El panel admin usa un design system propio con tokens Tailwind (`dw-*`) y componentes Blade reutilizables.
 
-**Tokens y estilos:** `tailwind.config.js`, `resources/css/app.css` (colores marca, tipografia Inter/Poppins, bordes hairline, sombras neon).
+**Tokens y estilos:** `tailwind.config.js`, `resources/css/app.css` (colores marca, tipografía Inter/Poppins, bordes hairline, sombras neon).
 
 **Componentes Blade** (`resources/views/components/`):
 - `dw-button`, `dw-input`, `dw-card`, `dw-kpi`, `dw-badge`, `dw-nav-link`, `dw-page-header`
 
-**Vistas migradas al nuevo look:** layouts admin/guest, login, dashboard, ventas, clientes, inventario, compras, gastos, finanzas, reportes, inversiones, usuarios, editor de catalogo publico y pantallas auth.
+**Tema claro / oscuro:** selector en el header del panel y en login (Claro, Oscuro, Sistema). La preferencia se guarda en `localStorage` (`dw-theme`).
 
-**Graficos:** tema Chart.js en `resources/js/chart-theme.js`; se actualiza al cambiar el tema (`dw-theme-change`).
+**Móvil:** en pantallas &lt; 768px el menú lateral queda oculto; se abre con el botón ☰ y se cierra con ✕, toque fuera o al elegir una sección (`dw-admin-sidebar` en `app.css`).
 
-**Tema claro / oscuro:** selector en el header del panel y en login (Claro, Oscuro, Sistema). La preferencia se guarda en `localStorage` (`dw-theme`). Implementacion:
-
-| Pieza | Ubicacion |
-|-------|-----------|
-| Variables CSS (`:root` y `[data-theme='dark']`) | `resources/css/app.css` |
-| Script anti-flash en `<head>` | `resources/views/partials/dw-theme-init.blade.php` |
-| Logica JS (`initTheme`, `setTheme`) | `resources/js/theme.js` |
-| Componente selector | `resources/views/components/dw-theme-toggle.blade.php` |
-
-Los colores de superficie (`bg`, `card`, `text`, `muted`, `lilac-soft`, `border`) usan variables CSS; los acentos de marca (`primary`, `rose`, `yellow`) permanecen en hex para compatibilidad con opacidades de Tailwind.
-
-**Tablas:** clase `.dw-table` con bordes hairline, cabecera `bg-dw-lilac-soft` y hover en filas.
-
-**Sin tema oscuro (por ahora):** catalogo publico (`/`, `welcome`) y factura de venta (`sales/show`).
-
-**Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`, estilos `dw-pos-*` en `app.css`):
-
-| Caracteristica | Detalle |
-|----------------|---------|
-| Layout | Modal fluido (hasta ~1140px), rail de cobro fijo, scroll solo en carrito |
-| Toolbar | Grid en una fila: cliente colapsable + busqueda de producto + cantidad/valor/subtotal |
-| Cliente | Boton `Cliente` con panel desplegable (cedula, buscar, nuevo, quitar) |
-| Productos | Combobox custom con filtro, resaltado, teclado `↑↓` + `Enter` (sin `datalist`) |
-| Cobro | Total tipografico, segmentos de pago, recibido/devuelta en efectivo |
-
-Logica JS del combobox y del panel de cliente vive en el partial (bloque `@push('scripts')`).
+**Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`):
+- Filtros de sector: Todos / Impresión / Papelería / Diseño.
+- Columna **Sector** en el carrito; venta mixta en un solo ticket.
+- Escáner de código de barras por cámara (requiere HTTPS en dispositivos móviles).
 
 Tras cambios en vistas, CSS o JS del frontend:
 ```bash
@@ -138,70 +145,107 @@ npm run build
 ```
 Los assets compilados van a `public/build/` (no se versionan; cada entorno debe compilar).
 
-## Rutas utiles
+## Rutas útiles
 - Login: `/login`
 - Panel: `/dashboard`
-- Inventario: `/items`
+- Inventario: `/inventario` (alias `/items`)
 - Ventas: `/ventas`
-- Compras: `/compras`
+- Compras y catálogo: `/compras`
 - Gastos: `/gastos`
 - Finanzas y reportes: `/finanzas`, `/reportes`
 - Usuarios: `/ajustes/usuarios`
-- Catalogo publico: `/`
+- Catálogo público: `/`
 
 ## Acceso desde la red local (Laragon / Apache)
 
-Si esta PC también tiene otros proyectos Laravel, conviene **no** depender solo del VirtualHost por defecto.
+**Por nombre local:** `http://decowandy.test` con `auto.decowandy.test.conf` y entrada en `hosts`.
 
-**Por IP en la LAN (puerto 80 para DecoWandy):**
-
-- VirtualHost dedicado: `C:/laragon/etc/apache2/sites-enabled/decowandy-lan-ip.conf` — `VirtualHost *:80`, `ServerName` = tu IP LAN (ej. `192.168.18.19`), `DocumentRoot` → `decowandy/public`.
-- En `.env`: `APP_URL=http://TU_IP_LAN` (sin puerto si usas 80).
-- Otro proyecto puede usar la misma IP en **otro puerto** (ej. Beeffresh en **8080**: `http://TU_IP_LAN:8080`), sin compartir la misma URL base que DecoWandy.
-
-**Nombre local:** `http://decowandy.test` con `auto.decowandy.test.conf` y entrada en `hosts`.
+**Por IP en la LAN:** añade `ServerAlias TU_IP_LAN` al VirtualHost de DecoWandy en `C:/laragon/etc/apache2/sites-enabled/auto.decowandy.test.conf`. Apache debe escuchar en `0.0.0.0:80`.
 
 Tras editar la configuración de Apache, **reinicia Apache** en Laragon.
 
-## Acceso interno por VPN (Tailscale + Laragon)
+## Acceso por Tailscale (celular / remoto)
 
-Para permitir acceso desde otros dispositivos sin hosting público, puedes usar Tailscale además de Laragon.
+Para usar DecoWandy desde el teléfono u otro dispositivo en la red Tailscale:
 
-Requisitos:
+### 1) VirtualHost Apache
 
-- Tailscale instalado y conectado en la PC servidor y en cada cliente.
-- Apache activo (Laragon).
+En `C:/laragon/etc/apache2/sites-enabled/auto.decowandy.test.conf`:
 
-Pasos:
+```apache
+ServerAlias *.decowandy.test TU_IP_TAILSCALE
+```
 
-1) Obtener la IP de Tailscale en la PC servidor:
+El `DocumentRoot` debe apuntar a `C:/laragon/www/decowandy/public`.
+
+### 2) HTTPS (obligatorio para cámara del escáner)
+
+El escáner por cámara (`getUserMedia`) exige contexto seguro: **HTTPS** o `localhost`. En el celular debes usar HTTPS.
+
+Configuración en Laragon (`C:/laragon/etc/ssl/`):
+
+1. **CA local** (`decowandy-ca.crt` / `decowandy-ca.key`) — se instala en el teléfono.
+2. **Certificado del sitio** (`decowandy.test.crt` / `decowandy.test.key`) — solo en el servidor Apache.
+
+El VirtualHost `:443` referencia el certificado del sitio. HTTP desde la IP Tailscale puede redirigir a HTTPS.
+
+Generar o renovar certificados (OpenSSL de Laragon):
 
 ```bash
-tailscale ip -4
+# CA (una vez)
+openssl genrsa -out decowandy-ca.key 4096
+openssl req -x509 -new -nodes -key decowandy-ca.key -sha256 -days 825 \
+  -out decowandy-ca.crt -config decowandy-ca.cnf -extensions v3_ca
+
+# Sitio (firmado por la CA)
+openssl genrsa -out decowandy.test.key 2048
+openssl req -new -key decowandy.test.key -out decowandy.test.csr -config decowandy.test.cnf
+openssl x509 -req -in decowandy.test.csr -CA decowandy-ca.crt -CAkey decowandy-ca.key \
+  -CAcreateserial -out decowandy.test.crt -days 825 -sha256 \
+  -extensions v3_req -extfile decowandy.test.cnf
 ```
 
-2) Configurar `.env` con esa IP (ajusta `APP_ENV` / `APP_DEBUG` según entorno):
+Copia `decowandy-ca.crt` al teléfono como `decowandy-ca.cer` para instalarlo.
 
-```
-APP_URL=http://TU_IP_TAILSCALE
+### 3) Instalar CA en Android
+
+1. Envía `decowandy-ca.cer` al teléfono (WhatsApp, correo, etc.).
+2. **Ajustes → Seguridad → Cifrado y credenciales → Instalar certificado → Certificado CA**.
+3. No uses “Certificado de usuario/VPN” (pedirá clave privada).
+4. Reinicia el navegador y abre `https://TU_IP_TAILSCALE/login`.
+
+### 4) Variables `.env`
+
+```env
+APP_URL=http://decowandy.test
+SANCTUM_STATEFUL_DOMAINS=decowandy.test,TU_IP_TAILSCALE,localhost,127.0.0.1
+SESSION_SECURE_COOKIE=
 ```
 
-Luego:
+Laravel genera URLs según el host de la petición (`AppServiceProvider`), así PC y celular pueden coexistir.
 
 ```bash
 php artisan config:clear
 ```
 
-3) Apache: el sitio debe resolver el `DocumentRoot` de DecoWandy para la URL que uses (IP Tailscale o IP LAN). Revisa `decowandy-lan-ip.conf` / `auto.decowandy.test.conf` y, si aplica, `00-default.conf` en `C:/laragon/etc/apache2/sites-enabled/`.
+### 5) Firewall
 
-4) Firewall de Windows: permitir el puerto que uses (80 u otro).
+Permite los puertos **80** y **443** en Windows (reglas de Apache HTTP Server).
 
-Acceso de ejemplo: `http://TU_IP_TAILSCALE/login`
+### URLs de ejemplo (Tailscale)
 
-Nota: si al abrir la IP ves otro proyecto, revisa qué `ServerName` y puerto tiene cada `VirtualHost` (`httpd -S` en Apache) y que `APP_URL` coincida con la URL real.
+| Uso | URL |
+|-----|-----|
+| Login | `https://TU_IP_TAILSCALE/login` |
+| POS / ventas | `https://TU_IP_TAILSCALE/ventas` |
+| Compras | `https://TU_IP_TAILSCALE/compras` |
+| Inventario | `https://TU_IP_TAILSCALE/inventario` |
+
+No uses `decowandy.test` desde el celular (ese dominio solo resuelve en la PC con `hosts`).
 
 ## Notas
-- El seeder de produccion no carga datos de prueba; usa datos reales del negocio.
+- El seeder de producción no carga datos de prueba; usa datos reales del negocio.
 - Si cambias configuraciones en `.env`, ejecuta `php artisan config:clear` en local o `php artisan config:cache` al desplegar.
-- El proyecto usa traducciones y textos en espanol; mantelos coherentes al contribuir.
+- El proyecto usa traducciones y textos en español; manténlos coherentes al contribuir.
 - Tras cambios en frontend (`resources/js`, `resources/css`, vistas Blade con clases `dw-*`), compila con `npm run build`.
+- Los certificados SSL viven en `C:/laragon/etc/ssl/` (fuera del repo). No versiones claves privadas ni `.env`.

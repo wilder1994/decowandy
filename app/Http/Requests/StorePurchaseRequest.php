@@ -7,19 +7,32 @@ use Illuminate\Validation\Rule;
 
 class StorePurchaseRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return (bool) $this->user()?->can('manage-inventory');
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
+    protected function prepareForValidation(): void
+    {
+        $items = $this->input('items', []);
+
+        if (! is_array($items)) {
+            return;
+        }
+
+        foreach ($items as $index => $item) {
+            if (! is_array($item)) {
+                continue;
+            }
+
+            if (isset($item['barcode']) && is_string($item['barcode'])) {
+                $items[$index]['barcode'] = trim($item['barcode']);
+            }
+        }
+
+        $this->merge(['items' => $items]);
+    }
+
     public function rules(): array
     {
         return [
@@ -37,6 +50,12 @@ class StorePurchaseRequest extends FormRequest
                 'integer',
                 Rule::exists('items', 'id')->where(fn ($query) => $query->where('active', true)),
             ],
+            'items.*.barcode' => ['nullable', 'string', 'max:64'],
+            'items.*.sale_price' => ['nullable', 'numeric', 'min:0'],
+            'items.*.color' => ['nullable', 'string', 'max:40'],
+            'items.*.scan_mode' => ['nullable', 'in:unit,pack'],
+            'items.*.pack_size' => ['nullable', 'integer', 'min:1'],
+            'items.*.min_stock' => ['nullable', 'integer', 'min:0'],
         ];
     }
 }

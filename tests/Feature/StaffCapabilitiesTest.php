@@ -17,6 +17,7 @@ class StaffCapabilitiesTest extends TestCase
         $this->actingAs($user)->get(route('sales.index'))->assertOk();
         $this->actingAs($user)->get(route('customers.index'))->assertOk();
         $this->actingAs($user)->get(route('items.index'))->assertForbidden();
+        $this->actingAs($user)->get(route('inventory.index'))->assertForbidden();
         $this->actingAs($user)->get(route('purchases.index'))->assertForbidden();
         $this->actingAs($user)->postJson('/api/items', [])->assertForbidden();
     }
@@ -25,7 +26,8 @@ class StaffCapabilitiesTest extends TestCase
     {
         $user = User::factory()->staffInventory()->create();
 
-        $this->actingAs($user)->get(route('items.index'))->assertOk();
+        $this->actingAs($user)->get(route('items.index'))->assertRedirect(route('inventory.index'));
+        $this->actingAs($user)->get(route('inventory.index'))->assertOk();
         $this->actingAs($user)->get(route('purchases.index'))->assertOk();
         $this->actingAs($user)->get(route('sales.index'))->assertForbidden();
         $this->actingAs($user)->get(route('customers.index'))->assertForbidden();
@@ -37,7 +39,8 @@ class StaffCapabilitiesTest extends TestCase
         $user = User::factory()->staffFull()->create();
 
         $this->actingAs($user)->get(route('sales.index'))->assertOk();
-        $this->actingAs($user)->get(route('items.index'))->assertOk();
+        $this->actingAs($user)->get(route('items.index'))->assertRedirect(route('inventory.index'));
+        $this->actingAs($user)->get(route('inventory.index'))->assertOk();
         $this->actingAs($user)->get(route('finance.index'))->assertForbidden();
         $this->actingAs($user)->get(route('reports.index'))->assertForbidden();
     }

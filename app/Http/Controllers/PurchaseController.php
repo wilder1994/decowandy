@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+
 use App\Models\Item;
 use App\Models\Purchase;
 use Illuminate\Http\Request;
@@ -59,12 +60,32 @@ class PurchaseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'sector']);
 
+        $catalog = app(ItemController::class)->buildCatalogPageData($request);
+        $reorderItem = null;
+        if ($request->filled('reorder')) {
+            $reorderItem = Item::query()
+                ->where('id', (int) $request->query('reorder'))
+                ->where('active', true)
+                ->first(['id', 'name', 'barcode', 'sector']);
+        }
+
         return view('purchases.index', [
             'purchases' => $purchases,
             'summaryTotal' => $summaryTotal,
             'filters' => $filters,
             'categoryOptions' => $categoryOptions,
             'itemsCatalog' => $itemsCatalog,
+            'inventoryConfig' => [
+                'colors' => config('decowandy.inventory.colors', ['N/A']),
+                'markup_percent' => (int) config('decowandy.inventory.markup_percent', 40),
+            ],
+            'activeTab' => in_array($request->query('tab'), ['catalogo', 'compras'], true)
+                ? $request->query('tab')
+                : 'compras',
+            'catalog' => $catalog,
+            'reorderItem' => $reorderItem,
+            'openOnLoad' => $request->query('open'),
+            'serviceSectors' => config('decowandy.item_create_sectors', []),
         ]);
     }
 

@@ -47,14 +47,26 @@
 
             <div class="dw-pos-toolbar-divider" aria-hidden="true"></div>
 
+            <div class="dw-pos-segments dw-pos-sector-filters" id="posSectorFilters" role="group" aria-label="Filtrar por sector">
+              <button type="button" class="dw-pos-segment is-active" data-pos-sector="all">Todos</button>
+              <button type="button" class="dw-pos-segment" data-pos-sector="impresion">Impresión</button>
+              <button type="button" class="dw-pos-segment" data-pos-sector="papeleria">Papelería</button>
+              <button type="button" class="dw-pos-segment" data-pos-sector="diseno">Diseño</button>
+            </div>
+
+            <div class="dw-pos-toolbar-divider" aria-hidden="true"></div>
+
             <div class="dw-pos-product-wrap" id="productCombobox">
-              <input id="p_product" type="text" placeholder="Buscar producto…"
+              <input id="p_product" type="text" placeholder="Buscar o escanear código…"
                      class="dw-pos-input dw-pos-input--product w-full" autocomplete="off" spellcheck="false"
                      role="combobox" aria-expanded="false" aria-controls="productComboboxList"
-                     aria-autocomplete="list" aria-label="Buscar producto">
+                     aria-autocomplete="list" aria-label="Buscar producto o escanear código">
               <span id="p_category_badge" class="dw-pos-input-badge hidden"></span>
               <ul id="productComboboxList" class="dw-pos-combobox hidden" role="listbox" aria-label="Productos"></ul>
             </div>
+            <button id="btnScanProduct" type="button" class="dw-pos-btn-square" title="Escanear código">
+              <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+            </button>
             <input id="p_qty" type="number" min="1" value="1" aria-label="Cantidad"
                    class="dw-pos-input dw-pos-input--qty">
             <input id="p_unit" type="text" inputmode="numeric" placeholder="0" aria-label="Valor unitario"
@@ -71,12 +83,13 @@
           <div class="dw-pos-cart">
             <div id="saleCartEmpty" class="dw-pos-empty">
               <span class="material-symbols-outlined text-xl text-dw-muted/60">shopping_cart</span>
-              <span class="text-xs"><kbd class="rounded bg-dw-lilac-soft px-1">↑↓</kbd> <kbd class="rounded bg-dw-lilac-soft px-1">Enter</kbd> seleccionar · cantidad · <strong>+</strong> agregar</span>
+              <span class="text-xs"><kbd class="rounded bg-dw-lilac-soft px-1">Filtro</kbd> sector · escanear → cantidad · <strong>+</strong> agregar · venta mixta</span>
             </div>
             <table id="saleCartTable" class="dw-pos-table hidden">
               <thead>
                 <tr>
                   <th>Producto</th>
+                  <th class="w-20">Sector</th>
                   <th class="w-12 text-center">Cant.</th>
                   <th class="w-20 text-right">Valor</th>
                   <th class="w-24 text-right">Total</th>
@@ -177,6 +190,43 @@
   </div>
 </div>
 
+{{-- Modal rápido: Alta por código (solo admin) --}}
+<div id="barcodeQuickCreateModal" class="fixed inset-0 z-[85] hidden">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-bqc-dismiss></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-md space-y-4 rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-dw-text">Registrar producto</h3>
+        <button id="closeBarcodeQuickModal" type="button" class="text-dw-muted hover:text-dw-text">X</button>
+      </div>
+      <p class="text-sm text-dw-muted">Código no encontrado. Completa los datos para crear el ítem en papelería.</p>
+      <input type="hidden" id="bqc_barcode">
+      <div>
+        <label class="dw-label mb-1" for="bqc_name">Nombre</label>
+        <input id="bqc_name" type="text" class="dw-input">
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="dw-label mb-1" for="bqc_cost">Costo</label>
+          <input id="bqc_cost" type="number" min="0" step="0.01" class="dw-input">
+        </div>
+        <div>
+          <label class="dw-label mb-1" for="bqc_price">Precio venta</label>
+          <input id="bqc_price" type="number" min="0" step="0.01" class="dw-input">
+        </div>
+      </div>
+      <div>
+        <label class="dw-label mb-1" for="bqc_stock">Stock inicial</label>
+        <input id="bqc_stock" type="number" min="0" value="0" class="dw-input">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button id="cancelBarcodeQuickModal" type="button" class="dw-btn-secondary">Cancelar</button>
+        <button id="saveBarcodeQuickModal" type="button" class="dw-btn-primary">Crear y cargar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 @push('scripts')
 <script>
 function onlyDigits(str){ return (str || '').replace(/[^\d]/g,''); }
@@ -233,6 +283,7 @@ const saleItemsCounter = document.getElementById('saleItemsCounter');
 const btnSearchCustomer = document.getElementById('searchCustomer');
 const btnNewCustomer = document.getElementById('newCustomer');
 const btnAddProductLine = document.getElementById('addProductLine');
+const btnScanProduct = document.getElementById('btnScanProduct');
 const btnClearCustomer = document.getElementById('clearCustomer');
 const customerModal = document.getElementById('customerCreateModal');
 const customerModalClose = document.getElementById('closeCustomerModal');
@@ -242,6 +293,15 @@ const ncDocument = document.getElementById('nc_document');
 const ncName = document.getElementById('nc_name');
 const ncEmail = document.getElementById('nc_email');
 const ncPhone = document.getElementById('nc_phone');
+const barcodeQuickModal = document.getElementById('barcodeQuickCreateModal');
+const bqcBarcode = document.getElementById('bqc_barcode');
+const bqcName = document.getElementById('bqc_name');
+const bqcCost = document.getElementById('bqc_cost');
+const bqcPrice = document.getElementById('bqc_price');
+const bqcStock = document.getElementById('bqc_stock');
+
+const MARKUP_PERCENT = 40;
+let barcodeLookupBusy = false;
 
 let saleToast = null;
 let saleToastText = null;
@@ -260,6 +320,8 @@ let comboboxOpen = false;
 let comboboxResults = [];
 let comboboxHighlight = -1;
 const COMBOBOX_LIMIT = 8;
+let posSectorFilter = 'all';
+const posSectorFilters = document.getElementById('posSectorFilters');
 
 function showSaleToast(message) {
   if (!saleToast || !saleToastText) return;
@@ -370,6 +432,146 @@ function clearCustomer(){
   setCustomer({ id:null, document:'', name:'', email:'', phone:'' });
 }
 
+function looksLikeBarcode(value) {
+  const code = (value || '').trim();
+  if (code.length < 3) return false;
+  return /^[A-Za-z0-9][A-Za-z0-9\-_.]+$/.test(code);
+}
+
+function registerCatalogItem(apiItem) {
+  const sector = apiItem.sector || 'papeleria';
+  if (!productDataset[sector]) productDataset[sector] = [];
+  const exists = productDataset[sector].some((p) => Number(p.id) === Number(apiItem.id));
+  if (!exists) {
+    productDataset[sector].push({
+      id: apiItem.id,
+      name: apiItem.name,
+      unit: apiItem.sale_price ?? 0,
+      stock: apiItem.type === 'product' ? (apiItem.stock ?? null) : null,
+      type: apiItem.type,
+    });
+    renderProducts();
+  }
+}
+
+function applyApiItemToPos(apiItem) {
+  registerCatalogItem(apiItem);
+  const meta = {
+    id: apiItem.id,
+    name: apiItem.name,
+    category: apiItem.sector || 'papeleria',
+    unit: apiItem.sale_price ?? 0,
+    stock: apiItem.type === 'product' ? (apiItem.stock ?? null) : null,
+    type: apiItem.type || 'product',
+    label: apiItem.name,
+  };
+  productById.set(String(meta.id), meta);
+  closeProductCombobox();
+  applyProductMeta(meta);
+  if (selProduct) selProduct.value = meta.name;
+  requestAnimationFrame(() => {
+    inpQty?.focus();
+    inpQty?.select();
+  });
+}
+
+async function lookupBarcode(code) {
+  const trimmed = (code || '').trim();
+  if (!trimmed || barcodeLookupBusy) return false;
+
+  const axiosInstance = window.axios;
+  if (!axiosInstance) {
+    showSaleToast('No se encontró Axios en la página.');
+    return false;
+  }
+
+  barcodeLookupBusy = true;
+  try {
+    const { data } = await axiosInstance.get(`/api/items/by-barcode/${encodeURIComponent(trimmed)}`);
+    if (data?.ok && data.item) {
+      applyApiItemToPos(data.item);
+      showSaleToast('Producto cargado. Escribe la cantidad.');
+      return true;
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      if (IS_ADMIN) {
+        openBarcodeQuickModal(trimmed);
+      } else {
+        showSaleToast('Código no registrado. Consulta con un administrador.');
+      }
+      return false;
+    }
+    showSaleToast('No se pudo buscar el código.');
+  } finally {
+    barcodeLookupBusy = false;
+  }
+  return false;
+}
+
+function openBarcodeQuickModal(code) {
+  if (!barcodeQuickModal) return;
+  bqcBarcode.value = code;
+  bqcName.value = '';
+  bqcCost.value = '';
+  bqcPrice.value = '';
+  bqcStock.value = '0';
+  barcodeQuickModal.classList.remove('hidden');
+  bqcName?.focus();
+}
+
+function closeBarcodeQuickModal() {
+  barcodeQuickModal?.classList.add('hidden');
+}
+
+function suggestedQuickPrice(cost) {
+  const c = Number(cost || 0);
+  if (!Number.isFinite(c) || c <= 0) return 0;
+  return Math.round(c * (1 + MARKUP_PERCENT / 100));
+}
+
+async function saveBarcodeQuickModal() {
+  const axiosInstance = window.axios;
+  if (!axiosInstance) return;
+
+  const name = (bqcName?.value || '').trim();
+  if (!name) {
+    showSaleToast('El nombre es obligatorio.');
+    return;
+  }
+
+  const cost = Number(bqcCost?.value || 0);
+  const price = Number(bqcPrice?.value || 0) || suggestedQuickPrice(cost);
+
+  try {
+    const payload = {
+      name,
+      sector: 'papeleria',
+      type: 'product',
+      sale_price: price,
+      cost: cost > 0 ? cost : null,
+      stock: Number(bqcStock?.value || 0),
+      min_stock: 0,
+      barcode: bqcBarcode?.value || null,
+      barcode_source: /^DWY-/i.test(bqcBarcode?.value || '') ? 'internal' : 'manufacturer',
+      scan_mode: 'unit',
+      color: 'N/A',
+      active: true,
+    };
+    const { data } = await axiosInstance.post('/api/items/papeleria/quick', payload);
+    if (data?.item) {
+      applyApiItemToPos(data.item);
+      closeBarcodeQuickModal();
+      showSaleToast('Producto creado. Escribe la cantidad.');
+    }
+  } catch (error) {
+    const msg = error.response?.data?.errors
+      ? Object.values(error.response.data.errors)[0]?.[0]
+      : (error.response?.data?.message || 'No se pudo crear el producto.');
+    showSaleToast(msg);
+  }
+}
+
 function renderProducts(){
   productIndex = [];
   productById = new Map();
@@ -399,14 +601,20 @@ function normalizeSearch(value) {
 
 function filterProducts(query) {
   const q = normalizeSearch(query);
+  let pool = productIndex;
+
+  if (posSectorFilter !== 'all') {
+    pool = pool.filter((item) => item.category === posSectorFilter);
+  }
+
   if (!q) {
-    return productIndex.slice(0, COMBOBOX_LIMIT);
+    return pool.slice(0, COMBOBOX_LIMIT);
   }
 
   const starts = [];
   const contains = [];
 
-  productIndex.forEach((item) => {
+  pool.forEach((item) => {
     const name = item.name.toLowerCase();
     if (name.startsWith(q)) {
       starts.push(item);
@@ -416,6 +624,36 @@ function filterProducts(query) {
   });
 
   return [...starts, ...contains].slice(0, COMBOBOX_LIMIT);
+}
+
+function updatePosSearchPlaceholder() {
+  if (!selProduct) return;
+  const placeholders = {
+    all: 'Buscar o escanear código…',
+    papeleria: 'Escanear o buscar papelería…',
+    impresion: 'Buscar servicio de impresión…',
+    diseno: 'Buscar servicio de diseño…',
+  };
+  selProduct.placeholder = placeholders[posSectorFilter] || placeholders.all;
+}
+
+function initPosSectorFilters() {
+  posSectorFilters?.querySelectorAll('[data-pos-sector]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      posSectorFilter = btn.dataset.posSector || 'all';
+      posSectorFilters.querySelectorAll('[data-pos-sector]').forEach((el) => {
+        el.classList.toggle('is-active', el.dataset.posSector === posSectorFilter);
+      });
+      updatePosSearchPlaceholder();
+      closeProductCombobox();
+      if (posSectorFilter === 'papeleria') {
+        btnScanProduct?.focus();
+      } else {
+        selProduct?.focus();
+      }
+    });
+  });
+  updatePosSearchPlaceholder();
 }
 
 function highlightQuery(text, query) {
@@ -638,6 +876,11 @@ function onProductKeydown(e) {
 
     if (e.key === 'Enter') {
       e.preventDefault();
+      const query = (selProduct?.value || '').trim();
+      if (looksLikeBarcode(query) && !getSelectedProductMeta()) {
+        lookupBarcode(query);
+        return;
+      }
       const pick = comboboxHighlight >= 0 ? comboboxResults[comboboxHighlight] : comboboxResults[0];
       if (pick) selectProductById(pick.id);
       return;
@@ -653,6 +896,11 @@ function onProductKeydown(e) {
 
   if (e.key === 'Enter') {
     e.preventDefault();
+    const query = (selProduct?.value || '').trim();
+    if (looksLikeBarcode(query) && !getSelectedProductMeta()) {
+      lookupBarcode(query);
+      return;
+    }
     if (getSelectedProductMeta()) {
       inpQty?.focus();
       inpQty?.select();
@@ -717,6 +965,10 @@ function renderSaleItems(){
     nameCell.className = 'font-medium text-dw-text';
     nameCell.textContent = line.name;
 
+    const sectorCell = document.createElement('td');
+    sectorCell.className = 'text-xs text-dw-muted';
+    sectorCell.textContent = getCategoryLabel(line.category);
+
     const qtyCell = document.createElement('td');
     qtyCell.className = 'text-center';
     qtyCell.textContent = String(line.quantity);
@@ -740,6 +992,7 @@ function renderSaleItems(){
     actionsCell.appendChild(removeBtn);
 
     row.appendChild(nameCell);
+    row.appendChild(sectorCell);
     row.appendChild(qtyCell);
     row.appendChild(unitCell);
     row.appendChild(totalCell);
@@ -1134,6 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   initPayMethodControls();
   initCustomerBar();
+  initPosSectorFilters();
   initProductCombobox();
   renderProducts();
   resetSaleForm();
@@ -1150,6 +1404,25 @@ document.addEventListener('DOMContentLoaded', () => {
   btnNewCustomer?.addEventListener('click', openCustomerModal);
   btnClearCustomer?.addEventListener('click', clearCustomer);
   btnAddProductLine?.addEventListener('click', addLineToSale);
+  btnScanProduct?.addEventListener('click', () => {
+    if (!window.dwOpenBarcodeScanner) {
+      showSaleToast('Escáner no disponible.');
+      return;
+    }
+    window.dwOpenBarcodeScanner({
+      onDetected: (code) => lookupBarcode(code),
+      onError: () => showSaleToast('No se pudo acceder a la cámara.'),
+    });
+  });
+  document.getElementById('closeBarcodeQuickModal')?.addEventListener('click', closeBarcodeQuickModal);
+  document.getElementById('cancelBarcodeQuickModal')?.addEventListener('click', closeBarcodeQuickModal);
+  document.getElementById('saveBarcodeQuickModal')?.addEventListener('click', saveBarcodeQuickModal);
+  barcodeQuickModal?.querySelector('[data-bqc-dismiss]')?.addEventListener('click', closeBarcodeQuickModal);
+  bqcCost?.addEventListener('input', () => {
+    if (!bqcPrice?.value) {
+      bqcPrice.value = suggestedQuickPrice(bqcCost.value);
+    }
+  });
   customerModalClose?.addEventListener('click', closeCustomerModal);
   customerModalCancel?.addEventListener('click', closeCustomerModal);
   customerModalSave?.addEventListener('click', saveCustomerModal);

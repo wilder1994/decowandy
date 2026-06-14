@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Item;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -21,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (! $this->app->runningInConsole() && ! $this->app->runningUnitTests()) {
+            URL::forceRootUrl(request()->getSchemeAndHttpHost());
+        }
+
         View::composer('sales.partials.modal-create', function ($view) {
             $viewData = $view->getData();
             if (array_key_exists('catalogDataset', $viewData)) {

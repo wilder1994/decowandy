@@ -4,6 +4,8 @@
 /public/hot
 /public/storage
 /storage/*.key
+/storage/app/*.crt
+/storage/app/*.cer
 /vendor
 .env
 .env.backup
