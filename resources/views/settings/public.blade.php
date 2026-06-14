@@ -11,104 +11,92 @@
   $initialCategory = $categoryCollection->first();
 @endphp
 
-<div class="flex items-center justify-between mb-4">
-  <div>
-    <h1 class="text-2xl font-bold">Editor de página de bienvenida</h1>
-    <p class="text-sm text-gray-500">Administra las tarjetas públicas por categoría.</p>
-  </div>
-  <div class="flex items-center gap-2">
-    <a href="{{ url('/#catalogo') }}" target="_blank"
-       class="px-4 py-2 rounded-xl border hover:bg-gray-50">Ver vista pública</a>
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <x-dw-page-header title="Editor de página de bienvenida" subtitle="Administra las tarjetas públicas por categoría." />
+  <div class="flex flex-wrap items-center gap-2">
+    <x-dw-button variant="secondary" :href="url('/#catalogo')" target="_blank">Ver vista pública</x-dw-button>
     @can('manage-users')
-    <a href="{{ route('settings.users') }}"
-       class="px-4 py-2 rounded-xl border text-[color:var(--dw-primary)] hover:bg-gray-50">Panel de usuarios</a>
+      <x-dw-button variant="secondary" :href="route('settings.users')">Panel de usuarios</x-dw-button>
     @endcan
-    <button id="btnAdd"
-       class="px-4 py-2 rounded-xl text-white brand-gradient shadow">Nuevo ítem</button>
+    <x-dw-button id="btnAdd" type="button">Nuevo ítem</x-dw-button>
   </div>
 </div>
 
 <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
   <div>
-    {{-- Tabs --}}
-    <div class="flex gap-2 mb-4 flex-wrap">
+    <div class="mb-4 flex flex-wrap gap-2">
       @foreach($categoryCollection as $category)
-        <button class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border"
-                data-cat="{{ $category['name'] }}">{{ $category['name'] }}</button>
+        <button type="button" class="tab-btn dw-tab" data-cat="{{ $category['name'] }}" data-active="false">{{ $category['name'] }}</button>
       @endforeach
     </div>
 
-    {{-- Grid --}}
     <div id="cardsGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
   </div>
-
-  {{-- Bloque de vista previa eliminado según solicitud --}}
 </div>
 
-{{-- Modal CRUD --}}
 <div id="itemModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/30"></div>
-  <div class="relative mx-auto mt-16 w-[680px] max-w-[95vw] rounded-2xl bg-white p-5 shadow-lg">
-    <div class="flex items-center justify-between mb-3">
-      <h2 id="modalTitle" class="text-xl font-semibold">Nuevo ítem</h2>
-      <button id="modalClose" class="text-gray-500 hover:text-gray-700">✕</button>
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+  <div class="relative mx-auto mt-16 w-[min(680px,95vw)] rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 id="modalTitle" class="font-display text-xl font-semibold text-dw-text">Nuevo ítem</h2>
+      <button id="modalClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
     </div>
 
-    <div class="grid gap-4 grid-cols-12">
+    <div class="grid grid-cols-12 gap-4">
       <div class="col-span-12 md:col-span-4">
-        <label class="block text-sm font-medium mb-1">Categoría</label>
-        <select id="f_category" class="w-full rounded-xl border px-3 py-2">
+        <label class="dw-label mb-1" for="f_category">Categoría</label>
+        <select id="f_category" class="dw-select">
           <option>Papelería</option>
           <option>Impresión</option>
           <option>Diseño</option>
         </select>
       </div>
       <div class="col-span-12 md:col-span-8">
-        <label class="block text-sm font-medium mb-1">Título</label>
-        <input id="f_title" type="text" class="w-full rounded-xl border px-3 py-2" placeholder="Nombre visible">
+        <label class="dw-label mb-1" for="f_title">Título</label>
+        <input id="f_title" type="text" class="dw-input" placeholder="Nombre visible">
       </div>
 
       <div class="col-span-12">
-        <label class="block text-sm font-medium mb-1">Descripción (opcional)</label>
-        <textarea id="f_desc" rows="3" class="w-full rounded-xl border px-3 py-2" placeholder="Texto corto"></textarea>
+        <label class="dw-label mb-1" for="f_desc">Descripción (opcional)</label>
+        <textarea id="f_desc" rows="3" class="dw-input" placeholder="Texto corto"></textarea>
       </div>
 
       <div class="col-span-12 md:col-span-4">
-        <label class="block text-sm font-medium mb-1">Precio (COP)</label>
-        <input id="f_price" type="text" class="w-full rounded-xl border px-3 py-2" value="0">
-        <div class="mt-3 space-y-2 text-sm">
+        <label class="dw-label mb-1" for="f_price">Precio (COP)</label>
+        <input id="f_price" type="text" class="dw-input" value="0">
+        <div class="mt-3 space-y-2 text-sm text-dw-text">
           <label class="flex items-center gap-2">
-            <input id="f_showPrice" type="checkbox" class="rounded">
+            <input id="f_showPrice" type="checkbox" class="rounded border-dw-border text-dw-primary">
             <span>Mostrar precio</span>
           </label>
           <label class="flex items-center gap-2">
-            <input id="f_visible" type="checkbox" class="rounded" checked>
+            <input id="f_visible" type="checkbox" class="rounded border-dw-border text-dw-primary" checked>
             <span>Visible</span>
           </label>
           <label class="flex items-center gap-2">
-            <input id="f_featured" type="checkbox" class="rounded">
+            <input id="f_featured" type="checkbox" class="rounded border-dw-border text-dw-primary">
             <span>Destacado (aparece en “Destacados”)</span>
           </label>
         </div>
       </div>
 
       <div class="col-span-12 md:col-span-4">
-        <label class="block text-sm font-medium mb-1">Imagen (opcional)</label>
-        <input id="f_image" type="file" accept="image/*" class="w-full rounded-xl border px-3 py-2">
-        <button id="btnClearImg" type="button" class="mt-2 text-sm text-rose-600">Quitar imagen</button>
+        <label class="dw-label mb-1" for="f_image">Imagen (opcional)</label>
+        <input id="f_image" type="file" accept="image/*" class="dw-input">
+        <button id="btnClearImg" type="button" class="mt-2 text-sm font-semibold text-dw-rose hover:underline">Quitar imagen</button>
       </div>
 
       <div class="col-span-12 md:col-span-4">
-        <label class="block text-sm font-medium mb-1">Previsualización</label>
-        <div class="h-28 rounded-xl border bg-gray-50 flex items-center justify-center overflow-hidden">
+        <label class="dw-label mb-1">Previsualización</label>
+        <div class="flex h-28 items-center justify-center overflow-hidden rounded-dw border-hairline border-dw-border bg-dw-lilac-soft">
           <img id="f_preview" alt="" class="max-h-28 object-contain">
         </div>
       </div>
     </div>
 
     <div class="mt-5 flex items-center justify-end gap-2">
-      <button id="modalCancel" class="px-4 py-2 rounded-xl border hover:bg-gray-50">Cancelar</button>
-      <button id="modalSave" class="px-4 py-2 rounded-xl text-white brand-gradient shadow">Guardar</button>
+      <button id="modalCancel" type="button" class="dw-btn-secondary">Cancelar</button>
+      <button id="modalSave" type="button" class="dw-btn-primary">Guardar</button>
     </div>
   </div>
 </div>

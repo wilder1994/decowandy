@@ -92,6 +92,25 @@ mysql -u root -e "CREATE DATABASE IF NOT EXISTS decowandy_testing CHARACTER SET 
 - API internas para items, compras, ventas y catalogo publico.
 - Permisos modulares por rol (admin / personal con modulos combinables).
 
+## Interfaz (design system)
+
+El panel admin usa un design system propio con tokens Tailwind (`dw-*`) y componentes Blade reutilizables.
+
+**Tokens y estilos:** `tailwind.config.js`, `resources/css/app.css` (colores marca, tipografia Inter/Poppins, bordes hairline, sombras neon).
+
+**Componentes Blade** (`resources/views/components/`):
+- `dw-button`, `dw-input`, `dw-card`, `dw-kpi`, `dw-badge`, `dw-nav-link`, `dw-page-header`
+
+**Vistas migradas al nuevo look:** layouts admin/guest, login, dashboard, ventas, clientes, inventario, compras, gastos, finanzas, reportes, inversiones, usuarios, editor de catalogo publico y pantallas auth.
+
+**Graficos:** tema Chart.js en `resources/js/chart-theme.js`.
+
+Tras cambios en vistas, CSS o JS del frontend:
+```bash
+npm run build
+```
+Los assets compilados van a `public/build/` (no se versionan; cada entorno debe compilar).
+
 ## Rutas utiles
 - Login: `/login`
 - Panel: `/dashboard`
@@ -158,4 +177,4 @@ Nota: si al abrir la IP ves otro proyecto, revisa qué `ServerName` y puerto tie
 - El seeder de produccion no carga datos de prueba; usa datos reales del negocio.
 - Si cambias configuraciones en `.env`, ejecuta `php artisan config:clear` en local o `php artisan config:cache` al desplegar.
 - El proyecto usa traducciones y textos en espanol; mantelos coherentes al contribuir.
-- Tras cambios en frontend (`resources/js`, `resources/css`), compila con `npm run build`.
+- Tras cambios en frontend (`resources/js`, `resources/css`, vistas Blade con clases `dw-*`), compila con `npm run build`.

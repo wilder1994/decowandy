@@ -3,57 +3,54 @@
 @section('title','Cliente · '.$customer->name)
 
 @section('content')
-  <div class="mb-4 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">{{ $customer->name }}</h1>
-      <p class="text-sm text-gray-500">Cédula: {{ $customer->document ?? 'N/A' }}</p>
-    </div>
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <x-dw-page-header :title="$customer->name" :subtitle="'Cédula: '.($customer->document ?? 'N/A')" />
     <div class="flex gap-2">
-      <a href="{{ route('customers.index') }}" class="text-sm text-indigo-600 hover:underline">Volver</a>
+      <x-dw-button variant="secondary" :href="route('customers.index')">Volver</x-dw-button>
       @if($customer->archived_at)
         <form method="POST" action="{{ route('customers.unarchive', ['customer' => $customer->getRouteKey()]) }}">
           @csrf
-          <button class="rounded-xl bg-emerald-600 text-white text-sm font-semibold px-3 py-2">Reactivar</button>
+          <x-dw-button type="submit">Reactivar</x-dw-button>
         </form>
       @else
         <form method="POST" action="{{ route('customers.archive', ['customer' => $customer->getRouteKey()]) }}">
           @csrf
-          <button class="rounded-xl bg-rose-600 text-white text-sm font-semibold px-3 py-2">Archivar</button>
+          <x-dw-button type="submit" variant="danger">Archivar</x-dw-button>
         </form>
       @endif
     </div>
   </div>
 
-  <div class="grid gap-4 md:grid-cols-3 mb-6">
-    <div class="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
-      <h3 class="font-semibold text-gray-800 mb-2">Contacto</h3>
-      <p class="text-sm text-gray-600">Correo: {{ $customer->email ?? 'Sin correo' }}</p>
-      <p class="text-sm text-gray-600">Teléfono: {{ $customer->phone ?? 'Sin teléfono' }}</p>
-      <p class="text-sm text-gray-600">Estado:
+  <div class="mb-6 grid gap-4 md:grid-cols-3">
+    <x-dw-card>
+      <h3 class="mb-2 font-display text-sm font-semibold text-dw-text">Contacto</h3>
+      <p class="text-sm text-dw-muted">Correo: {{ $customer->email ?? 'Sin correo' }}</p>
+      <p class="text-sm text-dw-muted">Teléfono: {{ $customer->phone ?? 'Sin teléfono' }}</p>
+      <p class="mt-2 text-sm text-dw-muted">Estado:
         @if($customer->archived_at)
-          <span class="px-2 py-1 rounded-full bg-rose-100 text-rose-700 text-xs">Archivado</span>
+          <x-dw-badge variant="danger">Archivado</x-dw-badge>
         @else
-          <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs">Activo</span>
+          <x-dw-badge variant="primary">Activo</x-dw-badge>
         @endif
       </p>
-      <p class="text-sm text-gray-600">Última compra:
+      <p class="mt-1 text-sm text-dw-muted">Última compra:
         {{ $customer->last_purchase_at ? $customer->last_purchase_at->format('d/m/Y H:i') : 'Sin compras' }}
       </p>
-    </div>
-    <div class="md:col-span-2 rounded-2xl bg-white border border-gray-100 p-4 shadow-sm">
-      <h3 class="font-semibold text-gray-800 mb-3">Notas</h3>
-      <p class="text-sm text-gray-600 whitespace-pre-line">{{ $customer->notes ?? 'Sin notas' }}</p>
-    </div>
+    </x-dw-card>
+    <x-dw-card class="md:col-span-2">
+      <h3 class="mb-2 font-display text-sm font-semibold text-dw-text">Notas</h3>
+      <p class="whitespace-pre-line text-sm text-dw-muted">{{ $customer->notes ?? 'Sin notas' }}</p>
+    </x-dw-card>
   </div>
 
-  <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 shadow-sm overflow-hidden">
-    <div class="px-5 py-3 flex items-center justify-between">
-      <h3 class="font-semibold text-gray-800">Historial de compras</h3>
-      <span class="text-xs text-gray-500">Ventas: {{ $sales->total() }}</span>
+  <x-dw-card padding="p-0" class="overflow-hidden">
+    <div class="flex items-center justify-between border-b px-4 py-3 dw-hairline">
+      <h3 class="font-display text-sm font-semibold text-dw-text">Historial de compras</h3>
+      <span class="text-xs text-dw-muted">Ventas: {{ $sales->total() }}</span>
     </div>
-    <div class="px-5 pb-4 overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="text-gray-500">
+    <div class="overflow-x-auto px-4 py-3">
+      <table class="dw-table min-w-full text-sm">
+        <thead>
           <tr class="text-left">
             <th class="py-2 pr-4">Fecha</th>
             <th class="py-2 pr-4">Total</th>
@@ -61,16 +58,16 @@
             <th class="py-2">Ítems</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @forelse($sales as $sale)
             <tr>
-              <td class="py-2 pr-4 whitespace-nowrap">
+              <td class="whitespace-nowrap py-2 pr-4 text-dw-text">
                 {{ optional($sale->sold_at ?? $sale->created_at)->format('d/m/Y H:i') }}
               </td>
-              <td class="py-2 pr-4 font-semibold text-gray-900">${{ number_format($sale->total, 0, ',', '.') }}</td>
-              <td class="py-2 pr-4 text-sm text-gray-700">{{ ucfirst($sale->payment_method) }}</td>
-              <td class="py-2 text-sm text-gray-700">
-                <ul class="list-disc list-inside">
+              <td class="py-2 pr-4 font-semibold text-dw-text">${{ number_format($sale->total, 0, ',', '.') }}</td>
+              <td class="py-2 pr-4"><x-dw-badge>{{ ucfirst($sale->payment_method) }}</x-dw-badge></td>
+              <td class="py-2 text-sm text-dw-muted">
+                <ul class="list-inside list-disc">
                   @foreach($sale->items as $item)
                     <li>{{ $item->description ?? $item->item->name ?? 'Ítem' }} (x{{ $item->quantity }})</li>
                   @endforeach
@@ -79,14 +76,14 @@
             </tr>
           @empty
             <tr>
-              <td colspan="4" class="py-6 text-center text-sm text-gray-500">Sin compras registradas.</td>
+              <td colspan="4" class="py-6 text-center text-sm text-dw-muted">Sin compras registradas.</td>
             </tr>
           @endforelse
         </tbody>
       </table>
     </div>
-    <div class="px-5 pb-4">
-      {{ $sales->links() }}
-    </div>
-  </div>
+    @if($sales->hasPages())
+      <div class="border-t px-4 py-3 dw-hairline">{{ $sales->links() }}</div>
+    @endif
+  </x-dw-card>
 @endsection

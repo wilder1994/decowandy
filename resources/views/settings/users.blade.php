@@ -4,46 +4,34 @@
 @section('title', 'Usuarios | DecoWandy')
 
 @section('content')
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">Panel de usuarios</h1>
-      <p class="text-sm text-gray-500">Consulta y gestiona usuarios del sistema.</p>
-    </div>
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <x-dw-page-header title="Panel de usuarios" subtitle="Consulta y gestiona usuarios del sistema." />
     <div class="flex items-center gap-2">
       @can('manage-public-page')
-        <a href="{{ route('settings.public') }}"
-           class="rounded-xl border px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-slate-50">
-          Volver a ajustes
-        </a>
+        <x-dw-button variant="secondary" :href="route('settings.public')">Volver a ajustes</x-dw-button>
       @endcan
-      <button id="btnOpenUserModal"
-              class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700">
-        Nuevo usuario
-      </button>
+      <x-dw-button id="btnOpenUserModal" type="button">Nuevo usuario</x-dw-button>
     </div>
   </div>
 
-  <div class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-    <div class="mb-3 flex items-center justify-between">
-      <h2 class="text-lg font-semibold text-slate-800">Usuarios registrados</h2>
-      <span class="text-xs text-gray-500">{{ $users->count() }} usuarios</span>
+  <x-dw-card padding="p-0" class="overflow-hidden">
+    <div class="flex items-center justify-between border-b px-4 py-3 dw-hairline">
+      <h2 class="font-display text-sm font-semibold text-dw-text">Usuarios registrados</h2>
+      <span class="text-xs text-dw-muted">{{ $users->count() }} usuarios</span>
     </div>
 
+    <div class="px-4 py-3">
     @if(session('status'))
-      <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-        {{ session('status') }}
-      </div>
+      <div class="dw-alert-success">{{ session('status') }}</div>
     @endif
 
     @if ($errors->any())
-      <div class="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
-        {{ $errors->first() }}
-      </div>
+      <div class="dw-alert-error">{{ $errors->first() }}</div>
     @endif
 
     <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="text-gray-500">
+      <table class="dw-table min-w-full text-sm">
+        <thead>
           <tr class="text-left">
             <th class="py-2 pr-4">Nombre</th>
             <th class="py-2 pr-4">Email</th>
@@ -52,19 +40,19 @@
             <th class="py-2 pr-4 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @forelse($users as $user)
             <tr>
-              <td class="py-2 pr-4 font-semibold text-gray-800">{{ $user->name }}</td>
-              <td class="py-2 pr-4 text-gray-700">{{ $user->email }}</td>
+              <td class="py-2 pr-4 font-semibold text-dw-text">{{ $user->name }}</td>
+              <td class="py-2 pr-4 text-dw-text">{{ $user->email }}</td>
               <td class="py-2 pr-4">
-                <span class="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{{ $user->accessLabel() }}</span>
+                <span class="dw-badge-primary">{{ $user->accessLabel() }}</span>
               </td>
-              <td class="py-2 pr-4 text-gray-600">{{ optional($user->created_at)->format('d/m/Y') }}</td>
+              <td class="py-2 pr-4 text-dw-muted">{{ optional($user->created_at)->format('d/m/Y') }}</td>
               <td class="py-2 pr-4">
                 <div class="flex justify-end gap-2">
                   <button
-                    class="btnEditUser text-xs font-semibold text-indigo-600 hover:underline"
+                    class="btnEditUser dw-link"
                     data-id="{{ $user->id }}"
                     data-name="{{ $user->name }}"
                     data-email="{{ $user->email }}"
@@ -76,69 +64,70 @@
                   <form method="POST" action="{{ route('settings.users.destroy', $user) }}" onsubmit="return confirm('Eliminar usuario?');">
                     @csrf
                     @method('DELETE')
-                    <button class="text-xs font-semibold text-rose-600 hover:underline" type="submit">Eliminar</button>
+                    <button class="text-xs font-semibold text-dw-rose hover:underline" type="submit">Eliminar</button>
                   </form>
                 </div>
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="5" class="py-4 text-center text-sm text-gray-500">No hay usuarios registrados.</td>
+              <td colspan="5" class="py-4 text-center text-sm text-dw-muted">No hay usuarios registrados.</td>
             </tr>
           @endforelse
         </tbody>
       </table>
     </div>
-  </div>
+    </div>
+  </x-dw-card>
 
   <div id="userModal" class="fixed inset-0 z-40 hidden">
-    <div class="absolute inset-0 bg-black/40" data-close="1"></div>
-    <div class="relative mx-auto mt-16 w-[min(620px,94vw)] rounded-2xl bg-white p-5 shadow-2xl">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close="1"></div>
+    <div class="relative mx-auto mt-16 w-[min(620px,94vw)] rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
       <div class="mb-4 flex items-center justify-between">
-        <h3 id="userModalTitle" class="text-lg font-semibold text-slate-800">Nuevo usuario</h3>
-        <button id="userModalClose" class="flex h-9 w-9 items-center justify-center rounded-full text-gray-600 hover:bg-gray-100">x</button>
+        <h3 id="userModalTitle" class="font-display text-lg font-semibold text-dw-text">Nuevo usuario</h3>
+        <button id="userModalClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">x</button>
       </div>
 
       <form id="userForm" method="POST" action="{{ route('settings.users.store') }}" class="grid gap-3 md:grid-cols-2">
         @csrf
         <input type="hidden" name="_method" value="POST" id="userFormMethod">
-        <input type="text" name="name" id="u_name" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Nombre" required>
-        <input type="email" name="email" id="u_email" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Email" required>
+        <input type="text" name="name" id="u_name" class="dw-input md:col-span-2" placeholder="Nombre" required>
+        <input type="email" name="email" id="u_email" class="dw-input md:col-span-2" placeholder="Email" required>
 
-        <select name="role" id="u_role" class="rounded-lg border px-3 py-2 md:col-span-2" required>
+        <select name="role" id="u_role" class="dw-select md:col-span-2" required>
           <option value="" disabled selected>Selecciona el tipo de cuenta</option>
           <option value="admin">Administrador (acceso total)</option>
           <option value="staff">Personal (módulos personalizados)</option>
         </select>
 
-        <div id="staffModules" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
-          <p class="mb-3 text-sm font-semibold text-slate-700">Módulos habilitados</p>
+        <div id="staffModules" class="hidden rounded-dw border-hairline border-dw-border bg-dw-lilac-soft p-4 md:col-span-2">
+          <p class="mb-3 text-sm font-semibold text-dw-text">Módulos habilitados</p>
           <div class="grid gap-2 sm:grid-cols-2">
-            <label class="flex items-start gap-2 rounded-lg border border-white bg-white px-3 py-2">
-              <input type="checkbox" name="can_operate" id="u_can_operate" value="1" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            <label class="flex items-start gap-2 rounded-dw border-hairline border-dw-border bg-dw-card px-3 py-2">
+              <input type="checkbox" name="can_operate" id="u_can_operate" value="1" class="mt-1 rounded border-dw-border text-dw-primary focus:ring-dw-primary">
               <span>
-                <span class="block text-sm font-semibold text-slate-800">Operación</span>
-                <span class="block text-xs text-slate-500">Ventas, clientes y POS.</span>
+                <span class="block text-sm font-semibold text-dw-text">Operación</span>
+                <span class="block text-xs text-dw-muted">Ventas, clientes y POS.</span>
               </span>
             </label>
-            <label class="flex items-start gap-2 rounded-lg border border-white bg-white px-3 py-2">
-              <input type="checkbox" name="can_inventory" id="u_can_inventory" value="1" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+            <label class="flex items-start gap-2 rounded-dw border-hairline border-dw-border bg-dw-card px-3 py-2">
+              <input type="checkbox" name="can_inventory" id="u_can_inventory" value="1" class="mt-1 rounded border-dw-border text-dw-primary focus:ring-dw-primary">
               <span>
-                <span class="block text-sm font-semibold text-slate-800">Inventario</span>
-                <span class="block text-xs text-slate-500">Productos, stock y compras.</span>
+                <span class="block text-sm font-semibold text-dw-text">Inventario</span>
+                <span class="block text-xs text-dw-muted">Productos, stock y compras.</span>
               </span>
             </label>
           </div>
         </div>
 
-        <input type="password" name="password" id="u_password" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Contrasena">
-        <input type="password" name="password_confirmation" id="u_password_confirmation" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Confirmar contrasena">
+        <input type="password" name="password" id="u_password" class="dw-input md:col-span-2" placeholder="Contrasena">
+        <input type="password" name="password_confirmation" id="u_password_confirmation" class="dw-input md:col-span-2" placeholder="Confirmar contrasena">
 
-        <p id="u_password_help" class="text-xs text-gray-500 md:col-span-2">Requerida al crear. Dejala vacia para mantener al editar.</p>
+        <p id="u_password_help" class="text-xs text-dw-muted md:col-span-2">Requerida al crear. Dejala vacia para mantener al editar.</p>
 
         <div class="mt-2 flex justify-end gap-2 md:col-span-2">
-          <button type="button" id="userModalCancel" class="rounded-xl border px-4 py-2 text-sm font-semibold hover:bg-slate-50">Cancelar</button>
-          <button type="submit" class="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-indigo-700">Guardar</button>
+          <x-dw-button type="button" id="userModalCancel" variant="secondary">Cancelar</x-dw-button>
+          <x-dw-button type="submit">Guardar</x-dw-button>
         </div>
       </form>
     </div>

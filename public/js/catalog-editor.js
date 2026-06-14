@@ -38,8 +38,7 @@
     const setActive = (cat) => {
       st.activeCat = cat;
       tabs.forEach((b) => {
-        const active = b.dataset.cat === cat;
-        b.className = 'tab-btn rounded-xl px-4 py-2 text-sm font-semibold ' + (active ? 'bg-indigo-600 text-white shadow' : 'bg-white border hover:bg-slate-50');
+        b.dataset.active = b.dataset.cat === cat ? 'true' : 'false';
       });
       loadList();
     };
@@ -80,29 +79,29 @@
   }
 
   function cardHTML(x) {
-    const price = x.show_price && x.price ? '$ ' + fmtCOP(x.price) : '<span class="text-gray-400">$ —</span>';
+    const price = x.show_price && x.price ? '$ ' + fmtCOP(x.price) : '<span class="text-dw-muted">$ —</span>';
     const badge =
       x.category === 'Papelería'
-        ? 'bg-violet-100 text-violet-700'
+        ? 'dw-badge-primary'
         : x.category === 'Impresión'
-        ? 'bg-pink-100 text-pink-700'
-        : 'bg-amber-100 text-amber-700';
+        ? 'dw-badge-danger'
+        : 'dw-badge-warning';
 
     return `
-      <div class="rounded-2xl bg-white border border-gray-100 p-4 shadow-sm flex flex-col">
-        <div class="h-36 rounded-xl bg-slate-50 overflow-hidden mb-3 flex items-center justify-center">
-          ${x.image_path ? `<img src="${esc(x.image_path)}" class="max-h-36 object-contain">` : `<div class="text-gray-400 text-sm">Sin imagen</div>`}
+      <div class="dw-card flex flex-col p-4">
+        <div class="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-dw bg-dw-lilac-soft">
+          ${x.image_path ? `<img src="${esc(x.image_path)}" class="max-h-36 object-contain">` : `<div class="text-sm text-dw-muted">Sin imagen</div>`}
         </div>
-        <div class="font-semibold">${esc(x.title)}</div>
-        <div class="text-sm text-gray-500 mt-0.5">${esc(x.description || '')}</div>
-        <div class="mt-2 text-[15px]">${price} ${x.featured ? '<span class="ml-2 text-xs px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700">Destacado</span>' : ''}</div>
+        <div class="font-semibold text-dw-text">${esc(x.title)}</div>
+        <div class="mt-0.5 text-sm text-dw-muted">${esc(x.description || '')}</div>
+        <div class="mt-2 text-[15px] text-dw-text">${price} ${x.featured ? '<span class="dw-badge-warning ml-2">Destacado</span>' : ''}</div>
         <div class="mt-3 flex items-center justify-between">
-          <div class="flex items-center gap-3 text-gray-500">
-            <button class="act moveUp" data-id="${x.id}" title="Subir orden">▲</button>
-            <button class="act edit" data-id="${x.id}" title="Editar">✏️</button>
-            <button class="act del text-rose-600" data-id="${x.id}" title="Eliminar">🗑️</button>
+          <div class="flex items-center gap-3 text-dw-muted">
+            <button class="act moveUp hover:text-dw-primary" data-id="${x.id}" title="Subir orden">▲</button>
+            <button class="act edit hover:text-dw-primary" data-id="${x.id}" title="Editar">✏️</button>
+            <button class="act del text-dw-rose hover:underline" data-id="${x.id}" title="Eliminar">🗑️</button>
           </div>
-          <span class="text-xs px-2 py-1 rounded-full ${badge}">${x.category}</span>
+          <span class="${badge}">${x.category}</span>
         </div>
       </div>
     `;
@@ -112,7 +111,7 @@
     const grid = $('cardsGrid');
     grid.innerHTML = '';
     if (!st.list.length) {
-      grid.innerHTML = `<div class="col-span-full py-10 text-center text-gray-500">Sin ítems en esta categoría.</div>`;
+      grid.innerHTML = `<div class="col-span-full py-10 text-center text-dw-muted">Sin ítems en esta categoría.</div>`;
       return;
     }
     grid.innerHTML = st.list.map(cardHTML).join('');

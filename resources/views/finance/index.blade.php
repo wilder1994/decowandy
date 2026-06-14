@@ -4,123 +4,73 @@
 @section('title','Finanzas · DecoWandy')
 
 @section('content')
-  <div class="mb-6 rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-amber-400 text-white p-6 shadow-xl">
+  <div class="mb-6 rounded-dw-lg brand-gradient p-5 text-white shadow-dw-neon">
     <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div>
-        <p class="text-sm uppercase tracking-wider text-indigo-100">Panel financiero</p>
-        <h1 class="text-3xl font-bold">Salud financiera y reportes</h1>
-        <p class="text-sm text-indigo-100/90 mt-1">Flujo de caja, inversiones y movimientos conectados a ventas, compras y gastos reales.</p>
+        <p class="text-xs uppercase tracking-wider text-white/80">Panel financiero</p>
+        <h1 class="font-display text-2xl font-bold">Salud financiera y reportes</h1>
+        <p class="mt-1 text-sm text-white/90">Flujo de caja, inversiones y movimientos conectados a ventas, compras y gastos reales.</p>
       </div>
-      <form method="GET" class="flex flex-wrap items-end gap-3 bg-white/10 backdrop-blur rounded-2xl border border-white/20 p-4">
+      <form method="GET" class="flex flex-wrap items-end gap-3 rounded-dw border-hairline border-white/20 bg-white/10 p-4 backdrop-blur">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wide text-white/80">Desde</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/80">Desde</label>
           <input type="date" name="from" value="{{ $rango['from'] }}"
-                 class="mt-1 w-full rounded-xl border-white/40 bg-white/20 text-sm text-white placeholder-white/70 focus:border-white focus:ring-white">
+                 class="dw-input border-white/30 bg-white/15 text-white placeholder-white/60">
         </div>
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wide text-white/80">Hasta</label>
+          <label class="mb-1 block text-xs font-semibold uppercase tracking-wide text-white/80">Hasta</label>
           <input type="date" name="to" value="{{ $rango['to'] }}"
-                 class="mt-1 w-full rounded-xl border-white/40 bg-white/20 text-sm text-white placeholder-white/70 focus:border-white focus:ring-white">
+                 class="dw-input border-white/30 bg-white/15 text-white placeholder-white/60">
         </div>
         <div class="flex gap-2">
-          <button type="submit"
-                  class="h-10 rounded-xl bg-white text-indigo-700 px-4 text-sm font-semibold shadow hover:bg-indigo-50">
-            Aplicar
-          </button>
-          <a href="{{ route('finance.index') }}"
-             class="h-10 rounded-xl border border-white/60 px-4 text-sm font-semibold text-white hover:bg-white/10 flex items-center">
-            Limpiar
-          </a>
+          <x-dw-button type="submit" class="!bg-white !text-dw-primary-dark hover:!opacity-90">Aplicar</x-dw-button>
+          <x-dw-button variant="secondary" :href="route('finance.index')" class="!border-white/50 !bg-transparent !text-white hover:!bg-white/10">Limpiar</x-dw-button>
         </div>
       </form>
     </div>
   </div>
 
-  {{-- KPIs principales --}}
-  <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-2xl bg-white border border-indigo-50 p-4 shadow-md">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="text-xs uppercase tracking-wide text-indigo-600 font-semibold">Caja estimada</div>
-          <div class="mt-1 text-3xl font-bold text-slate-900">${{ number_format($resumen['caja'], 0, ',', '.') }}</div>
-          <div class="text-xs text-slate-500 mt-1">Ingresos - egresos - inversión</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">₵</div>
-      </div>
-    </div>
-
-    <div class="rounded-2xl bg-white border border-violet-50 p-4 shadow-md">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="text-xs uppercase tracking-wide text-violet-600 font-semibold">Inversión</div>
-          <div class="mt-1 text-3xl font-bold text-slate-900">${{ number_format($resumen['invertido'], 0, ',', '.') }}</div>
-          <div class="text-xs text-violet-600 mt-1">
-            <a href="{{ route('finance.investments') }}" class="hover:underline">Gestionar inversiones</a>
-          </div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center font-bold">↑</div>
-      </div>
-    </div>
-
-    <div class="rounded-2xl bg-white border border-emerald-50 p-4 shadow-md">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="text-xs uppercase tracking-wide text-emerald-600 font-semibold">Recuperado</div>
-          <div class="mt-1 text-3xl font-bold text-slate-900">${{ number_format($resumen['recuperado'], 0, ',', '.') }}</div>
-          <div class="text-xs text-emerald-600 mt-1">{{ $resumen['porcentaje_recuperado'] }}% recuperado</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">✓</div>
-      </div>
-    </div>
-
-    <div class="rounded-2xl bg-white border border-amber-50 p-4 shadow-md">
-      <div class="flex items-start justify-between">
-        <div>
-          <div class="text-xs uppercase tracking-wide text-amber-600 font-semibold">Por recuperar</div>
-          <div class="mt-1 text-3xl font-bold text-slate-900">${{ number_format($resumen['por_recuperar'], 0, ',', '.') }}</div>
-          <div class="text-xs text-amber-600 mt-1">Utilidad periodo: ${{ number_format($resumen['utilidad'], 0, ',', '.') }}</div>
-        </div>
-        <div class="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">↺</div>
-      </div>
-    </div>
+  <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <x-dw-kpi label="Caja estimada" :value="'$'.number_format($resumen['caja'], 0, ',', '.')" hint="Ingresos - egresos - inversión" icon="account_balance_wallet" />
+    <x-dw-kpi label="Inversión" :value="'$'.number_format($resumen['invertido'], 0, ',', '.')" tone="lilac" icon="savings" hint="Ver módulo de inversiones" />
+    <x-dw-kpi label="Recuperado" :value="'$'.number_format($resumen['recuperado'], 0, ',', '.')" tone="yellow" icon="check_circle" :hint="$resumen['porcentaje_recuperado'].'% recuperado'" />
+    <x-dw-kpi label="Por recuperar" :value="'$'.number_format($resumen['por_recuperar'], 0, ',', '.')" tone="rose" icon="hourglass_top" :hint="'Utilidad periodo: $'.number_format($resumen['utilidad'], 0, ',', '.')" />
   </div>
 
-  {{-- Gráficas --}}
   <div class="mt-6 grid gap-4 lg:grid-cols-3">
-    <div class="rounded-2xl bg-white border border-gray-100 p-5 shadow-md h-full">
+    <x-dw-card padding="p-4" class="h-full">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="font-semibold text-slate-900">Flujo de caja</h3>
-          <p class="text-xs text-slate-500">Del {{ $rango['from'] }} al {{ $rango['to'] }}</p>
+          <h3 class="font-display text-sm font-semibold text-dw-text">Flujo de caja</h3>
+          <p class="text-xs text-dw-muted">Del {{ $rango['from'] }} al {{ $rango['to'] }}</p>
         </div>
-        <span class="text-xs px-3 py-1 rounded-full bg-indigo-50 text-indigo-700">Tendencia</span>
+        <x-dw-badge>Tendencia</x-dw-badge>
       </div>
       <canvas id="fn_cashflow" class="mt-4 h-56"></canvas>
-    </div>
-    <div class="rounded-2xl bg-white border border-gray-100 p-5 shadow-md h-full">
+    </x-dw-card>
+    <x-dw-card padding="p-4" class="h-full">
       <div class="flex items-center justify-between">
-        <h3 class="font-semibold text-slate-900">Ingresos vs egresos</h3>
-        <span class="text-xs px-3 py-1 rounded-full bg-violet-50 text-violet-700">Comparativo</span>
+        <h3 class="font-display text-sm font-semibold text-dw-text">Ingresos vs egresos</h3>
+        <x-dw-badge>Comparativo</x-dw-badge>
       </div>
       <canvas id="fn_rev_exp" class="mt-4 h-56"></canvas>
-    </div>
-    <div class="rounded-2xl bg-white border border-gray-100 p-5 shadow-md h-full flex items-center justify-center text-sm text-slate-500">
+    </x-dw-card>
+    <x-dw-card padding="p-4" class="flex h-full items-center justify-center text-sm text-dw-muted">
       <span class="text-center">Añade aquí tu tercer gráfico (ej. ventas por categoría) si lo tienes disponible.</span>
-    </div>
+    </x-dw-card>
   </div>
 
-  {{-- Estado de caja --}}
-  <div class="mt-6 rounded-2xl bg-white border border-gray-100 p-5 shadow-md">
-    <div class="flex items-center justify-between mb-3">
+  <x-dw-card padding="p-4" class="mt-6">
+    <div class="mb-3 flex items-center justify-between">
       <div>
-        <h3 class="font-semibold text-slate-900">Movimientos de caja</h3>
-        <p class="text-xs text-gray-500">Ventas, gastos, compras sin inventario e inversiones.</p>
+        <h3 class="font-display text-sm font-semibold text-dw-text">Movimientos de caja</h3>
+        <p class="text-xs text-dw-muted">Ventas, gastos, compras sin inventario e inversiones.</p>
       </div>
-      <span class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700">{{ count($movimientosCaja) }} movimientos</span>
+      <x-dw-badge>{{ count($movimientosCaja) }} movimientos</x-dw-badge>
     </div>
     <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="text-gray-500">
+      <table class="dw-table min-w-full text-sm">
+        <thead>
           <tr class="text-left">
             <th class="py-2 pr-4">Fecha</th>
             <th class="py-2 pr-4">Concepto</th>
@@ -128,29 +78,27 @@
             <th class="py-2 pr-4 text-right">Monto</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @forelse($movimientosCaja as $mov)
             <tr>
-              <td class="py-2 pr-4 text-slate-800">{{ $mov['fecha']->format('d/m/Y') }}</td>
-              <td class="py-2 pr-4 text-slate-700">{{ $mov['concepto'] }}</td>
+              <td class="py-2 pr-4 text-dw-text">{{ $mov['fecha']->format('d/m/Y') }}</td>
+              <td class="py-2 pr-4 text-dw-text">{{ $mov['concepto'] }}</td>
               <td class="py-2 pr-4">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-slate-100 text-slate-700">
-                  {{ ucfirst($mov['metodo']) }}
-                </span>
+                <x-dw-badge>{{ ucfirst($mov['metodo']) }}</x-dw-badge>
               </td>
-              <td class="py-2 pr-4 text-right font-semibold {{ $mov['tipo'] === 'entrada' ? 'text-emerald-700' : 'text-rose-600' }}">
+              <td class="py-2 pr-4 text-right font-semibold {{ $mov['tipo'] === 'entrada' ? 'text-dw-primary' : 'text-dw-rose' }}">
                 {{ $mov['tipo'] === 'entrada' ? '+' : '-' }}${{ number_format(abs($mov['monto']), 0, ',', '.') }}
               </td>
             </tr>
           @empty
             <tr>
-              <td colspan="4" class="py-4 text-center text-sm text-gray-500">No hay movimientos para el rango seleccionado.</td>
+              <td colspan="4" class="py-4 text-center text-sm text-dw-muted">No hay movimientos para el rango seleccionado.</td>
             </tr>
           @endforelse
         </tbody>
       </table>
     </div>
-  </div>
+  </x-dw-card>
 @endsection
 
 @push('scripts')

@@ -13,138 +13,121 @@
         'diseno' => 'Diseño',
     ];
 @endphp
-<div class="space-y-8">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold">Compras</h1>
-            <p class="text-sm text-gray-500">Administra las compras registradas y agrega nuevas entradas que actualicen el inventario.</p>
-        </div>
-        <div class="rounded-2xl border border-violet-100 bg-white px-5 py-3 text-right shadow-sm">
-            <span class="block text-xs uppercase tracking-wide text-gray-500">Total filtrado</span>
-            <span class="text-xl font-semibold text-[color:var(--dw-primary)]">${{ number_format($summaryTotal, 0, ',', '.') }}</span>
+<div class="space-y-6">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 class="dw-page-title">Compras</h1>
+        <div class="flex flex-wrap items-center gap-4">
+            <p class="whitespace-nowrap rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-3 py-1.5 text-sm text-dw-muted">
+                Total filtrado:
+                <strong class="tabular-nums text-dw-text">${{ number_format($summaryTotal, 0, ',', '.') }}</strong>
+            </p>
+            <span class="hidden h-6 w-px shrink-0 bg-dw-border sm:block" aria-hidden="true"></span>
+            <x-dw-button id="openPurchaseModal" type="button" class="shrink-0">
+                <span class="material-symbols-outlined text-base">add</span>
+                Agregar compra
+            </x-dw-button>
         </div>
     </div>
 
-    <div class="flex items-center justify-between mb-4">
-        <div></div>
-        <button id="openPurchaseModal" type="button" class="inline-flex items-center gap-2 rounded-xl bg-[color:var(--dw-primary)] px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
-            <span class="material-symbols-outlined text-base">add</span>
-            Agregar compra
-        </button>
-    </div>
-
-    <div class="space-y-6">
-        <div class="space-y-6">
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <form method="GET" action="{{ route('purchases.index') }}" class="space-y-4">
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500">Desde</label>
-                            <input type="date" name="from" value="{{ $filters['from'] }}"
-                                   class="mt-1 w-full rounded-xl border-gray-200 text-sm focus:border-[color:var(--dw-primary)] focus:ring-[color:var(--dw-primary)]">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500">Hasta</label>
-                            <input type="date" name="to" value="{{ $filters['to'] }}"
-                                   class="mt-1 w-full rounded-xl border-gray-200 text-sm focus:border-[color:var(--dw-primary)] focus:ring-[color:var(--dw-primary)]">
-                        </div>
-                        <div class="sm:col-span-2 lg:col-span-2">
-                            <label class="block text-xs font-semibold uppercase tracking-wide text-gray-500">Categoría</label>
-                            <select name="category"
-                                    class="mt-1 w-full rounded-xl border-gray-200 text-sm focus:border-[color:var(--dw-primary)] focus:ring-[color:var(--dw-primary)]">
-                                <option value="all" @selected($filters['category'] === 'all')>Todas</option>
-                                @foreach($categoryOptions as $option)
-                                    <option value="{{ $option }}" @selected($filters['category'] === $option)>{{ $option }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                        <a href="{{ route('purchases.index') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
-                            Limpiar
-                        </a>
-                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-xl bg-[color:var(--dw-primary)] px-4 py-2 text-sm font-semibold text-white shadow hover:opacity-90">
-                            Aplicar filtros
-                        </button>
-                    </div>
-                </form>
-            </section>
-
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-                <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h2 class="text-lg font-semibold">Compras registradas</h2>
-                        <p class="text-xs text-gray-500">Mostrando {{ $purchases->count() }} de {{ $purchases->total() }} compras.</p>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="text-gray-500">
-                            <tr class="text-left">
-                                <th class="px-3 py-2">Fecha</th>
-                                <th class="px-3 py-2">Categoría</th>
-                                <th class="px-3 py-2">Proveedor</th>
-                                <th class="px-3 py-2">Inventario</th>
-                                <th class="px-3 py-2 text-right">Líneas</th>
-                                <th class="px-3 py-2 text-right">Unidades</th>
-                                <th class="px-3 py-2 text-right">Total</th>
-                                <th class="px-3 py-2 text-right">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse($purchases as $purchase)
-                                @php
-                                    $units = $purchase->items->sum('quantity');
-                                @endphp
-                                <tr class="hover:bg-gray-50/70">
-                                    <td class="px-3 py-2 text-sm text-gray-700">{{ optional($purchase->date)->format('d/m/Y') }}</td>
-                                    <td class="px-3 py-2 font-medium text-gray-800">{{ $purchase->category }}</td>
-                                    <td class="px-3 py-2 text-gray-600">{{ $purchase->supplier ?: '—' }}</td>
-                                    <td class="px-3 py-2">
-                                        @if($purchase->to_inventory)
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">Inventario</span>
-                                        @else
-                                            <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-500">Gasto</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-3 py-2 text-right text-gray-700">{{ number_format($purchase->items_count, 0, ',', '.') }}</td>
-                                    <td class="px-3 py-2 text-right text-gray-700">{{ number_format($units, 0, ',', '.') }}</td>
-                                    <td class="px-3 py-2 text-right font-semibold text-gray-900">${{ number_format($purchase->total, 0, ',', '.') }}</td>
-                                    <td class="px-3 py-2 text-right">
-                                        <a href="{{ route('purchases.show', $purchase) }}" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 px-3 py-1 text-xs font-semibold text-[color:var(--dw-primary)] hover:bg-violet-50">Ver detalles</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="px-3 py-6 text-center text-sm text-gray-500">
-                                        No hay compras registradas con los filtros actuales.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-                @if($purchases->hasPages())
-                    <div class="mt-4">
-                        {{ $purchases->links() }}
-                    </div>
-                @endif
-            </section>
+    <form method="GET" action="{{ route('purchases.index') }}" class="dw-filter-panel">
+        <div class="grid gap-3 md:grid-cols-4 md:items-end">
+            <div>
+                <label class="dw-label mb-1" for="from">Desde</label>
+                <input id="from" type="date" name="from" value="{{ $filters['from'] }}" class="dw-input">
+            </div>
+            <div>
+                <label class="dw-label mb-1" for="to">Hasta</label>
+                <input id="to" type="date" name="to" value="{{ $filters['to'] }}" class="dw-input">
+            </div>
+            <div>
+                <label class="dw-label mb-1" for="category">Categoría</label>
+                <select id="category" name="category" class="dw-select">
+                    <option value="all" @selected($filters['category'] === 'all')>Todas</option>
+                    @foreach($categoryOptions as $option)
+                        <option value="{{ $option }}" @selected($filters['category'] === $option)>{{ $option }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                <x-dw-button variant="secondary" :href="route('purchases.index')">Limpiar</x-dw-button>
+                <x-dw-button type="submit">Aplicar filtros</x-dw-button>
+            </div>
         </div>
-    </div>
+    </form>
+
+    <x-dw-card padding="p-0" class="overflow-hidden">
+        <div class="flex flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between dw-hairline">
+            <div>
+                <h2 class="font-display text-sm font-semibold text-dw-text">Compras registradas</h2>
+                <p class="text-xs text-dw-muted">Mostrando {{ $purchases->count() }} de {{ $purchases->total() }} compras.</p>
+            </div>
+        </div>
+        <div class="overflow-x-auto px-4 py-3">
+            <table class="dw-table min-w-full text-sm">
+                <thead>
+                    <tr class="text-left">
+                        <th class="px-3 py-2">Fecha</th>
+                        <th class="px-3 py-2">Categoría</th>
+                        <th class="px-3 py-2">Proveedor</th>
+                        <th class="px-3 py-2">Inventario</th>
+                        <th class="px-3 py-2 text-right">Líneas</th>
+                        <th class="px-3 py-2 text-right">Unidades</th>
+                        <th class="px-3 py-2 text-right">Total</th>
+                        <th class="px-3 py-2 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($purchases as $purchase)
+                        @php
+                            $units = $purchase->items->sum('quantity');
+                        @endphp
+                        <tr>
+                            <td class="px-3 py-2 text-sm text-dw-text">{{ optional($purchase->date)->format('d/m/Y') }}</td>
+                            <td class="px-3 py-2 font-medium text-dw-text">{{ $purchase->category }}</td>
+                            <td class="px-3 py-2 text-dw-muted">{{ $purchase->supplier ?: '—' }}</td>
+                            <td class="px-3 py-2">
+                                @if($purchase->to_inventory)
+                                    <span class="dw-badge-primary">Inventario</span>
+                                @else
+                                    <span class="dw-badge-warning">Gasto</span>
+                                @endif
+                            </td>
+                            <td class="px-3 py-2 text-right text-dw-text">{{ number_format($purchase->items_count, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right text-dw-text">{{ number_format($units, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right font-semibold text-dw-text">${{ number_format($purchase->total, 0, ',', '.') }}</td>
+                            <td class="px-3 py-2 text-right">
+                                <a href="{{ route('purchases.show', $purchase) }}" class="dw-link">Ver detalles</a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="px-3 py-6 text-center text-sm text-dw-muted">
+                                No hay compras registradas con los filtros actuales.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if($purchases->hasPages())
+            <div class="border-t px-4 py-3 dw-hairline">
+                {{ $purchases->links() }}
+            </div>
+        @endif
+    </x-dw-card>
 </div>
 
 {{-- Modal de compra --}}
 <div id="purchaseModal" class="hidden fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/40" data-close="true"></div>
-    <div class="relative mx-auto mt-12 w-[min(920px,95%)] rounded-2xl bg-white p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="text-xl font-semibold">Registrar compra</h3>
-            <button id="closePurchaseModal" type="button" class="h-9 w-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close="true"></div>
+    <div class="relative mx-auto mt-12 w-[min(920px,95%)] max-h-[92vh] overflow-y-auto rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+        <div class="mb-4 flex items-center justify-between">
+            <h3 class="font-display text-xl font-semibold text-dw-text">Registrar compra</h3>
+            <button id="closePurchaseModal" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <p class="text-xs text-gray-500 mb-4">Completa los datos, agrega las líneas necesarias y se enviará a la API para actualizar inventario.</p>
+        <p class="mb-4 text-xs text-dw-muted">Completa los datos, agrega las líneas necesarias y se enviará a la API para actualizar inventario.</p>
         @include('purchases.partials.form')
     </div>
 </div>
@@ -186,13 +169,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!feedbackBox) return;
 
         feedbackBox.textContent = message;
-        feedbackBox.classList.remove('hidden', 'bg-red-50', 'border-red-200', 'text-red-600', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-700');
-
-        if (type === 'error') {
-            feedbackBox.classList.add('bg-red-50', 'border-red-200', 'text-red-600');
-        } else {
-            feedbackBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-700');
-        }
+        feedbackBox.classList.remove('hidden', 'dw-alert-success', 'dw-alert-error');
+        feedbackBox.classList.add(type === 'error' ? 'dw-alert-error' : 'dw-alert-success');
     }
 
     function clearFeedback() {

@@ -6,36 +6,37 @@
 @section('title','Inversiones — DecoWandy')
 
 @section('content')
-  <div class="mb-6 flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">Inversiones</h1>
-      <p class="text-sm text-gray-500">Registra inversión inicial y nuevas inyecciones de capital.</p>
-    </div>
-    <button id="btnNewInv"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white brand-gradient shadow hover:opacity-90">
-      <span class="material-symbols-outlined text-base">add</span> Nueva inversión
-    </button>
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <x-dw-page-header title="Inversiones" subtitle="Registra inversión inicial y nuevas inyecciones de capital." />
+    <x-dw-button id="btnNewInv" type="button">
+      <span class="material-symbols-outlined text-base">add</span>
+      Nueva inversión
+    </x-dw-button>
   </div>
 
-  {{-- Resumen --}}
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4">
-      <div class="text-sm text-gray-500">Invertido acumulado</div>
-      <div id="inv_total" class="mt-1 text-2xl font-bold">${{ number_format($total, 0, ',', '.') }}</div>
-      <div class="text-xs text-gray-500 mt-1">Datos guardados en la base.</div>
-    </div>
-    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4">
-      <div class="text-sm text-gray-500">Última actualización</div>
-      <div class="mt-1 text-2xl font-bold" id="inv_last_update">{{ optional($investments->first())->date?->format('d/m/Y') ?? '-' }}</div>
-      <div class="text-xs text-gray-500 mt-1">Ordenado por fecha y creación.</div>
-    </div>
+  <div class="mb-6 grid gap-4 sm:grid-cols-2">
+    <x-dw-card hover class="p-3.5">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-medium uppercase tracking-wide text-dw-muted">Invertido acumulado</span>
+        <span class="material-symbols-outlined text-base text-dw-lilac">savings</span>
+      </div>
+      <div id="inv_total" class="mt-1.5 font-display text-xl font-bold text-dw-text">${{ number_format($total, 0, ',', '.') }}</div>
+      <div class="mt-1 text-xs text-dw-muted">Datos guardados en la base.</div>
+    </x-dw-card>
+    <x-dw-card hover class="p-3.5">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-medium uppercase tracking-wide text-dw-muted">Última actualización</span>
+        <span class="material-symbols-outlined text-base text-dw-yellow">update</span>
+      </div>
+      <div id="inv_last_update" class="mt-1.5 font-display text-xl font-bold text-dw-text">{{ optional($investments->first())->date?->format('d/m/Y') ?? '-' }}</div>
+      <div class="mt-1 text-xs text-dw-muted">Ordenado por fecha y creación.</div>
+    </x-dw-card>
   </div>
 
-  {{-- Tabla --}}
-  <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4">
-    <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="text-gray-500">
+  <x-dw-card padding="p-0" class="overflow-hidden">
+    <div class="overflow-x-auto px-4 py-3">
+      <table class="dw-table min-w-full text-sm">
+        <thead>
           <tr class="text-left">
             <th class="py-2 pr-4">Fecha</th>
             <th class="py-2 pr-4">Concepto</th>
@@ -44,53 +45,46 @@
             <th class="py-2 w-28 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody id="invTable" class="divide-y divide-gray-100">
-          {{-- filas por JS --}}
-        </tbody>
+        <tbody id="invTable"></tbody>
       </table>
     </div>
-    <div id="invAlert" class="hidden mt-4 rounded-xl border px-3 py-2 text-sm"></div>
-  </div>
+    <div id="invAlert" class="mx-4 mb-4 hidden rounded-dw border-hairline px-3 py-2 text-sm"></div>
+  </x-dw-card>
 
-  {{-- Modal --}}
   <div id="invModal" class="hidden fixed inset-0 z-50">
-    <div class="absolute inset-0 bg-black/30" data-close="1"></div>
-    <div class="relative mx-auto mt-16 w-[min(680px,92%)] rounded-2xl bg-white p-5 shadow-2xl">
-      <div class="flex items-center justify-between mb-3">
-        <h2 id="invTitle" class="text-xl font-semibold">Nueva inversión</h2>
-        <button id="invClose" class="h-9 w-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close="1"></div>
+    <div class="relative mx-auto mt-16 w-[min(680px,92%)] rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+      <div class="mb-3 flex items-center justify-between">
+        <h2 id="invTitle" class="font-display text-xl font-semibold text-dw-text">Nueva inversión</h2>
+        <button id="invClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
-      <div id="invModalAlert" class="hidden mb-3 rounded-xl border px-3 py-2 text-sm"></div>
+      <div id="invModalAlert" class="mb-3 hidden rounded-dw border-hairline px-3 py-2 text-sm"></div>
 
       <div class="grid gap-4 md:grid-cols-2">
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Fecha</label>
-          <input id="f_date" type="date" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+          <label class="dw-label mb-1" for="f_date">Fecha</label>
+          <input id="f_date" type="date" class="dw-input">
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Concepto</label>
-          <input id="f_concept" type="text" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500" placeholder="Computador, impresora...">
+          <label class="dw-label mb-1" for="f_concept">Concepto</label>
+          <input id="f_concept" type="text" class="dw-input" placeholder="Computador, impresora...">
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Monto (COP)</label>
-          <input id="f_amount"
-                 type="text"
-                 inputmode="numeric"
-                 class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                 placeholder="0">
+          <label class="dw-label mb-1" for="f_amount">Monto (COP)</label>
+          <input id="f_amount" type="text" inputmode="numeric" class="dw-input" placeholder="0">
         </div>
         <div>
-          <label class="block text-sm text-gray-600 mb-1">Notas (opcional)</label>
-          <input id="f_notes" type="text" class="w-full rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+          <label class="dw-label mb-1" for="f_notes">Notas (opcional)</label>
+          <input id="f_notes" type="text" class="dw-input">
         </div>
       </div>
 
-      <div class="mt-5 flex items-center justify-end gap-3">
-        <button id="invCancel" type="button" class="rounded-xl bg-white px-4 py-2 border hover:bg-slate-50">Cancelar</button>
-        <button id="invSave" type="button" class="rounded-xl bg-indigo-600 text-white px-4 py-2 shadow hover:bg-indigo-700">Guardar</button>
+      <div class="mt-5 flex items-center justify-end gap-2">
+        <x-dw-button id="invCancel" type="button" variant="secondary">Cancelar</x-dw-button>
+        <x-dw-button id="invSave" type="button">Guardar</x-dw-button>
       </div>
     </div>
   </div>
@@ -122,12 +116,8 @@
 
   function showAlert(box, type, message) {
     box.textContent = message;
-    box.classList.remove('hidden', 'border-red-200', 'text-red-700', 'bg-red-50', 'border-emerald-200', 'text-emerald-700', 'bg-emerald-50');
-    if (type === 'error') {
-      box.classList.add('border-red-200', 'text-red-700', 'bg-red-50');
-    } else {
-      box.classList.add('border-emerald-200', 'text-emerald-700', 'bg-emerald-50');
-    }
+    box.classList.remove('hidden', 'dw-alert-success', 'dw-alert-error');
+    box.classList.add(type === 'error' ? 'dw-alert-error' : 'dw-alert-success');
   }
 
   function resetModal() {
@@ -140,7 +130,6 @@
     document.getElementById('invTitle').textContent = 'Nueva inversión';
   }
 
-  // Prefijo inv para evitar colisiones con otros modales globales (ej. ventas)
   function openInvModal() {
     document.getElementById('invModal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
@@ -160,13 +149,13 @@
       total += Number(item.amount || 0);
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td class="py-2 pr-4">${formatDate(item.date)}</td>
-        <td class="py-2 pr-4">${escapeHtml(item.concept)}</td>
-        <td class="py-2 pr-4">$ ${fmt(item.amount)}</td>
-        <td class="py-2 pr-4 text-gray-500">${escapeHtml(item.note || '')}</td>
+        <td class="py-2 pr-4 text-dw-text">${formatDate(item.date)}</td>
+        <td class="py-2 pr-4 font-medium text-dw-text">${escapeHtml(item.concept)}</td>
+        <td class="py-2 pr-4 font-semibold text-dw-text">$ ${fmt(item.amount)}</td>
+        <td class="py-2 pr-4 text-dw-muted">${escapeHtml(item.note || '')}</td>
         <td class="py-2 pr-2 text-right">
-          <button class="text-[color:var(--dw-primary)] hover:underline mr-2" data-edit="${item.id}">Editar</button>
-          <button class="text-rose-500 hover:underline" data-del="${item.id}">Eliminar</button>
+          <button class="dw-link mr-2" data-edit="${item.id}">Editar</button>
+          <button class="text-xs font-semibold text-dw-rose hover:underline" data-del="${item.id}">Eliminar</button>
         </td>`;
       tb.appendChild(tr);
     });

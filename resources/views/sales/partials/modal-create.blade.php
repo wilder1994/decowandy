@@ -5,15 +5,15 @@
   <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
   <div class="absolute inset-0 flex items-start justify-center p-4 overflow-y-auto">
-    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div class="w-full max-w-4xl overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon dw-hairline-neon">
 
-      <div class="flex items-center justify-between px-5 py-3 border-b bg-gradient-to-r from-indigo-50 to-white">
+      <div class="subtle-gradient flex items-center justify-between border-b px-4 py-3 dw-hairline">
         <div class="space-y-0.5">
-          <h3 class="text-lg font-bold text-slate-800">Registrar venta</h3>
-          <p class="text-sm text-slate-500">Cliente · productos · pago</p>
+          <h3 class="font-display text-lg font-bold text-dw-text">Registrar venta</h3>
+          <p class="text-sm text-dw-muted">Cliente · productos · pago</p>
         </div>
         <button id="closeSaleModal"
-                class="h-9 w-9 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 hover:text-slate-800 flex items-center justify-center"
+                class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft hover:text-dw-text"
                 aria-label="Cerrar modal">
           &times;
         </button>
@@ -23,13 +23,13 @@
         <div class="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
 
           <div class="lg:col-span-2 space-y-4">
-            <div class="bg-slate-50 rounded-xl p-4 border border-slate-100">
+            <div class="bg-dw-lilac-soft rounded-xl p-4 border border-dw-border">
               <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
               <div>
-                <h4 class="font-semibold text-slate-800">Cliente</h4>
-                <p class="text-xs text-slate-500">Opcional. Busca por cédula o registra uno nuevo.</p>
+                <h4 class="font-semibold text-dw-text">Cliente</h4>
+                <p class="text-xs text-dw-muted">Opcional. Busca por cédula o registra uno nuevo.</p>
               </div>
-              <div id="customerInfoPill" class="text-xs px-3 py-1.5 rounded-full bg-white border text-slate-600 min-w-[160px] text-center">
+              <div id="customerInfoPill" class="text-xs px-3 py-1.5 rounded-full bg-white border text-dw-muted min-w-[160px] text-center">
                 Sin cliente obligatorio
               </div>
             </div>
@@ -39,25 +39,25 @@
             <input type="hidden" id="c_phone">
               <div class="space-y-2">
                 <div>
-                  <label class="block text-sm text-slate-600 mb-1" for="c_document">Cédula / ID</label>
+                  <label class="block text-sm text-dw-muted mb-1" for="c_document">Cédula / ID</label>
                   <input id="c_document" type="text"
                          placeholder="Ej: 123456789"
-                         class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                         class="dw-input">
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
                   <button id="searchCustomer"
                           type="button"
-                          class="w-full rounded-lg border px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white shadow-sm">
+                          class="dw-btn-secondary w-full text-sm">
                     Buscar
                   </button>
                   <button id="newCustomer"
                           type="button"
-                          class="w-full rounded-lg bg-indigo-600 text-white px-3 py-2 text-sm font-semibold shadow hover:bg-indigo-700">
+                          class="dw-btn-primary w-full text-sm">
                     Nuevo
                   </button>
                   <button id="clearCustomer"
                           type="button"
-                          class="w-full rounded-lg border px-3 py-2 text-sm text-slate-600 hover:bg-white">
+                          class="dw-btn-secondary w-full text-sm">
                     Limpiar
                   </button>
                 </div>
@@ -66,45 +66,45 @@
 
             <div class="bg-white rounded-xl border p-4 shadow-sm space-y-3">
               <div class="flex flex-col gap-1">
-                <h4 class="font-semibold text-slate-800">Agregar productos</h4>
-                <p class="text-xs text-slate-500">Escribe y selecciona el producto, ajusta cantidad/valor y presiona Enter para agregar.</p>
+                <h4 class="font-semibold text-dw-text">Agregar productos</h4>
+                <p class="text-xs text-dw-muted">Escribe y selecciona el producto, ajusta cantidad/valor y presiona Enter para agregar.</p>
               </div>
 
             <div class="flex justify-center">
               <span id="p_category_badge"
-                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-dw-lilac-soft text-dw-text">
                 Selecciona un producto
               </span>
             </div>
 
             <div class="grid grid-cols-12 gap-3 items-end">
               <div class="col-span-6 min-w-0">
-                <label class="block text-sm text-slate-600 mb-1" for="p_product">Producto</label>
+                <label class="block text-sm text-dw-muted mb-1" for="p_product">Producto</label>
                 <input id="p_product" type="text" list="product_list" placeholder="Escribe para filtrar"
-                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                       class="dw-input">
                 <datalist id="product_list"></datalist>
-                <p id="stock_info" class="mt-1 text-xs text-slate-500 min-h-[1rem] invisible"></p>
+                <p id="stock_info" class="mt-1 text-xs text-dw-muted min-h-[1rem] invisible"></p>
               </div>
 
               <div class="col-span-2 min-w-0">
-                <label class="block text-sm text-slate-600 mb-1" for="p_qty">Cantidad</label>
+                <label class="block text-sm text-dw-muted mb-1" for="p_qty">Cantidad</label>
                 <input id="p_qty" type="number" min="1" value="1"
-                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                       class="dw-input">
                 <p id="qty_error" class="mt-1 text-xs text-rose-600 hidden"></p>
                 <p class="mt-1 text-xs text-transparent select-none">.</p>
               </div>
 
               <div class="col-span-2 min-w-0">
-                <label class="block text-sm text-slate-600 mb-1" for="p_unit">Unidad</label>
+                <label class="block text-sm text-dw-muted mb-1" for="p_unit">Unidad</label>
                 <input id="p_unit" type="text" inputmode="numeric" placeholder="0"
-                       class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                       class="dw-input">
                 <p class="mt-1 text-xs text-transparent select-none">.</p>
               </div>
 
               <div class="col-span-2 min-w-0">
-                <label class="block text-sm text-slate-600 mb-1" for="p_total">Total</label>
+                <label class="block text-sm text-dw-muted mb-1" for="p_total">Total</label>
                 <input id="p_total" type="text" inputmode="numeric" placeholder="0"
-                       class="w-full rounded-lg border-slate-300 bg-slate-100 text-slate-700" readonly>
+                       class="dw-input bg-dw-lilac-soft" readonly>
                 <p class="mt-1 text-xs text-transparent select-none">.</p>
               </div>
             </div>
@@ -113,12 +113,12 @@
             <div class="bg-white rounded-xl border p-4 shadow-sm">
               <div class="flex items-center justify-between mb-2">
                 <div>
-                  <h4 class="font-semibold text-slate-800">Resumen de productos</h4>
-                  <p class="text-xs text-slate-500">Edita cantidades y valores antes de registrar.</p>
+                  <h4 class="font-semibold text-dw-text">Resumen de productos</h4>
+                  <p class="text-xs text-dw-muted">Edita cantidades y valores antes de registrar.</p>
                 </div>
-                <span id="saleItemsCounter" class="text-xs px-3 py-1 rounded-full bg-slate-100 text-slate-700">Sin productos</span>
+                <span id="saleItemsCounter" class="text-xs px-3 py-1 rounded-full bg-dw-lilac-soft text-dw-text">Sin productos</span>
               </div>
-            <div class="hidden md:grid md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 text-[11px] text-slate-500 pb-2 border-b border-slate-100">
+            <div class="hidden md:grid md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 text-[11px] text-dw-muted pb-2 border-b border-dw-border">
               <div>Producto</div>
               <div>Categoría</div>
               <div class="text-center">Cantidad</div>
@@ -127,29 +127,28 @@
               <div class="text-right">Acciones</div>
             </div>
             <div id="saleItemsList" class="space-y-2 max-h-72 overflow-y-auto pr-1 pt-2">
-              <p class="text-sm text-slate-500">Aún no has agregado productos.</p>
+              <p class="text-sm text-dw-muted">Aún no has agregado productos.</p>
             </div>
             </div>
           </div>
 
           <div class="lg:col-span-1">
-            <div class="bg-indigo-50 rounded-xl border border-indigo-100 p-4 space-y-3 shadow-sm lg:sticky lg:top-6">
+            <div class="bg-dw-lilac-soft rounded-dw border-hairline border-dw-border p-4 space-y-3 shadow-dw-neon-sm lg:sticky lg:top-6">
               <div class="flex items-center justify-between">
-                <h4 class="font-semibold text-indigo-900">Pago</h4>
-                <span class="text-xs text-indigo-700 bg-white px-3 py-1 rounded-full border border-indigo-100">Paso 3</span>
+                <h4 class="font-semibold text-dw-text">Pago</h4>
+                <span class="dw-badge-primary text-xs">Paso 3</span>
               </div>
 
-            <div class="rounded-xl bg-white border border-indigo-100 p-3">
-              <label class="block text-xs text-indigo-900 mb-1" for="sale_total">Total venta</label>
+            <div class="rounded-dw border-hairline border-dw-border bg-dw-card p-3">
+              <label class="dw-label mb-1" for="sale_total">Total venta</label>
               <input id="sale_total" type="text" inputmode="numeric" placeholder="0"
-                     class="w-full rounded-lg border-indigo-200 bg-slate-100 text-slate-800 font-semibold text-lg" readonly>
+                     class="dw-input bg-dw-lilac-soft font-semibold text-lg" readonly>
             </div>
 
             <div class="space-y-3">
               <div>
-                <label class="block text-sm text-indigo-900 mb-1" for="pay_method">Metodo de pago</label>
-                <select id="pay_method"
-                        class="w-full rounded-lg border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                <label class="dw-label mb-1" for="pay_method">Metodo de pago</label>
+                <select id="pay_method" class="dw-select">
                   <option value="cash">Efectivo</option>
                   <option value="transfer">Transferencia</option>
                   <option value="card">Tarjeta</option>
@@ -159,28 +158,21 @@
               </div>
 
               <div>
-                <label class="block text-sm text-indigo-900 mb-1" for="pay_given">Paga con (COP)</label>
-                <input id="pay_given" type="text" inputmode="numeric" placeholder="0"
-                       class="w-full rounded-lg border-indigo-200 focus:border-indigo-500 focus:ring-indigo-500 bg-white">
+                <label class="dw-label mb-1" for="pay_given">Paga con (COP)</label>
+                <input id="pay_given" type="text" inputmode="numeric" placeholder="0" class="dw-input">
               </div>
 
               <div>
-                <label class="block text-sm text-indigo-900 mb-1" for="pay_change">Devuelta (COP)</label>
+                <label class="dw-label mb-1" for="pay_change">Devuelta (COP)</label>
                 <input id="pay_change" type="text" inputmode="numeric" placeholder="0"
-                       class="w-full rounded-lg border-indigo-200 bg-slate-100 text-slate-700" readonly>
+                       class="dw-input bg-dw-lilac-soft" readonly>
               </div>
             </div>
 
               <div class="pt-2 flex flex-col gap-2">
-                <button id="saveSale"
-                        class="rounded-xl bg-indigo-600 text-white font-semibold px-4 py-2.5 shadow hover:bg-indigo-700">
-                  Registrar venta
-                </button>
-                <button id="cancelSale"
-                        class="rounded-xl bg-white text-slate-700 font-semibold px-4 py-2.5 border hover:bg-slate-50">
-                  Cancelar
-                </button>
-                <p class="text-xs text-slate-500 text-center">Puedes registrar sin cliente si lo prefieres.</p>
+                <button id="saveSale" type="button" class="dw-btn-primary w-full">Registrar venta</button>
+                <button id="cancelSale" type="button" class="dw-btn-secondary w-full">Cancelar</button>
+                <p class="text-xs text-dw-muted text-center">Puedes registrar sin cliente si lo prefieres.</p>
               </div>
             </div>
           </div>
@@ -195,42 +187,36 @@
 <div id="customerCreateModal" class="fixed inset-0 z-[80] hidden">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
   <div class="absolute inset-0 flex items-center justify-center p-4">
-    <div class="w-full max-w-lg bg-white rounded-2xl shadow-xl p-6 space-y-4">
+    <div class="w-full max-w-lg space-y-4 rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
       <div class="flex items-center justify-between">
-        <h3 class="text-lg font-semibold text-slate-800">Registrar cliente</h3>
-        <button id="closeCustomerModal" class="text-slate-500 hover:text-slate-700">X</button>
+        <h3 class="text-lg font-semibold text-dw-text">Registrar cliente</h3>
+        <button id="closeCustomerModal" class="text-dw-muted hover:text-dw-text">X</button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div class="md:col-span-2">
-          <label class="block text-sm text-slate-600 mb-1" for="nc_document">Cédula / ID</label>
+          <label class="block text-sm text-dw-muted mb-1" for="nc_document">Cédula / ID</label>
           <input id="nc_document" type="text"
-                 class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                 class="dw-input">
         </div>
         <div class="md:col-span-2">
-          <label class="block text-sm text-slate-600 mb-1" for="nc_name">Nombre</label>
+          <label class="block text-sm text-dw-muted mb-1" for="nc_name">Nombre</label>
           <input id="nc_name" type="text"
-                 class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                 class="dw-input">
         </div>
         <div>
-          <label class="block text-sm text-slate-600 mb-1" for="nc_email">Correo</label>
+          <label class="block text-sm text-dw-muted mb-1" for="nc_email">Correo</label>
           <input id="nc_email" type="email"
-                 class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                 class="dw-input">
         </div>
         <div>
-          <label class="block text-sm text-slate-600 mb-1" for="nc_phone">Teléfono</label>
+          <label class="block text-sm text-dw-muted mb-1" for="nc_phone">Teléfono</label>
           <input id="nc_phone" type="text"
-                 class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                 class="dw-input">
         </div>
       </div>
       <div class="pt-3 flex gap-3 justify-end">
-        <button id="cancelCustomerModal"
-                class="rounded-xl bg-white text-slate-700 font-semibold px-4 py-2 border hover:bg-slate-50">
-          Cancelar
-        </button>
-        <button id="saveCustomerModal"
-                class="rounded-xl bg-indigo-600 text-white font-semibold px-4 py-2 shadow hover:bg-indigo-700">
-          Guardar cliente
-        </button>
+        <button id="cancelCustomerModal" type="button" class="dw-btn-secondary">Cancelar</button>
+        <button id="saveCustomerModal" type="button" class="dw-btn-primary">Guardar cliente</button>
       </div>
     </div>
   </div>
@@ -325,12 +311,12 @@ function updateCustomerPill(){
     const name = (inpName?.value || '').trim() || 'Cliente cargado';
     const doc = (inpCustomerDocument?.value || '').trim();
     customerInfoPill.textContent = doc ? `${name} · ${doc}` : name;
-    customerInfoPill.classList.remove('bg-white', 'border', 'text-slate-600');
-    customerInfoPill.classList.add('bg-emerald-50', 'text-emerald-700', 'border', 'border-emerald-100');
+    customerInfoPill.classList.remove('bg-white', 'border', 'text-dw-muted');
+    customerInfoPill.classList.add('dw-badge-primary');
   } else {
     customerInfoPill.textContent = 'Sin cliente obligatorio';
-    customerInfoPill.classList.remove('bg-emerald-50', 'text-emerald-700', 'border-emerald-100');
-    customerInfoPill.classList.add('bg-white', 'border', 'text-slate-600');
+    customerInfoPill.classList.remove('dw-badge-primary');
+    customerInfoPill.classList.add('bg-white', 'border', 'text-dw-muted');
   }
 }
 
@@ -414,46 +400,46 @@ function renderSaleItems(){
 
   if (!saleLines.length) {
     const empty = document.createElement('p');
-    empty.className = 'text-sm text-slate-500';
+    empty.className = 'text-sm text-dw-muted';
     empty.textContent = 'Aún no has agregado productos.';
     saleItemsList.appendChild(empty);
   } else {
     saleLines.forEach(line => {
       const row = document.createElement('div');
-      row.className = 'rounded-lg border border-slate-200 p-3 grid grid-cols-1 md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 items-center text-xs text-slate-700';
+      row.className = 'rounded-dw border-hairline border-dw-border p-3 grid grid-cols-1 md:grid-cols-[4fr_2fr_1.5fr_1.5fr_1.5fr_1.5fr] gap-2 items-center text-xs text-dw-text';
 
       const nameWrap = document.createElement('div');
       nameWrap.className = '';
       const nameEl = document.createElement('div');
-      nameEl.className = 'text-slate-700';
+      nameEl.className = 'text-dw-text';
       nameEl.textContent = line.name;
       nameWrap.appendChild(nameEl);
 
       const categoryWrap = document.createElement('div');
       categoryWrap.className = '';
       const categoryText = document.createElement('div');
-      categoryText.className = 'text-slate-700';
+      categoryText.className = 'text-dw-text';
       categoryText.textContent = getCategoryLabel(line.category);
       categoryWrap.appendChild(categoryText);
 
       const qtyWrap = document.createElement('div');
       qtyWrap.className = 'text-center';
       const qtyValue = document.createElement('div');
-      qtyValue.className = 'w-full rounded-lg bg-slate-100 text-slate-700 px-2 py-2 text-xs text-center';
+      qtyValue.className = 'w-full rounded-lg bg-dw-lilac-soft text-dw-text px-2 py-2 text-xs text-center';
       qtyValue.textContent = String(line.quantity);
       qtyWrap.appendChild(qtyValue);
 
       const unitWrap = document.createElement('div');
       unitWrap.className = 'text-center';
       const unitValue = document.createElement('div');
-      unitValue.className = 'w-full rounded-lg bg-slate-100 text-slate-700 px-2 py-2 text-xs text-center';
+      unitValue.className = 'w-full rounded-lg bg-dw-lilac-soft text-dw-text px-2 py-2 text-xs text-center';
       unitValue.textContent = formatCOP(line.unitPrice);
       unitWrap.appendChild(unitValue);
 
       const totalWrap = document.createElement('div');
       totalWrap.className = 'text-right';
       const totalValue = document.createElement('div');
-      totalValue.className = 'text-slate-700';
+      totalValue.className = 'text-dw-text';
       totalValue.textContent = '$' + formatCOP(line.quantity * line.unitPrice);
       totalWrap.appendChild(totalValue);
 
@@ -461,7 +447,7 @@ function renderSaleItems(){
       actionsWrap.className = 'text-right';
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
-      removeBtn.className = 'text-slate-700 hover:underline';
+      removeBtn.className = 'text-dw-text hover:underline';
       removeBtn.textContent = 'Quitar';
       removeBtn.addEventListener('click', () => removeLine(line.id));
       actionsWrap.appendChild(removeBtn);
@@ -510,7 +496,7 @@ function resetSaleForm(){
   inpQty.value = "1";
   if (!IS_ADMIN && inpUnit) {
     inpUnit.readOnly = true;
-    inpUnit.classList.add('bg-slate-100', 'text-slate-600');
+    inpUnit.classList.add('bg-dw-lilac-soft', 'text-dw-muted');
   }
   inpUnit.value = "";
   inpTotal.value = "";

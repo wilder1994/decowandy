@@ -7,13 +7,13 @@
   @php($subtotal = $sale->items->sum('line_total'))
   <style>
     .paper {
-      box-shadow: 0 22px 50px rgba(0,0,0,0.14);
+      box-shadow: var(--dw-glow-md, 0 22px 50px rgba(0,0,0,0.14));
       border-radius: 18px;
       overflow: hidden;
       background: #fff;
     }
     .paper header {
-      background: linear-gradient(115deg, #0f3d35 0%, #0f3d35 55%, #1b5c4d 75%, #cbd4d0 75%);
+      background: linear-gradient(115deg, var(--dw-primary-dark) 0%, var(--dw-primary-dark) 55%, var(--dw-primary) 75%, var(--dw-lilac-soft) 75%);
       color: #fff;
       padding: 30px 32px 34px;
       position: relative;
@@ -26,26 +26,31 @@
       right:-6%;
       width:60%;
       height:120px;
-      background:#0f3d35;
+      background:var(--dw-primary-dark);
       border-bottom-left-radius:80% 80%;
     }
     .paper table th,
     .paper table td {
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--dw-border, #e5e7eb);
     }
     .paper table tbody tr:nth-child(odd){
-      background:#f8fafc;
+      background:var(--dw-lilac-soft, #f8fafc);
+    }
+    .paper .invoice-total {
+      background:var(--dw-primary-dark);
+      color:#fff;
+      font-weight:700;
     }
   </style>
 
-  <div class="bg-slate-100 min-h-screen py-14 px-3">
-    <div class="max-w-5xl mx-auto paper">
+  <div class="min-h-screen bg-dw-lilac-soft py-14 px-3">
+    <div class="max-w-5xl mx-auto paper dw-hairline-neon">
       <header>
         <div class="relative z-10 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div>
             <p class="text-xs uppercase tracking-[0.35em] text-white/75">DecoWandy</p>
-            <h1 class="text-4xl font-black leading-tight tracking-tight">COMPANY NAME</h1>
-            <p class="text-sm text-white/85">Tu socio en impresiones y papeleria</p>
+            <h1 class="font-display text-4xl font-black leading-tight tracking-tight">DECOWANDY</h1>
+            <p class="text-sm text-white/85">Tu socio en impresiones y papelería</p>
             <div class="mt-4 space-y-1 text-white/90">
               <p class="text-xs uppercase tracking-wider">Factura para:</p>
               <p class="text-lg font-semibold">{{ $sale->customer_name ?? 'Venta de mostrador' }}</p>
@@ -66,9 +71,9 @@
       </header>
 
       <div class="px-5 pb-16 pt-4 space-y-6">
-        <div class="border border-slate-200 rounded-xl overflow-hidden">
+        <div class="overflow-hidden rounded-dw border-hairline border-dw-border">
           <table class="min-w-full text-sm">
-            <thead class="text-white" style="background:#0f3d35;">
+            <thead class="text-white" style="background:var(--dw-primary-dark);">
               <tr class="text-left">
                 <th class="py-3 px-4 w-14">N°</th>
                 <th class="py-3 px-4">Producto / Descripcion</th>
@@ -80,14 +85,14 @@
             <tbody>
               @foreach($sale->items as $idx => $item)
                 <tr>
-                  <td class="py-3 px-4 align-top text-gray-700">{{ str_pad($idx+1, 2, '0', STR_PAD_LEFT) }}.</td>
+                  <td class="py-3 px-4 align-top text-dw-muted">{{ str_pad($idx+1, 2, '0', STR_PAD_LEFT) }}.</td>
                   <td class="py-3 px-4 align-top">
-                    <div class="font-semibold text-gray-900">{{ $item->item->name ?? $item->description ?? 'Item' }}</div>
-                    <p class="text-xs text-gray-600 leading-snug">{{ $item->description ?? 'Producto agregado a la venta.' }}</p>
+                    <div class="font-semibold text-dw-text">{{ $item->item->name ?? $item->description ?? 'Item' }}</div>
+                    <p class="text-xs text-dw-muted leading-snug">{{ $item->description ?? 'Producto agregado a la venta.' }}</p>
                   </td>
-                  <td class="py-3 px-4 align-top text-gray-800">$ {{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                  <td class="py-3 px-4 align-top text-gray-800">{{ $item->quantity }}</td>
-                  <td class="py-3 px-4 align-top text-right font-semibold text-gray-900">$ {{ number_format($item->line_total, 0, ',', '.') }}</td>
+                  <td class="py-3 px-4 align-top text-dw-text">$ {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                  <td class="py-3 px-4 align-top text-dw-text">{{ $item->quantity }}</td>
+                  <td class="py-3 px-4 align-top text-right font-semibold text-dw-text">$ {{ number_format($item->line_total, 0, ',', '.') }}</td>
                 </tr>
               @endforeach
             </tbody>
@@ -95,29 +100,29 @@
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="font-semibold text-gray-900 mb-2">Informacion de pago</div>
-            <p class="text-sm text-gray-800">Nombre de cuenta: DecoWandy</p>
-            <p class="text-sm text-gray-800">Numero de cuenta: 0000 2222 1111 3333</p>
-            <p class="text-sm text-gray-800">Banco: N/A</p>
-            <div class="pt-4 font-semibold text-gray-900">Terminos y condiciones</div>
-            <p class="text-xs text-gray-600 leading-relaxed">Gracias por su compra. No hay reembolsos despues de 7 dias. Soporte: soporte@deco.com</p>
+          <div class="rounded-dw border-hairline border-dw-border bg-dw-card p-5 shadow-dw-neon-sm">
+            <div class="mb-2 font-semibold text-dw-text">Información de pago</div>
+            <p class="text-sm text-dw-muted">Nombre de cuenta: DecoWandy</p>
+            <p class="text-sm text-dw-muted">Número de cuenta: 0000 2222 1111 3333</p>
+            <p class="text-sm text-dw-muted">Banco: N/A</p>
+            <div class="pt-4 font-semibold text-dw-text">Términos y condiciones</div>
+            <p class="text-xs text-dw-muted leading-relaxed">Gracias por su compra. No hay reembolsos después de 7 días. Soporte: soporte@deco.com</p>
           </div>
-          <div class="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-            <table class="w-full text-sm text-gray-800">
-              <tr class="border-b border-slate-200">
+          <div class="overflow-hidden rounded-dw border-hairline border-dw-border bg-dw-card shadow-dw-neon-sm">
+            <table class="w-full text-sm text-dw-text">
+              <tr class="border-b border-dw-border">
                 <td class="py-3 px-4">Subtotal</td>
                 <td class="py-3 px-4 text-right">$ {{ number_format($subtotal, 0, ',', '.') }}</td>
               </tr>
-              <tr class="border-b border-slate-200">
+              <tr class="border-b border-dw-border">
                 <td class="py-3 px-4">Impuestos</td>
                 <td class="py-3 px-4 text-right">0%</td>
               </tr>
-              <tr class="border-b border-slate-200">
+              <tr class="border-b border-dw-border">
                 <td class="py-3 px-4">Descuentos</td>
                 <td class="py-3 px-4 text-right">0%</td>
               </tr>
-              <tr style="background:#0f3d35;color:#fff;font-weight:700;">
+              <tr class="invoice-total">
                 <td class="py-3 px-4 text-base">Total</td>
                 <td class="py-3 px-4 text-right text-base">$ {{ number_format($sale->total, 0, ',', '.') }}</td>
               </tr>
@@ -125,19 +130,19 @@
           </div>
         </div>
 
-        <div class="rounded-xl border border-slate-200 overflow-hidden" style="background:linear-gradient(120deg, #f3fbf8 0%, #eef2f7 100%);">
-          <div class="w-full flex justify-center px-10 py-16">
-            <div class="max-w-3xl w-full">
-              <div class="grid md:grid-cols-2 gap-14 text-sm text-gray-800">
+        <div class="overflow-hidden rounded-dw border-hairline border-dw-border" style="background:linear-gradient(120deg, var(--dw-lilac-soft) 0%, #fff 100%);">
+          <div class="flex w-full justify-center px-10 py-16">
+            <div class="w-full max-w-3xl">
+              <div class="grid gap-14 text-sm text-dw-muted md:grid-cols-2">
                 <div class="space-y-3 px-6">
-                  <div class="font-semibold text-gray-900">Contacto</div>
+                  <div class="font-semibold text-dw-text">Contacto</div>
                   <p>Email: soporte@deco.com</p>
                   <p>Web: deco.com</p>
-                  <p>Direccion: Calle principal, Ciudad</p>
+                  <p>Dirección: Calle principal, Ciudad</p>
                 </div>
                 <div class="space-y-3 px-6">
-                  <div class="font-semibold text-gray-900">Nota</div>
-                  <p class="text-xs leading-relaxed text-gray-700">Gracias por su compra. Si necesita ayuda o facturacion personalizada, escribanos a soporte@deco.com.</p>
+                  <div class="font-semibold text-dw-text">Nota</div>
+                  <p class="text-xs leading-relaxed">Gracias por su compra. Si necesita ayuda o facturación personalizada, escríbanos a soporte@deco.com.</p>
                 </div>
               </div>
             </div>

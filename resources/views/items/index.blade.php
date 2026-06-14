@@ -34,55 +34,49 @@
 
 @section('content')
 
-  {{-- Header --}}
-  <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-    <div>
-      <h1 class="text-2xl font-bold">Ítems</h1>
-      <p class="text-sm text-gray-500">Gestiona los productos y el inventario que alimentan el POS.</p>
-    </div>
-    <button id="btnNew"
-            type="button"
-            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white brand-gradient shadow hover:opacity-90">
+  <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <x-dw-page-header title="Ítems" subtitle="Gestiona los productos y el inventario que alimentan el POS." />
+    <x-dw-button id="btnNew" type="button">
       <span class="material-symbols-outlined text-base">add</span>
       Nuevo producto
-    </button>
+    </x-dw-button>
   </div>
 
   {{-- Inventario --}}
   <div class="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
-      <div class="text-sm text-gray-500">Productos con stock</div>
-      <div class="mt-1 text-2xl font-bold">{{ $inventoryStats['stockable'] }}</div>
-      <div class="text-xs text-gray-500 mt-1">Listos para controlar existencias</div>
+    <div class="dw-card p-3.5">
+      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Productos con stock</div>
+      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ $inventoryStats['stockable'] }}</div>
+      <div class="mt-1 text-xs text-dw-muted">Listos para controlar existencias</div>
     </div>
-    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
-      <div class="text-sm text-gray-500">Servicios</div>
-      <div class="mt-1 text-2xl font-bold">{{ $inventoryStats['services'] }}</div>
-      <div class="text-xs text-gray-500 mt-1">Ítems sin stock</div>
+    <div class="dw-card p-3.5">
+      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Servicios</div>
+      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ $inventoryStats['services'] }}</div>
+      <div class="mt-1 text-xs text-dw-muted">Ítems sin stock</div>
     </div>
-    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
-      <div class="text-sm text-gray-500">Unidades en stock</div>
-      <div class="mt-1 text-2xl font-bold">{{ number_format($inventoryStats['units'], 0, ',', '.') }}</div>
-      <div class="text-xs text-gray-500 mt-1">Suma de existencias actuales</div>
+    <div class="dw-card p-3.5">
+      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Unidades en stock</div>
+      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ number_format($inventoryStats['units'], 0, ',', '.') }}</div>
+      <div class="mt-1 text-xs text-dw-muted">Suma de existencias actuales</div>
     </div>
-    <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
-      <div class="text-sm text-gray-500">Bajo stock</div>
-      <div class="mt-1 text-2xl font-bold">{{ $inventoryStats['low_stock'] }}</div>
-      <div class="text-xs text-gray-500 mt-1">Por debajo del mínimo</div>
+    <div class="dw-card p-3.5">
+      <div class="text-xs font-medium uppercase tracking-wide text-dw-muted">Bajo stock</div>
+      <div class="mt-1 font-display text-xl font-bold text-dw-text">{{ $inventoryStats['low_stock'] }}</div>
+      <div class="mt-1 text-xs text-dw-muted">Por debajo del mínimo</div>
     </div>
   </div>
 
-  <div class="mb-6 rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+  <div class="dw-card mb-4 p-4">
     <div class="flex items-center justify-between mb-3">
       <div>
-        <h3 class="font-semibold">Alertas de inventario</h3>
-        <p class="text-xs text-gray-500">Items con stock por debajo del mínimo configurado.</p>
+        <h3 class="font-display text-sm font-semibold">Alertas de inventario</h3>
+        <p class="text-xs text-dw-muted">Items con stock por debajo del mínimo configurado.</p>
       </div>
-      <span class="text-xs text-gray-500">Top 5</span>
+      <span class="text-xs text-dw-muted">Top 5</span>
     </div>
     <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="text-gray-500">
+      <table class="dw-table min-w-full text-sm">
+        <thead>
           <tr class="text-left">
             <th class="py-2 pr-4">Producto</th>
             <th class="py-2 pr-4">Sector</th>
@@ -90,16 +84,16 @@
             <th class="py-2 pr-4">Mínimo</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-gray-100">
+        <tbody>
           @forelse($lowStockItems as $item)
             <tr>
               <td class="py-2 pr-4">{{ $item->name }}</td>
-              <td class="py-2 pr-4 text-gray-500">{{ $sectors[$item->sector] ?? $item->sector }}</td>
+              <td class="py-2 pr-4 text-dw-muted">{{ $sectors[$item->sector] ?? $item->sector }}</td>
               <td class="py-2 pr-4 text-rose-600 font-semibold">{{ $item->stock }}</td>
-              <td class="py-2 pr-4 text-gray-600">{{ $item->min_stock }}</td>
+              <td class="py-2 pr-4 text-dw-muted">{{ $item->min_stock }}</td>
             </tr>
           @empty
-            <tr><td colspan="4" class="py-3 text-center text-sm text-gray-500">Sin alertas de inventario.</td></tr>
+            <tr><td colspan="4" class="py-3 text-center text-sm text-dw-muted">Sin alertas de inventario.</td></tr>
           @endforelse
         </tbody>
       </table>
@@ -112,28 +106,28 @@
       @foreach($sectors as $key => $label)
         <button data-sector="{{ $key }}"
                 type="button"
-                class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border hover:bg-slate-50"
+                class="tab-btn dw-tab"
                 data-default="{{ $loop->first ? '1' : '0' }}">
           {{ $label }}
         </button>
       @endforeach
     </div>
     <div class="relative ml-auto w-full max-w-xs">
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">search</span>
+      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-dw-muted text-base">search</span>
       <input id="searchBox"
              type="search"
              placeholder="Buscar por nombre o descripción"
-             class="w-full rounded-xl border border-gray-200 bg-white py-2 pl-9 pr-3 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+             class="dw-input pl-9">
     </div>
   </div>
 
   <div id="itemsAlert" class="hidden mb-4 rounded-xl border px-4 py-3 text-sm"></div>
 
   {{-- Tabla --}}
-  <div class="rounded-2xl bg-[color:var(--dw-card)] border border-gray-100 p-4 shadow-sm">
+  <div class="dw-card p-4">
     <div class="overflow-x-auto">
-      <table class="min-w-full text-sm">
-        <thead class="text-gray-500">
+      <table class="dw-table min-w-full text-sm">
+        <thead>
           <tr class="text-left">
             <th class="py-2 pr-4">Producto</th>
             <th class="py-2 pr-4">Categoría</th>
@@ -145,23 +139,23 @@
             <th class="py-2 pr-2 w-32 text-right">Acciones</th>
           </tr>
         </thead>
-        <tbody id="itemsTableBody" class="divide-y divide-gray-100">
+        <tbody id="itemsTableBody">
           {{-- filas generadas por JS --}}
         </tbody>
       </table>
     </div>
 
-    <div id="paginationControls" class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+    <div id="paginationControls" class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-dw-muted">
       <div id="paginationInfo"></div>
       <div class="flex items-center gap-2">
         <button id="btnPrev"
                 type="button"
-                class="rounded-xl border border-gray-200 px-3 py-1 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
+                class="dw-btn-secondary px-3 py-1 disabled:cursor-not-allowed disabled:opacity-60">
           Anterior
         </button>
         <button id="btnNext"
                 type="button"
-                class="rounded-xl border border-gray-200 px-3 py-1 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
+                class="dw-btn-secondary px-3 py-1 disabled:cursor-not-allowed disabled:opacity-60">
           Siguiente
         </button>
       </div>
@@ -171,10 +165,10 @@
   {{-- Modal Crear/Editar --}}
   <div id="itemModal" class="hidden fixed inset-0 z-50 flex items-start justify-center">
     <div class="absolute inset-0 bg-black/30 z-40" data-close="true"></div>
-    <div class="relative z-50 mx-auto mt-16 w-[min(720px,92%)] rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between mb-4 sticky top-0 bg-white">
-        <h2 id="modalTitle" class="text-xl font-semibold">Nuevo producto</h2>
-        <button id="modalClose" type="button" class="h-9 w-9 rounded-full hover:bg-gray-100 flex items-center justify-center">
+    <div class="relative z-50 mx-auto mt-16 w-[min(720px,92%)] max-h-[90vh] overflow-y-auto rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+      <div class="sticky top-0 mb-4 flex items-center justify-between bg-dw-card">
+        <h2 id="modalTitle" class="font-display text-lg font-semibold">Nuevo producto</h2>
+        <button id="modalClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-dw-lilac-soft">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
@@ -183,9 +177,9 @@
 
       <form id="itemForm" class="space-y-5">
         @include('items.partials.form', ['item' => null])
-        <div class="flex items-center justify-end gap-3 sticky bottom-0 bg-white pt-2">
-          <button id="modalCancel" type="button" class="rounded-xl bg-white px-4 py-2 border hover:bg-slate-50">Cancelar</button>
-          <button id="modalSave" type="submit" class="rounded-xl bg-indigo-600 text-white px-4 py-2 shadow hover:bg-indigo-700">
+        <div class="sticky bottom-0 flex items-center justify-end gap-2 bg-dw-card pt-2">
+          <button id="modalCancel" type="button" class="dw-btn-secondary">Cancelar</button>
+          <button id="modalSave" type="submit" class="dw-btn-primary">
             Guardar
           </button>
         </div>
@@ -196,12 +190,12 @@
   {{-- Modal confirmación rentabilidad --}}
   <div id="priceConfirmModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center">
     <div class="absolute inset-0 bg-black/50" data-pc-close="true"></div>
-    <div class="relative z-10 mx-auto w-[min(520px,92%)] rounded-2xl bg-white p-6 shadow-2xl">
-      <h3 class="text-lg font-semibold text-gray-900 mb-2">Atención</h3>
-      <p id="priceConfirmMessage" class="text-sm text-gray-700"></p>
-      <div class="mt-5 flex justify-end gap-3">
-        <button id="priceConfirmCancel" type="button" class="rounded-xl bg-white px-4 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50">Seguir editando</button>
-        <button id="priceConfirmProceed" type="button" class="rounded-xl bg-[color:var(--dw-primary)] px-4 py-2 text-white shadow hover:opacity-90">Guardar de todas formas</button>
+    <div class="relative z-10 mx-auto w-[min(520px,92%)] rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+      <h3 class="mb-2 font-display text-lg font-semibold text-dw-text">Atención</h3>
+      <p id="priceConfirmMessage" class="text-sm text-dw-muted"></p>
+      <div class="mt-5 flex justify-end gap-2">
+        <button id="priceConfirmCancel" type="button" class="dw-btn-secondary">Seguir editando</button>
+        <button id="priceConfirmProceed" type="button" class="dw-btn-primary">Guardar de todas formas</button>
       </div>
     </div>
   </div>
@@ -287,23 +281,14 @@
 
     function toggleTabs() {
       tabButtons.forEach((btn) => {
-        const active = btn.dataset.sector === state.sector;
-        btn.classList.toggle('bg-indigo-600', active);
-        btn.classList.toggle('text-white', active);
-        btn.classList.toggle('shadow', active);
-        btn.classList.toggle('border', !active);
-        btn.classList.toggle('border-indigo-200', active);
+        btn.dataset.active = btn.dataset.sector === state.sector ? 'true' : 'false';
       });
     }
 
     function showPageAlert(type, message) {
       itemsAlert.textContent = message;
-      itemsAlert.classList.remove('hidden', 'border-green-200', 'text-green-700', 'border-red-200', 'text-red-700', 'bg-green-50', 'bg-red-50');
-      if (type === 'success') {
-        itemsAlert.classList.add('border-green-200', 'text-green-700', 'bg-green-50');
-      } else {
-        itemsAlert.classList.add('border-red-200', 'text-red-700', 'bg-red-50');
-      }
+      itemsAlert.classList.remove('hidden', 'dw-alert-success', 'dw-alert-error');
+      itemsAlert.classList.add(type === 'success' ? 'dw-alert-success' : 'dw-alert-error');
       setTimeout(() => {
         itemsAlert.classList.add('hidden');
       }, 4000);
@@ -375,14 +360,14 @@
 
       if (state.loading) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="8" class="py-6 text-center text-sm text-gray-500">Cargando ítems…</td>';
+        row.innerHTML = '<td colspan="8" class="py-6 text-center text-sm text-dw-muted">Cargando ítems…</td>';
         tableBody.appendChild(row);
         return;
       }
 
       if (!state.items.length) {
         const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="8" class="py-6 text-center text-sm text-gray-500">Sin productos en este sector.</td>';
+        row.innerHTML = '<td colspan="8" class="py-6 text-center text-sm text-dw-muted">Sin productos en este sector.</td>';
         tableBody.appendChild(row);
         return;
       }
@@ -391,19 +376,19 @@
         const tr = document.createElement('tr');
         const activeBadge = item.active
           ? '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Sí</span>'
-          : '<span class="px-2 py-1 rounded-full text-xs bg-gray-200 text-gray-700">No</span>';
+          : '<span class="dw-badge-warning">No</span>';
 
         const stockNumber = item.type === 'product' ? Number(item.stock ?? 0) : null;
         const minStock = item.type === 'product' ? Number(item.min_stock ?? 0) : null;
         const stockBadge = stockNumber === null
-          ? '<span class="px-2 py-1 rounded-full bg-slate-100 text-gray-600 text-xs">Servicio</span>'
-          : `<div class="font-semibold ${stockNumber <= minStock ? 'text-rose-600' : 'text-emerald-700'}">${stockNumber}</div>`;
+          ? '<span class="dw-badge-primary">Servicio</span>'
+          : `<div class="font-semibold ${stockNumber <= minStock ? 'text-dw-rose' : 'text-dw-primary'}">${stockNumber}</div>`;
         const minStockLabel = stockNumber === null ? '-' : minStock;
 
         tr.innerHTML = `
           <td class="py-2 pr-4">
             <div class="font-medium text-[color:var(--dw-text)]">${escapeHtml(item.name)}</div>
-            ${item.description ? `<div class="text-xs text-gray-500 mt-0.5">${escapeHtml(item.description)}</div>` : ''}
+            ${item.description ? `<div class="text-xs text-dw-muted mt-0.5">${escapeHtml(item.description)}</div>` : ''}
           </td>
           <td class="py-2 pr-4">${sectorLabels[item.sector] ?? item.sector}</td>
           <td class="py-2 pr-4">${item.type === 'product' ? 'Producto' : 'Servicio'}</td>
