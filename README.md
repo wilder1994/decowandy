@@ -103,7 +103,22 @@ El panel admin usa un design system propio con tokens Tailwind (`dw-*`) y compon
 
 **Vistas migradas al nuevo look:** layouts admin/guest, login, dashboard, ventas, clientes, inventario, compras, gastos, finanzas, reportes, inversiones, usuarios, editor de catalogo publico y pantallas auth.
 
-**Graficos:** tema Chart.js en `resources/js/chart-theme.js`.
+**Graficos:** tema Chart.js en `resources/js/chart-theme.js`; se actualiza al cambiar el tema (`dw-theme-change`).
+
+**Tema claro / oscuro:** selector en el header del panel y en login (Claro, Oscuro, Sistema). La preferencia se guarda en `localStorage` (`dw-theme`). Implementacion:
+
+| Pieza | Ubicacion |
+|-------|-----------|
+| Variables CSS (`:root` y `[data-theme='dark']`) | `resources/css/app.css` |
+| Script anti-flash en `<head>` | `resources/views/partials/dw-theme-init.blade.php` |
+| Logica JS (`initTheme`, `setTheme`) | `resources/js/theme.js` |
+| Componente selector | `resources/views/components/dw-theme-toggle.blade.php` |
+
+Los colores de superficie (`bg`, `card`, `text`, `muted`, `lilac-soft`, `border`) usan variables CSS; los acentos de marca (`primary`, `rose`, `yellow`) permanecen en hex para compatibilidad con opacidades de Tailwind.
+
+**Tablas:** clase `.dw-table` con bordes hairline, cabecera `bg-dw-lilac-soft` y hover en filas.
+
+**Sin tema oscuro (por ahora):** catalogo publico (`/`, `welcome`) y factura de venta (`sales/show`).
 
 Tras cambios en vistas, CSS o JS del frontend:
 ```bash

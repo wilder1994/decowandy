@@ -29,7 +29,7 @@
                 <h4 class="font-semibold text-dw-text">Cliente</h4>
                 <p class="text-xs text-dw-muted">Opcional. Busca por cédula o registra uno nuevo.</p>
               </div>
-              <div id="customerInfoPill" class="text-xs px-3 py-1.5 rounded-full bg-white border text-dw-muted min-w-[160px] text-center">
+              <div id="customerInfoPill" class="text-xs px-3 py-1.5 rounded-full bg-dw-card border border-dw-border text-dw-muted min-w-[160px] text-center">
                 Sin cliente obligatorio
               </div>
             </div>
@@ -64,7 +64,7 @@
               </div>
             </div>
 
-            <div class="bg-white rounded-xl border p-4 shadow-sm space-y-3">
+            <div class="rounded-xl border border-dw-border bg-dw-card p-4 shadow-sm space-y-3">
               <div class="flex flex-col gap-1">
                 <h4 class="font-semibold text-dw-text">Agregar productos</h4>
                 <p class="text-xs text-dw-muted">Escribe y selecciona el producto, ajusta cantidad/valor y presiona Enter para agregar.</p>
@@ -110,7 +110,7 @@
             </div>
           </div>
 
-            <div class="bg-white rounded-xl border p-4 shadow-sm">
+            <div class="rounded-xl border border-dw-border bg-dw-card p-4 shadow-sm">
               <div class="flex items-center justify-between mb-2">
                 <div>
                   <h4 class="font-semibold text-dw-text">Resumen de productos</h4>
@@ -311,12 +311,12 @@ function updateCustomerPill(){
     const name = (inpName?.value || '').trim() || 'Cliente cargado';
     const doc = (inpCustomerDocument?.value || '').trim();
     customerInfoPill.textContent = doc ? `${name} · ${doc}` : name;
-    customerInfoPill.classList.remove('bg-white', 'border', 'text-dw-muted');
+    customerInfoPill.classList.remove('bg-dw-card', 'border', 'border-dw-border', 'text-dw-muted');
     customerInfoPill.classList.add('dw-badge-primary');
   } else {
     customerInfoPill.textContent = 'Sin cliente obligatorio';
     customerInfoPill.classList.remove('dw-badge-primary');
-    customerInfoPill.classList.add('bg-white', 'border', 'text-dw-muted');
+    customerInfoPill.classList.add('bg-dw-card', 'border', 'border-dw-border', 'text-dw-muted');
   }
 }
 

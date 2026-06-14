@@ -18,6 +18,29 @@
         --dw-border-neon: rgba(169, 138, 212, 0.52);
         --dw-glow: 0 0 0 0.5px var(--dw-border-neon), 0 0 14px rgba(169, 138, 212, 0.14);
         --dw-glow-sm: 0 0 0 0.5px rgba(169, 138, 212, 0.38), 0 0 8px rgba(169, 138, 212, 0.1);
+        --dw-card-shadow: 0 1px 2px rgba(45, 42, 50, 0.04);
+        --dw-header-bg: rgba(255, 255, 255, 0.95);
+        color-scheme: light;
+    }
+
+    [data-theme='dark'] {
+        --dw-primary: #B99AE0;
+        --dw-primary-dark: #D4B8F0;
+        --dw-lilac: #9B7CC8;
+        --dw-lilac-soft: #2E2A38;
+        --dw-rose: #E88BB0;
+        --dw-yellow: #E8C96A;
+        --dw-bg: #1A1820;
+        --dw-card: #25222C;
+        --dw-text: #ECEAF0;
+        --dw-muted: #A39DAD;
+        --dw-border: rgba(185, 154, 224, 0.22);
+        --dw-border-neon: rgba(185, 154, 224, 0.4);
+        --dw-glow: 0 0 0 0.5px var(--dw-border-neon), 0 0 14px rgba(185, 154, 224, 0.12);
+        --dw-glow-sm: 0 0 0 0.5px rgba(185, 154, 224, 0.32), 0 0 8px rgba(185, 154, 224, 0.08);
+        --dw-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+        --dw-header-bg: rgba(37, 34, 44, 0.95);
+        color-scheme: dark;
     }
 
     body {
@@ -44,6 +67,19 @@
         );
     }
 
+    [data-theme='dark'] .subtle-gradient {
+        background: linear-gradient(
+            90deg,
+            rgba(169, 138, 212, 0.1),
+            rgba(155, 124, 200, 0.08),
+            rgba(232, 139, 176, 0.06)
+        );
+    }
+
+    .dw-header-bar {
+        background-color: var(--dw-header-bg);
+    }
+
     .dw-hairline {
         border-width: 0.5px;
         border-color: var(--dw-border);
@@ -56,8 +92,9 @@
     }
 
     .dw-card {
-        @apply rounded-dw-lg bg-dw-card shadow-dw-card;
+        @apply rounded-dw-lg bg-dw-card;
         border: 0.5px solid var(--dw-border);
+        box-shadow: var(--dw-card-shadow);
     }
 
     .dw-card-hover {
@@ -70,7 +107,7 @@
     }
 
     .dw-input {
-        @apply w-full rounded-dw border-hairline border-dw-border bg-white px-3 py-2 text-sm text-dw-text shadow-none transition;
+        @apply w-full rounded-dw border-hairline border-dw-border bg-dw-card px-3 py-2 text-sm text-dw-text shadow-none transition;
     }
 
     .dw-input:focus {
@@ -92,7 +129,7 @@
     }
 
     .dw-btn-secondary {
-        @apply dw-btn border-hairline border-dw-border bg-white text-dw-primary-dark hover:border-dw-border-neon hover:shadow-dw-neon-sm;
+        @apply dw-btn border-hairline border-dw-border bg-dw-card text-dw-primary-dark hover:border-dw-border-neon hover:shadow-dw-neon-sm;
     }
 
     .dw-btn-danger {
@@ -133,12 +170,27 @@
         box-shadow: var(--dw-glow-sm);
     }
 
+    .dw-table {
+        @apply w-full border-collapse;
+        border: 0.5px solid var(--dw-border);
+    }
+
+    .dw-table th,
+    .dw-table td {
+        border: 0.5px solid var(--dw-border);
+        @apply px-3 py-2;
+    }
+
     .dw-table thead {
         @apply text-xs uppercase tracking-wide text-dw-muted;
     }
 
-    .dw-table tbody tr {
-        border-bottom: 0.5px solid var(--dw-border);
+    .dw-table thead th {
+        @apply bg-dw-lilac-soft font-semibold text-dw-text;
+    }
+
+    .dw-table tbody tr:hover {
+        background-color: color-mix(in srgb, var(--dw-lilac-soft) 55%, var(--dw-card));
     }
 
     .dw-page-title {
@@ -170,7 +222,8 @@
     }
 
     .dw-alert-success {
-        @apply mb-4 rounded-dw border-hairline border-dw-primary/30 bg-dw-lilac-soft px-3 py-2 text-sm text-dw-primary-dark;
+        @apply mb-4 rounded-dw border-hairline bg-dw-lilac-soft px-3 py-2 text-sm text-dw-primary-dark;
+        border-color: color-mix(in srgb, var(--dw-primary) 30%, transparent);
     }
 
     .dw-alert-error {

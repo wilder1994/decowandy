@@ -3,6 +3,7 @@
 <html lang="es" class="h-full">
 <head>
     <meta charset="utf-8">
+    @include('partials.dw-theme-init')
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Panel DecoWandy')</title>
@@ -49,10 +50,11 @@
 
         <main class="col-span-12 flex h-screen flex-col overflow-hidden md:col-span-9 lg:col-span-10">
 
-            <header class="sticky top-0 z-30 border-b dw-hairline bg-dw-card/95 backdrop-blur">
+            <header class="dw-header-bar sticky top-0 z-30 border-b dw-hairline backdrop-blur">
                 <div class="flex w-full items-center justify-between px-4 py-2.5 lg:px-5">
                     <div class="hidden text-xs font-medium uppercase tracking-wide text-dw-muted md:block">Panel administrativo</div>
                     <div class="flex items-center gap-2">
+                        <x-dw-theme-toggle />
                         @can('operate')
                             <x-dw-button id="openSaleModal" type="button" class="hidden sm:inline-flex">
                                 <span class="material-symbols-outlined text-base">add_shopping_cart</span>

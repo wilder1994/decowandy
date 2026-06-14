@@ -2,6 +2,7 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
+        @include('partials.dw-theme-init')
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>{{ config('app.name', 'DecoWandy') }}</title>
@@ -21,6 +22,9 @@
                     </a>
                 </div>
                 <div class="overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon dw-hairline-neon">
+                    <div class="flex items-center justify-end border-b px-4 py-2 dw-hairline">
+                        <x-dw-theme-toggle />
+                    </div>
                     <div class="grid md:grid-cols-3">
                         <div class="hidden p-6 text-white md:block brand-gradient">
                             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-white/70">Acceso seguro</p>
