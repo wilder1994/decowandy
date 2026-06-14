@@ -12,14 +12,9 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
@@ -28,16 +23,15 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'role' => User::ROLE_OPERATOR,
+            'role' => User::ROLE_STAFF,
+            'can_operate' => true,
+            'can_inventory' => false,
             'active' => true,
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
@@ -49,22 +43,48 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role' => User::ROLE_ADMIN,
+            'can_operate' => false,
+            'can_inventory' => false,
             'active' => true,
         ]);
     }
 
     public function operator(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'role' => User::ROLE_OPERATOR,
-            'active' => true,
-        ]);
+        return $this->staffOperate();
     }
 
     public function inventory(): static
     {
+        return $this->staffInventory();
+    }
+
+    public function staffOperate(): static
+    {
         return $this->state(fn (array $attributes) => [
-            'role' => User::ROLE_INVENTORY,
+            'role' => User::ROLE_STAFF,
+            'can_operate' => true,
+            'can_inventory' => false,
+            'active' => true,
+        ]);
+    }
+
+    public function staffInventory(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_STAFF,
+            'can_operate' => false,
+            'can_inventory' => true,
+            'active' => true,
+        ]);
+    }
+
+    public function staffFull(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_STAFF,
+            'can_operate' => true,
+            'can_inventory' => true,
             'active' => true,
         ]);
     }

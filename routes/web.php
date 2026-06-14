@@ -11,7 +11,6 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\SalesController;
-use App\Http\Controllers\SalesController as SalesViewController;
 use App\Http\Controllers\SettingsUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,29 +18,45 @@ Route::get('/', [CatalogController::class, 'welcome'])->name('welcome');
 Route::get('/catalogo/categoria/{category}', [CatalogController::class, 'category'])
     ->name('catalog.category');
 
-Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
-
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
+    Route::middleware('can:access-dashboard')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])
+            ->name('dashboard');
+    });
 
-    Route::get('/ventas/nueva', function () {
-        return redirect()->route('sales.index', ['open' => 'create']);
-    })->name('sales.create');
-    Route::get('/ventas', [SalesController::class, 'index'])->name('sales.index');
-    Route::get('/ventas/{sale}', [SalesViewController::class, 'show'])->name('sales.show');
-    Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
-    Route::get('/compras/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
-    Route::get('/items', [ItemController::class, 'index'])->name('items.index');
-    Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
-    Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
-    Route::get('/items/{item}/destroy', [ItemController::class, 'confirmDelete'])->name('items.destroy.confirm');
-    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
+    Route::middleware('can:operate')->group(function () {
+        Route::post('/ventas', [SaleController::class, 'store'])->name('sales.store');
+
+        Route::get('/ventas/nueva', function () {
+            return redirect()->route('sales.index', ['open' => 'create']);
+        })->name('sales.create');
+
+        Route::get('/ventas', [SalesController::class, 'index'])->name('sales.index');
+        Route::get('/ventas/{sale}', [SalesController::class, 'show'])->name('sales.show');
+
+        Route::resource('/clientes', CustomerController::class)
+            ->parameters(['clientes' => 'customer'])
+            ->names('customers')
+            ->only(['index', 'show', 'store', 'update']);
+
+        Route::post('/clientes/{customer}/archive', [CustomerController::class, 'archive'])->name('customers.archive');
+        Route::post('/clientes/{customer}/unarchive', [CustomerController::class, 'unarchive'])->name('customers.unarchive');
+    });
+
+    Route::middleware('can:manage-inventory')->group(function () {
+        Route::get('/compras', [PurchaseController::class, 'index'])->name('purchases.index');
+        Route::get('/compras/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
+
+        Route::get('/items', [ItemController::class, 'index'])->name('items.index');
+        Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
+        Route::get('/items/{item}/edit', [ItemController::class, 'edit'])->name('items.edit');
+        Route::get('/items/{item}/destroy', [ItemController::class, 'confirmDelete'])->name('items.destroy.confirm');
+        Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
+    });
 
     Route::middleware('can:view-reports')->group(function () {
         Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
@@ -64,13 +79,6 @@ Route::middleware('auth')->group(function () {
         Route::put('/ajustes/usuarios/{user}', [SettingsUserController::class, 'update'])->name('settings.users.update');
         Route::delete('/ajustes/usuarios/{user}', [SettingsUserController::class, 'destroy'])->name('settings.users.destroy');
     });
-
-    Route::resource('/clientes', CustomerController::class)
-        ->parameters(['clientes' => 'customer'])
-        ->names('customers')
-        ->only(['index', 'show', 'store', 'update']);
-    Route::post('/clientes/{customer}/archive', [CustomerController::class, 'archive'])->name('customers.archive');
-    Route::post('/clientes/{customer}/unarchive', [CustomerController::class, 'unarchive'])->name('customers.unarchive');
 
     Route::middleware('can:manage-public-page')->prefix('ajustes/welcome')->group(function () {
         Route::get('/', [CatalogController::class, 'settings'])->name('settings.public');

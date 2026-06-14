@@ -23,7 +23,7 @@ class SaleController extends Controller
         $data = $request->validated();
         $soldAt = isset($data['sold_at']) ? Carbon::parse($data['sold_at']) : now();
         $customer = null;
-        $isAdmin = auth()->user()?->role === 'admin';
+        $isAdmin = auth()->user()?->isAdmin() ?? false;
 
         if (! empty($data['customer_id'])) {
             $customer = Customer::find($data['customer_id']);

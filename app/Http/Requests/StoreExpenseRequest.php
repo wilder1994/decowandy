@@ -10,7 +10,7 @@ class StoreExpenseRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return (bool) $this->user()?->can('manage-finance');
     }
 
 

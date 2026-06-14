@@ -13,7 +13,7 @@ class PurchaseApiTest extends TestCase
 
     public function test_purchase_to_inventory_creates_stock_entries(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([
@@ -76,7 +76,7 @@ class PurchaseApiTest extends TestCase
 
     public function test_purchase_rejects_inactive_inventory_item(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([

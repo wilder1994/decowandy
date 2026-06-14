@@ -15,7 +15,7 @@ class SalesIndexTest extends TestCase
 
     public function test_sales_index_filters_by_category_and_calculates_totals(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffOperate()->create();
         $this->actingAs($user);
 
         $designItem = Item::factory()->create(['sector' => 'diseno', 'sale_price' => 15000]);
@@ -70,7 +70,7 @@ class SalesIndexTest extends TestCase
 
     public function test_sales_index_filters_by_month(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffOperate()->create();
         $this->actingAs($user);
 
         $designItem = Item::factory()->create(['sector' => 'diseno', 'sale_price' => 20000]);

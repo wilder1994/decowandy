@@ -2,40 +2,87 @@
 
 Aplicacion Laravel para gestionar catalogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-05-10
+**Última actualización de esta documentación:** 2026-06-13
 
 ## Requisitos
 - PHP 8.2+
 - Composer
 - Node.js 18+
-- MySQL/MariaDB (o SQLite para pruebas)
+- MySQL/MariaDB
 
-## Puesta en marcha
-1) Clona el repo y entra al proyecto.  
-2) Copia env y genera la llave:
+## Puesta en marcha (Laragon)
+
+1) Clona el repo y entra al proyecto.
+
+2) Copia `.env` y genera la llave:
 ```bash
 cp .env.example .env
 php artisan key:generate
 ```
-3) Configura la base de datos en `.env` (credenciales de MySQL).  
-4) Instala dependencias:
+
+3) Configura la base de datos en `.env`:
+```env
+DB_DATABASE=decowandy
+DB_USERNAME=root
+DB_PASSWORD=
+APP_URL=http://decowandy.test
+```
+
+4) Define el administrador inicial en `.env`:
+```env
+ADMIN_NAME=DecoWandy
+ADMIN_EMAIL=tu-correo@gmail.com
+ADMIN_PASSWORD=tu_contraseña_segura
+```
+La contraseña debe tener al menos 8 caracteres.
+
+5) Instala dependencias y compila assets:
 ```bash
 composer install
 npm install
+npm run build
 ```
-5) Levanta tablas y datos base:
+
+6) Crea la base de datos, migra y provisiona el admin:
 ```bash
-php artisan migrate:fresh --seed
+php artisan migrate
+php artisan storage:link
+php artisan decowandy:ensure-admin
 ```
-6) Arranca frontend y backend de desarrollo:
+
+7) En Laragon: **Start All** (Apache + MySQL). Acceso local: `http://decowandy.test`
+
+No necesitas `php artisan serve` ni `npm run dev` en uso diario si los assets ya están compilados en `public/build/`.
+
+### VirtualHost local
+Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entrada `127.0.0.1 decowandy.test` en `hosts`. Tras cambios en Apache, reinicia Laragon.
+
+## Usuarios y permisos
+
+| Tipo | Acceso |
+|------|--------|
+| **Administrador** | Todo el sistema (finanzas, reportes, inversiones, usuarios, catalogo publico) |
+| **Personal** | Modulos activables al crear el usuario |
+
+Modulos para personal (`staff`):
+- **Operacion** (`can_operate`): ventas, clientes y POS.
+- **Inventario** (`can_inventory`): productos, stock y compras.
+
+Se pueden activar uno, otro o ambos. Finanzas, reportes, inversiones y gestion de usuarios quedan reservados para administradores.
+
+Gestion de usuarios: `/ajustes/usuarios` (solo admin).
+
+Comando util si cambias credenciales del admin en `.env`:
 ```bash
-npm run dev
-php artisan serve
+php artisan decowandy:ensure-admin
 ```
 
 ## Testing
 - Suite completa: `php artisan test`
-- Si necesitas un ambiente aislado, crea `.env.testing` apuntando a SQLite o una BD de pruebas y ejecuta `php artisan test` (las migraciones de testing corren automaticamente).
+- La suite usa la BD `decowandy_testing` (configurada en `phpunit.xml`). Creala antes de correr tests:
+```bash
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS decowandy_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+```
 
 ## Funcionalidades clave
 - Items/inventario con control de stock, minimos y alertas.
@@ -43,19 +90,22 @@ php artisan serve
 - Compras y gastos con impacto en inventario y caja.
 - Inversiones y reportes de finanzas (cashflow, ingresos vs gastos, utilidades).
 - API internas para items, compras, ventas y catalogo publico.
+- Permisos modulares por rol (admin / personal con modulos combinables).
 
 ## Rutas utiles
+- Login: `/login`
 - Panel: `/dashboard`
 - Inventario: `/items`
 - Ventas: `/ventas`
 - Compras: `/compras`
 - Gastos: `/gastos`
 - Finanzas y reportes: `/finanzas`, `/reportes`
+- Usuarios: `/ajustes/usuarios`
 - Catalogo publico: `/`
 
 ## Acceso desde la red local (Laragon / Apache)
 
-Si esta PC también tiene otros proyectos Laravel (p. ej. Beeffresh), conviene **no** depender solo del VirtualHost por defecto.
+Si esta PC también tiene otros proyectos Laravel, conviene **no** depender solo del VirtualHost por defecto.
 
 **Por IP en la LAN (puerto 80 para DecoWandy):**
 
@@ -63,7 +113,7 @@ Si esta PC también tiene otros proyectos Laravel (p. ej. Beeffresh), conviene *
 - En `.env`: `APP_URL=http://TU_IP_LAN` (sin puerto si usas 80).
 - Otro proyecto puede usar la misma IP en **otro puerto** (ej. Beeffresh en **8080**: `http://TU_IP_LAN:8080`), sin compartir la misma URL base que DecoWandy.
 
-**Nombre local:** sigue disponible `http://decowandy.test` si Laragon generó `auto.decowandy.test.conf` y tienes la entrada en `hosts`.
+**Nombre local:** `http://decowandy.test` con `auto.decowandy.test.conf` y entrada en `hosts`.
 
 Tras editar la configuración de Apache, **reinicia Apache** en Laragon.
 
@@ -105,6 +155,7 @@ Acceso de ejemplo: `http://TU_IP_TAILSCALE/login`
 Nota: si al abrir la IP ves otro proyecto, revisa qué `ServerName` y puerto tiene cada `VirtualHost` (`httpd -S` en Apache) y que `APP_URL` coincida con la URL real.
 
 ## Notas
-- Las seeds crean datos iniciales listos para probar flujos completos (items, ventas, compras, gastos e inversiones).
-- Si cambias configuraciones en `.env`, considera `php artisan config:cache` al desplegar.
+- El seeder de produccion no carga datos de prueba; usa datos reales del negocio.
+- Si cambias configuraciones en `.env`, ejecuta `php artisan config:clear` en local o `php artisan config:cache` al desplegar.
 - El proyecto usa traducciones y textos en espanol; mantelos coherentes al contribuir.
+- Tras cambios en frontend (`resources/js`, `resources/css`), compila con `npm run build`.

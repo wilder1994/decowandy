@@ -15,7 +15,7 @@ class ReportIndexTest extends TestCase
 
     public function test_category_filter_keeps_report_metrics_consistent(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->admin()->create();
 
         $papeleria = Item::factory()->create([
             'sector' => 'papeleria',

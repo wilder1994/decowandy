@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -12,18 +11,18 @@ return new class extends Migration {
         DB::table('users')
             ->whereNull('role')
             ->orWhere('role', '')
-            ->update(['role' => User::ROLE_OPERATOR]);
+            ->update(['role' => 'operator']);
 
         DB::table('users')
-            ->whereNotIn('role', User::allowedRoles())
-            ->update(['role' => User::ROLE_OPERATOR]);
+            ->whereNotIn('role', ['admin', 'operator', 'inventory'])
+            ->update(['role' => 'operator']);
 
         DB::table('users')
             ->whereNull('active')
             ->update(['active' => true]);
 
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 20)->default(User::ROLE_OPERATOR)->change();
+            $table->string('role', 20)->default('operator')->change();
             $table->boolean('active')->default(true)->change();
         });
     }
@@ -31,7 +30,7 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role', 20)->default(User::ROLE_ADMIN)->change();
+            $table->string('role', 20)->default('admin')->change();
             $table->boolean('active')->default(true)->change();
         });
     }

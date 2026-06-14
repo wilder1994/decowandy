@@ -15,7 +15,7 @@ class InventoryApiTest extends TestCase
 
     public function test_low_stock_uses_item_min_stock_when_threshold_is_missing(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([
@@ -43,7 +43,7 @@ class InventoryApiTest extends TestCase
 
     public function test_low_stock_prefers_stock_specific_threshold(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([

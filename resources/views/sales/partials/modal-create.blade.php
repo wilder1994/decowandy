@@ -250,7 +250,7 @@ function formatCOP(num){
 const DATASET = @json($modalCatalogDataset, JSON_UNESCAPED_UNICODE);
 const DEFAULT_BADGE = 'Selecciona un producto';
 let productDataset = JSON.parse(JSON.stringify(DATASET));
-const IS_ADMIN = @json((auth()->user()?->role ?? '') === 'admin');
+const IS_ADMIN = @json(auth()->user()?->isAdmin() ?? false);
 
 const SECTOR_LABELS = {
   impresion: 'Impresión',

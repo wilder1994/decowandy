@@ -44,21 +44,27 @@
                 <div class="font-bold" style="font-family:'Poppins'">DecoWandy</div>
             </div>
             <nav class="px-2 pb-4 space-y-1 text-sm">
+                @can('access-dashboard')
                 <a href="{{ url('/dashboard') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 text-[color:var(--dw-text)] @if(request()->is('dashboard')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">dashboard</span> Dashboard
                 </a>
+                @endcan
+                @can('operate')
                 <a href="{{ route('sales.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('ventas')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">point_of_sale</span> Ventas
                 </a>
                 <a href="{{ route('customers.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('clientes*')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">group</span> Clientes
                 </a>
+                @endcan
+                @can('manage-inventory')
                 <a href="{{ route('items.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('items')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">inventory_2</span> Ítems - Inventario
                 </a>
                 <a href="{{ route('purchases.index') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('compras*')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                     <span class="material-symbols-outlined text-base">shopping_cart</span> Compras
                 </a>
+                @endcan
                 @can('manage-finance')
                     <a href="{{ route('expenses.index') }}"
                         class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50
@@ -74,6 +80,13 @@
                 @can('manage-finance')
                     <a href="{{ route('finance.investments') }}" class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50 @if(request()->is('finanzas/inversiones')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
                         <span class="material-symbols-outlined text-base">savings</span> Inversiones
+                    </a>
+                @endcan
+                @can('manage-users')
+                    <a href="{{ route('settings.users') }}"
+                       class="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-violet-50
+                            @if(request()->is('ajustes/usuarios*')) bg-violet-50 text-[color:var(--dw-primary)] @endif">
+                        <span class="material-symbols-outlined text-base">manage_accounts</span> Usuarios
                     </a>
                 @endcan
                 @can('manage-public-page')
@@ -98,12 +111,14 @@
                     </div>
 
                     <div class="flex items-center gap-3">
+                        @can('operate')
                         <button id="openSaleModal"
                                 type="button"
                                 class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl text-white brand-gradient shadow hover:opacity-90">
                             <span class="material-symbols-outlined text-base">add_shopping_cart</span>
                             Registrar venta
                         </button>
+                        @endcan
 
 
                         {{-- Menú del usuario --}}
@@ -152,8 +167,9 @@
                 </div>
             </div>
 
-            {{-- Modal Registrar venta (UI) --}}
+            @can('operate')
             @include('sales.partials.modal-create')
+            @endcan
 
         </main>
     </div>

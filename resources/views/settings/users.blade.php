@@ -4,8 +4,6 @@
 @section('title', 'Usuarios | DecoWandy')
 
 @section('content')
-  @php($roles = \App\Models\User::allowedRoles())
-
   <div class="mb-6 flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold">Panel de usuarios</h1>
@@ -49,7 +47,7 @@
           <tr class="text-left">
             <th class="py-2 pr-4">Nombre</th>
             <th class="py-2 pr-4">Email</th>
-            <th class="py-2 pr-4">Rol</th>
+            <th class="py-2 pr-4">Acceso</th>
             <th class="py-2 pr-4">Creado</th>
             <th class="py-2 pr-4 text-right">Acciones</th>
           </tr>
@@ -60,7 +58,7 @@
               <td class="py-2 pr-4 font-semibold text-gray-800">{{ $user->name }}</td>
               <td class="py-2 pr-4 text-gray-700">{{ $user->email }}</td>
               <td class="py-2 pr-4">
-                <span class="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{{ $user->role ?? 'Sin rol' }}</span>
+                <span class="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700">{{ $user->accessLabel() }}</span>
               </td>
               <td class="py-2 pr-4 text-gray-600">{{ optional($user->created_at)->format('d/m/Y') }}</td>
               <td class="py-2 pr-4">
@@ -70,7 +68,9 @@
                     data-id="{{ $user->id }}"
                     data-name="{{ $user->name }}"
                     data-email="{{ $user->email }}"
-                    data-role="{{ $user->role ?? '' }}">
+                    data-role="{{ $user->role }}"
+                    data-can-operate="{{ $user->can_operate ? '1' : '0' }}"
+                    data-can-inventory="{{ $user->can_inventory ? '1' : '0' }}">
                     Editar
                   </button>
                   <form method="POST" action="{{ route('settings.users.destroy', $user) }}" onsubmit="return confirm('Eliminar usuario?');">
@@ -105,14 +105,31 @@
         <input type="text" name="name" id="u_name" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Nombre" required>
         <input type="email" name="email" id="u_email" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Email" required>
 
-        <select name="role" id="u_role" class="rounded-lg border px-3 py-2" required>
-          <option value="" disabled>Selecciona un rol</option>
-          @foreach($roles as $role)
-            <option value="{{ $role }}">{{ ucfirst($role) }}</option>
-          @endforeach
+        <select name="role" id="u_role" class="rounded-lg border px-3 py-2 md:col-span-2" required>
+          <option value="" disabled selected>Selecciona el tipo de cuenta</option>
+          <option value="admin">Administrador (acceso total)</option>
+          <option value="staff">Personal (módulos personalizados)</option>
         </select>
 
-        <div class="hidden md:block"></div>
+        <div id="staffModules" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+          <p class="mb-3 text-sm font-semibold text-slate-700">Módulos habilitados</p>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <label class="flex items-start gap-2 rounded-lg border border-white bg-white px-3 py-2">
+              <input type="checkbox" name="can_operate" id="u_can_operate" value="1" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+              <span>
+                <span class="block text-sm font-semibold text-slate-800">Operación</span>
+                <span class="block text-xs text-slate-500">Ventas, clientes y POS.</span>
+              </span>
+            </label>
+            <label class="flex items-start gap-2 rounded-lg border border-white bg-white px-3 py-2">
+              <input type="checkbox" name="can_inventory" id="u_can_inventory" value="1" class="mt-1 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+              <span>
+                <span class="block text-sm font-semibold text-slate-800">Inventario</span>
+                <span class="block text-xs text-slate-500">Productos, stock y compras.</span>
+              </span>
+            </label>
+          </div>
+        </div>
 
         <input type="password" name="password" id="u_password" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Contrasena">
         <input type="password" name="password_confirmation" id="u_password_confirmation" class="rounded-lg border px-3 py-2 md:col-span-2" placeholder="Confirmar contrasena">
@@ -138,12 +155,25 @@
     const nameInput = document.getElementById('u_name');
     const emailInput = document.getElementById('u_email');
     const roleInput = document.getElementById('u_role');
+    const modulesBox = document.getElementById('staffModules');
+    const operateInput = document.getElementById('u_can_operate');
+    const inventoryInput = document.getElementById('u_can_inventory');
     const passInput = document.getElementById('u_password');
     const passConfirmInput = document.getElementById('u_password_confirmation');
     const passHelp = document.getElementById('u_password_help');
     const openBtn = document.getElementById('btnOpenUserModal');
     const closeBtn = document.getElementById('userModalClose');
     const cancelBtn = document.getElementById('userModalCancel');
+
+    function toggleModules() {
+      const isStaff = roleInput.value === 'staff';
+      modulesBox.classList.toggle('hidden', !isStaff);
+
+      if (!isStaff) {
+        operateInput.checked = false;
+        inventoryInput.checked = false;
+      }
+    }
 
     function openModal(mode, user) {
       modal.classList.remove('hidden');
@@ -156,6 +186,8 @@
         nameInput.value = '';
         emailInput.value = '';
         roleInput.value = '';
+        operateInput.checked = false;
+        inventoryInput.checked = false;
         passInput.value = '';
         passConfirmInput.value = '';
         passInput.required = true;
@@ -166,12 +198,16 @@
         methodInput.value = 'PUT';
         nameInput.value = user.name || '';
         emailInput.value = user.email || '';
-        roleInput.value = user.role || '';
+        roleInput.value = user.role || 'staff';
+        operateInput.checked = user.canOperate === '1';
+        inventoryInput.checked = user.canInventory === '1';
         passInput.value = '';
         passConfirmInput.value = '';
         passInput.required = false;
         passHelp.textContent = 'Dejala vacia para mantener la contrasena.';
       }
+
+      toggleModules();
     }
 
     function closeModal() {
@@ -179,6 +215,7 @@
       document.body.classList.remove('overflow-hidden');
     }
 
+    roleInput?.addEventListener('change', toggleModules);
     openBtn?.addEventListener('click', () => openModal('create'));
     closeBtn?.addEventListener('click', closeModal);
     cancelBtn?.addEventListener('click', closeModal);
@@ -196,6 +233,8 @@
           name: btn.dataset.name,
           email: btn.dataset.email,
           role: btn.dataset.role,
+          canOperate: btn.dataset.canOperate,
+          canInventory: btn.dataset.canInventory,
         });
       });
     });

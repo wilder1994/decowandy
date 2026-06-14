@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Http\Requests\ManageUserRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -11,7 +11,7 @@ class SettingsUserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::select('id', 'name', 'email', 'role', 'created_at')
+        $users = User::select('id', 'name', 'email', 'role', 'can_operate', 'can_inventory', 'created_at')
             ->orderBy('name')
             ->get();
 
@@ -25,12 +25,10 @@ class SettingsUserController extends Controller
 
     public function store(ManageUserRequest $request): RedirectResponse
     {
-        $data = $request->validated();
         $user = new User();
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        $user->role = $data['role'];
-        $user->password = $data['password'];
+        $user->active = true;
+        $user->email_verified_at = now();
+        $user->applyAccountSettings($request->accountData());
         $user->save();
 
         return redirect()->route('settings.users')->with('status', 'Usuario creado: '.$user->name);
@@ -38,14 +36,7 @@ class SettingsUserController extends Controller
 
     public function update(ManageUserRequest $request, User $user): RedirectResponse
     {
-        $data = $request->validated();
-
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        $user->role = $data['role'];
-        if (!empty($data['password'])) {
-            $user->password = $data['password'];
-        }
+        $user->applyAccountSettings($request->accountData());
         $user->save();
 
         return redirect()->route('settings.users')->with('status', 'Usuario actualizado: '.$user->name);

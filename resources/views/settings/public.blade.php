@@ -19,8 +19,10 @@
   <div class="flex items-center gap-2">
     <a href="{{ url('/#catalogo') }}" target="_blank"
        class="px-4 py-2 rounded-xl border hover:bg-gray-50">Ver vista pública</a>
+    @can('manage-users')
     <a href="{{ route('settings.users') }}"
        class="px-4 py-2 rounded-xl border text-[color:var(--dw-primary)] hover:bg-gray-50">Panel de usuarios</a>
+    @endcan
     <button id="btnAdd"
        class="px-4 py-2 rounded-xl text-white brand-gradient shadow">Nuevo ítem</button>
   </div>

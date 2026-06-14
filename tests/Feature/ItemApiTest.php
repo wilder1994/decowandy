@@ -17,7 +17,7 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_can_create_item(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $payload = [
@@ -47,7 +47,7 @@ class ItemApiTest extends TestCase
 
     public function test_creating_stockable_item_records_initial_adjustment_movement(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $payload = [
@@ -91,7 +91,7 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_can_update_item(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([
@@ -127,7 +127,7 @@ class ItemApiTest extends TestCase
 
     public function test_updating_stockable_item_records_adjustment_delta_only(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([
@@ -170,7 +170,7 @@ class ItemApiTest extends TestCase
 
     public function test_updating_item_without_stock_does_not_create_extra_adjustment(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([
@@ -214,7 +214,7 @@ class ItemApiTest extends TestCase
 
     public function test_updating_product_to_service_resets_inventory_traceably(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create([
@@ -254,7 +254,7 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_can_deactivate_item(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create(['active' => true]);
@@ -276,7 +276,7 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_can_force_delete_item_without_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create();
@@ -290,7 +290,7 @@ class ItemApiTest extends TestCase
 
     public function test_authenticated_user_cannot_force_delete_item_with_sales_history(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->staffInventory()->create();
         $this->actingAs($user);
 
         $item = Item::factory()->create();

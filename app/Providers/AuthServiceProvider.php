@@ -14,20 +14,18 @@ class AuthServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Gate::define('view-reports', function (User $user): bool {
-            return $user->isAdmin() && ($user->active ?? true);
-        });
+        Gate::define('access-dashboard', fn (User $user): bool => $user->active && $user->canAccessPanel());
 
-        Gate::define('manage-finance', function (User $user): bool {
-            return $user->isAdmin() && ($user->active ?? true);
-        });
+        Gate::define('operate', fn (User $user): bool => $user->active && $user->canOperate());
 
-        Gate::define('manage-public-page', function (User $user): bool {
-            return $user->isAdmin() && ($user->active ?? true);
-        });
+        Gate::define('manage-inventory', fn (User $user): bool => $user->active && $user->canManageInventory());
 
-        Gate::define('manage-users', function (User $user): bool {
-            return $user->isAdmin() && ($user->active ?? true);
-        });
+        Gate::define('view-reports', fn (User $user): bool => $user->active && $user->isAdmin());
+
+        Gate::define('manage-finance', fn (User $user): bool => $user->active && $user->isAdmin());
+
+        Gate::define('manage-public-page', fn (User $user): bool => $user->active && $user->isAdmin());
+
+        Gate::define('manage-users', fn (User $user): bool => $user->active && $user->isAdmin());
     }
 }

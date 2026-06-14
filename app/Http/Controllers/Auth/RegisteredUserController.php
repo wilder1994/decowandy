@@ -39,7 +39,9 @@ class RegisteredUserController extends Controller
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
-        $user->role = User::ROLE_OPERATOR;
+        $user->role = User::ROLE_STAFF;
+        $user->can_operate = true;
+        $user->can_inventory = false;
         $user->active = true;
         $user->password = Hash::make($request->password);
         $user->save();
