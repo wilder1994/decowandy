@@ -47,7 +47,7 @@
               </div>
 
               <div class="dw-pos-sector-scroll">
-                <div class="dw-pos-segments dw-pos-sector-filters" id="posSectorFilters" role="group" aria-label="Filtrar por sector">
+                <div class="dw-pos-sector-filters" id="posSectorFilters" role="group" aria-label="Filtrar por sector">
                   <button type="button" class="dw-pos-segment is-active" data-pos-sector="all">Todos</button>
                   <button type="button" class="dw-pos-segment" data-pos-sector="impresion">Impresión</button>
                   <button type="button" class="dw-pos-segment" data-pos-sector="papeleria">Papelería</button>
@@ -56,6 +56,7 @@
               </div>
             </div>
 
+            <div class="dw-pos-toolbar__entry">
             <div class="dw-pos-toolbar__row dw-pos-toolbar__row--search">
               <div class="dw-pos-product-wrap" id="productCombobox">
                 <input id="p_product" type="text" placeholder="Buscar o escanear código…"
@@ -90,6 +91,7 @@
                 <span class="material-symbols-outlined text-[20px]">add</span>
                 <span class="dw-pos-btn-add__text">Agregar</span>
               </button>
+            </div>
             </div>
 
             <p id="qty_error" class="dw-pos-toolbar-error hidden"></p>

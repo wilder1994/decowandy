@@ -2,7 +2,7 @@
 
 Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-06-14
+**Última actualización de esta documentación:** 2025-06-13
 
 ## Requisitos
 - PHP 8.2+
@@ -124,7 +124,7 @@ mysql -u root -e "CREATE DATABASE IF NOT EXISTS decowandy_testing CHARACTER SET 
 - Gastos, inversiones y reportes de finanzas (cashflow, ingresos vs gastos, utilidades).
 - API internas para ítems, compras, ventas y catálogo público.
 - Permisos modulares por rol (admin / personal con módulos combinables).
-- Panel responsive optimizado para celular (menú drawer, POS fullscreen, KPIs 2×2, formularios en tarjetas).
+- Panel responsive optimizado para celular (menú drawer, POS fullscreen, KPIs 2×2, formularios en tarjetas) y toolbar POS en 2 filas en desktop.
 - Escáner de códigos con linterna y feedback en pantalla.
 
 ## Interfaz (design system)
@@ -146,9 +146,19 @@ El panel admin usa un design system propio con tokens Tailwind (`dw-*`) y compon
 - Compras: líneas en tarjetas, filtros en 2 columnas, feedback sticky arriba del formulario.
 - Dashboard: KPIs en grilla 2×2.
 
-**Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`):
-- Pantalla completa en móvil; toolbar en 3 filas (cliente/sectores → búsqueda/escanear → cantidades/agregar).
-- Filtros de sector, columna **Sector** en carrito, venta mixta en un ticket.
+**Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`, estilos en `resources/css/app.css`):
+
+Layout responsive dual (móvil vs desktop):
+
+| Viewport | Toolbar |
+|----------|---------|
+| **Móvil (< 768px)** | 3 filas: cliente/sectores → búsqueda/escanear → cantidades/agregar (botón ancho, labels visibles). Pantalla completa. |
+| **Desktop (≥ 768px)** | 2 filas: (1) cliente + filtros de sector en una línea, repartidos en todo el ancho; (2) búsqueda, escáner, cant., valor, subtotal y botón **+** compacto (32px). |
+
+Detalles de implementación:
+- Filtros de sector (`.dw-pos-sector-filters`) separados del grid de método de pago (`.dw-pos-segments`); evita que el cuarto botón (Diseño) haga wrap.
+- En desktop, overrides CSS del toolbar van **después** de los estilos base para no ser anulados en cascada.
+- Filtros por sector, columna **Sector** en carrito, venta mixta en un ticket.
 - Escáner integrado (HTTPS obligatorio en celular).
 
 Tras cambios en vistas, CSS o JS del frontend:

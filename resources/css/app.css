@@ -557,12 +557,16 @@
         border-color: var(--dw-border);
     }
 
+    .dw-pos-toolbar__entry {
+        @apply flex flex-col gap-2;
+    }
+
     .dw-pos-toolbar__row {
         @apply flex w-full min-w-0 items-center gap-2;
     }
 
     .dw-pos-toolbar__row--meta {
-        @apply flex-col items-stretch gap-2 sm:flex-row sm:items-center;
+        @apply flex-col items-stretch gap-2;
     }
 
     .dw-pos-toolbar__row--search {
@@ -570,7 +574,7 @@
     }
 
     .dw-pos-toolbar__row--amounts {
-        @apply grid grid-cols-2 gap-2 sm:grid-cols-4;
+        @apply grid grid-cols-2 gap-2;
     }
 
     .dw-pos-sector-scroll {
@@ -600,17 +604,17 @@
     }
 
     .dw-pos-btn-add {
-        @apply col-span-2 inline-flex h-[2.25rem] items-center justify-center gap-1.5 rounded-dw border-hairline border-transparent brand-gradient px-3 text-sm font-semibold text-white shadow-dw-neon-sm sm:col-span-1;
+        @apply inline-flex h-[2.25rem] items-center justify-center gap-1.5 rounded-dw border-hairline border-transparent brand-gradient px-3 text-sm font-semibold text-white shadow-dw-neon-sm;
+    }
+
+    @media (max-width: 767px) {
+        .dw-pos-toolbar__row--amounts .dw-pos-btn-add {
+            grid-column: span 2 / span 2;
+        }
     }
 
     .dw-pos-btn-add__text {
-        @apply inline sm:hidden;
-    }
-
-    @media (min-width: 640px) {
-        .dw-pos-btn-add__text {
-            @apply hidden;
-        }
+        @apply inline;
     }
 
     .dw-pos-btn-square--scan {
@@ -618,7 +622,7 @@
     }
 
     .dw-pos-customer-zone {
-        @apply relative w-full shrink-0 sm:w-auto;
+        @apply relative w-full shrink-0;
     }
 
     .dw-pos-customer-toggle {
@@ -758,6 +762,92 @@
     .dw-color-combobox-option.is-highlighted {
         @apply bg-dw-lilac-soft font-medium;
         box-shadow: inset 2px 0 0 var(--dw-primary);
+    }
+
+    /* Toolbar POS — desktop 2 filas (después de estilos base para no ser pisados) */
+    @media (min-width: 768px) {
+        .dw-pos-toolbar {
+            @apply gap-2 px-4 py-2.5;
+        }
+
+        .dw-pos-toolbar__row--meta {
+            @apply flex-row items-center gap-4;
+        }
+
+        .dw-pos-toolbar .dw-pos-customer-zone {
+            @apply w-auto shrink-0;
+        }
+
+        .dw-pos-toolbar .dw-pos-sector-scroll {
+            @apply min-w-0 flex-1 pb-0;
+        }
+
+        .dw-pos-toolbar .dw-pos-sector-filters {
+            @apply flex w-full gap-2;
+            min-width: 0;
+        }
+
+        .dw-pos-toolbar .dw-pos-sector-filters .dw-pos-segment {
+            @apply inline-flex min-w-0 flex-1 items-center justify-center px-2 py-0 text-xs;
+            height: 2rem;
+        }
+
+        .dw-pos-toolbar__entry {
+            display: grid;
+            grid-template-columns: minmax(12rem, 1fr) 2rem 3.25rem 5.5rem 5.5rem 2rem;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dw-pos-toolbar__row.dw-pos-toolbar__row--search,
+        .dw-pos-toolbar__row.dw-pos-toolbar__row--amounts {
+            display: contents;
+        }
+
+        .dw-pos-toolbar .dw-pos-field {
+            @apply min-w-0;
+        }
+
+        .dw-pos-toolbar .dw-pos-field__label {
+            @apply sr-only;
+        }
+
+        .dw-pos-toolbar .dw-pos-field .dw-pos-input {
+            @apply w-full;
+            height: 2rem;
+        }
+
+        .dw-pos-toolbar .dw-pos-input--product {
+            height: 2rem;
+        }
+
+        .dw-pos-toolbar .dw-pos-input--qty {
+            width: 3.25rem;
+        }
+
+        .dw-pos-toolbar .dw-pos-input--money {
+            width: 5.5rem;
+        }
+
+        .dw-pos-toolbar .dw-pos-btn-square--scan {
+            @apply h-8 w-8;
+        }
+
+        .dw-pos-toolbar .dw-pos-btn-add {
+            @apply inline-flex shrink-0 items-center justify-center rounded-dw border-hairline border-transparent brand-gradient text-sm font-semibold text-white shadow-dw-neon-sm;
+            grid-column: span 1 / span 1;
+            width: 2rem;
+            height: 2rem;
+            padding: 0;
+        }
+
+        .dw-pos-toolbar .dw-pos-btn-add__text {
+            @apply hidden;
+        }
+
+        .dw-pos-toolbar .dw-pos-product-wrap {
+            @apply min-w-0;
+        }
     }
 
     .dw-pos-cart {
