@@ -214,6 +214,8 @@
         </form>
     </div>
 </div>
+
+@include('labels.partials.print-wizard')
 @endpush
 
 @push('scripts')

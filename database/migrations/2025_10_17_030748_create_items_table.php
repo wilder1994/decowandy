@@ -9,18 +9,25 @@ return new class extends Migration {
     public function up(): void {
         Schema::create('items', function (Blueprint $table) {
             $table->id();
-            $table->string('name');                // nombre del ítem (código/sku opcional más adelante)
+            $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
 
-            $table->enum('type', ['product','service']); // producto o servicio
+            $table->enum('type', ['product','service']);
             $table->enum('sector', ['papeleria','impresion','diseno']);
 
-            $table->integer('sale_price')->default(0); // precio de venta base (COP enteros)
-            $table->integer('cost')->default(0);       // costo (promedio) para margen
-            $table->string('unit', 30)->nullable();    // hoja, unidad, paquete, servicio
+            $table->integer('sale_price')->default(0);
+            $table->integer('cost')->default(0);
+            $table->string('unit', 30)->nullable();
 
-            $table->boolean('featured')->default(false); // destacar en landing
+            $table->string('barcode', 64)->nullable()->unique();
+            $table->string('color', 40)->default('N/A');
+            $table->string('scan_mode', 10)->nullable();
+            $table->unsignedInteger('pack_size')->nullable();
+            $table->string('barcode_source', 20)->nullable();
+            $table->string('internal_sku', 64)->nullable();
+
+            $table->boolean('featured')->default(false);
             $table->boolean('active')->default(true);
 
             $table->timestamps();

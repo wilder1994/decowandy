@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LabelSheetRequest;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
 use App\Models\Item;
@@ -162,20 +163,51 @@ class ItemController extends Controller
         return $this->labels->renderPng($item);
     }
 
-    public function labelSheet(Request $request)
+    public function labelCandidates(Request $request)
     {
-        $ids = collect($request->input('ids', []))
-            ->filter(fn ($id) => is_numeric($id))
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
+        $search = trim((string) $request->query('search', ''));
+        $limit = (int) $request->integer('limit', 0);
 
-        if ($ids === []) {
-            abort(422, 'Selecciona al menos un producto con código de barras.');
+        $query = Item::query()
+            ->where('sector', 'papeleria')
+            ->whereNotNull('barcode')
+            ->where('barcode', '!=', '')
+            ->where('active', true)
+            ->orderBy('name');
+
+        if ($search !== '') {
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('barcode', 'like', "%{$search}%");
+            });
         }
 
-        return $this->labels->renderSheetPdf($ids);
+        if ($limit > 0) {
+            $query->limit(min(500, $limit));
+        } else {
+            $query->limit(500);
+        }
+
+        $items = $query->get(['id', 'name', 'barcode']);
+
+        return response()->json([
+            'ok' => true,
+            'items' => $items->map(fn (Item $item) => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'barcode' => $item->barcode,
+            ])->values(),
+        ]);
+    }
+
+    public function labelPreview(LabelSheetRequest $request)
+    {
+        return $this->labels->renderSheetPdf($request->normalizedLines(), inline: true);
+    }
+
+    public function labelSheet(LabelSheetRequest $request)
+    {
+        return $this->labels->renderSheetPdf($request->normalizedLines(), inline: false);
     }
 
     public function store(StoreItemRequest $request)

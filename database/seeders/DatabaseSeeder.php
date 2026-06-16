@@ -7,10 +7,10 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seeder vacio para producción. Se eliminan datos de prueba.
+     * Crea el administrador definido en .env (ADMIN_NAME, ADMIN_EMAIL, ADMIN_PASSWORD).
      */
     public function run(): void
     {
-        // Sin seeders: se cargará información real en producción.
+        $this->call(AdminUserSeeder::class);
     }
 }

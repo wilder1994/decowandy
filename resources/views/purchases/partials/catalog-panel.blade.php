@@ -18,8 +18,8 @@
       <input id="searchBox" type="search" placeholder="Buscar por nombre, código…" class="dw-input pl-9">
     </div>
     <button id="btnSheetLabels" type="button" class="dw-btn-secondary hidden text-sm">
-      <span class="material-symbols-outlined text-base">picture_as_pdf</span>
-      Etiquetas PDF
+      <span class="material-symbols-outlined text-base">print</span>
+      Imprimir etiquetas
     </button>
   </div>
 
@@ -781,18 +781,21 @@
     });
 
     fields.btnLabelSheet?.addEventListener('click', () => {
-      if (!state.editing?.id) return;
-      window.open(`/api/items/labels/sheet?ids[]=${state.editing.id}`, '_blank');
+      if (!state.editing?.id || !state.editing.barcode) return;
+      if (window.dwOpenLabelPrintWizard) {
+        window.dwOpenLabelPrintWizard({
+          id: state.editing.id,
+          name: state.editing.name,
+          barcode: state.editing.barcode,
+          quantity: 1,
+        });
+      }
     });
 
     btnSheetLabels?.addEventListener('click', () => {
-      const ids = state.items.filter((item) => item.barcode).map((item) => item.id);
-      if (!ids.length) {
-        showPageAlert('error', 'No hay productos con código en esta página.');
-        return;
+      if (window.dwOpenLabelPrintWizard) {
+        window.dwOpenLabelPrintWizard();
       }
-      const query = ids.map((id) => `ids[]=${id}`).join('&');
-      window.open(`/api/items/labels/sheet?${query}`, '_blank');
     });
 
     modalClose.addEventListener('click', () => {

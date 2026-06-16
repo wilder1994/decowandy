@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
+use App\Services\AdminUserProvisioner;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class EnsureAdminUser extends Command
 {
@@ -12,45 +12,21 @@ class EnsureAdminUser extends Command
 
     protected $description = 'Crea o actualiza el usuario administrador definido en .env';
 
-    public function handle(): int
+    public function handle(AdminUserProvisioner $provisioner): int
     {
-        $name = (string) config('admin.name');
-        $email = (string) config('admin.email');
-        $password = (string) config('admin.password');
+        try {
+            $user = $provisioner->ensure();
+            $this->info("Administrador listo: {$user->email}");
 
-        $validator = Validator::make(
-            compact('name', 'email', 'password'),
-            [
-                'name' => ['required', 'string', 'max:255'],
-                'email' => ['required', 'email', 'max:255'],
-                'password' => ['required', 'string', 'min:8'],
-            ],
-            [
-                'password.required' => 'Define ADMIN_PASSWORD en tu archivo .env antes de ejecutar este comando.',
-                'password.min' => 'ADMIN_PASSWORD debe tener al menos 8 caracteres.',
-            ]
-        );
-
-        if ($validator->fails()) {
-            foreach ($validator->errors()->all() as $message) {
-                $this->error($message);
+            return self::SUCCESS;
+        } catch (ValidationException $exception) {
+            foreach ($exception->errors() as $messages) {
+                foreach ($messages as $message) {
+                    $this->error($message);
+                }
             }
 
             return self::FAILURE;
         }
-
-        $user = User::query()->firstOrNew(['email' => $email]);
-        $user->name = $name;
-        $user->role = User::ROLE_ADMIN;
-        $user->can_operate = false;
-        $user->can_inventory = false;
-        $user->active = true;
-        $user->email_verified_at = $user->email_verified_at ?? now();
-        $user->password = $password;
-        $user->save();
-
-        $this->info("Administrador listo: {$user->email}");
-
-        return self::SUCCESS;
     }
 }

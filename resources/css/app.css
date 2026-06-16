@@ -918,6 +918,49 @@
         @apply mt-auto flex flex-col gap-1.5 pt-1;
     }
 
+    .dw-label-wizard__results {
+        @apply absolute left-0 right-0 top-full z-50 mt-1 max-h-52 overflow-y-auto rounded-dw border-hairline border-dw-border-neon bg-dw-card py-1 shadow-dw-neon;
+    }
+
+    .dw-label-wizard__option.is-highlighted,
+    .dw-label-wizard__option:hover {
+        background-color: color-mix(in srgb, var(--dw-lilac-soft) 75%, var(--dw-card));
+    }
+
+    .dw-label-wizard__grid-wrap {
+        max-height: min(400px, 42vh);
+        overflow-y: auto;
+    }
+
+    .dw-label-wizard__grid tbody tr:hover {
+        background-color: color-mix(in srgb, var(--dw-lilac-soft) 45%, var(--dw-card));
+    }
+
+    .dw-label-preview-panel {
+        @apply min-h-0;
+    }
+
+    .dw-label-preview-stage {
+        @apply min-h-0;
+    }
+
+    #labelPreviewCanvasHost.is-single-page {
+        @apply flex items-center justify-center p-3;
+    }
+
+    .dw-label-preview-pages {
+        @apply flex w-full flex-col items-center gap-2 py-3;
+    }
+
+    #labelPreviewCanvasHost.is-single-page .dw-label-preview-pages {
+        @apply min-h-full justify-center py-0;
+    }
+
+    canvas.dw-label-preview-page {
+        @apply max-w-full bg-white shadow-sm;
+        height: auto;
+    }
+
     .dw-admin-sidebar {
         transform: translateX(-100%);
         transition: transform 0.2s ease-out;

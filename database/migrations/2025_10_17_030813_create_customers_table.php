@@ -20,23 +20,10 @@ return new class extends Migration {
 
             $table->index(['archived_at', 'last_purchase_at']);
         });
-
-        Schema::table('sales', function (Blueprint $table) {
-            $table->foreignId('customer_id')
-                ->nullable()
-                ->after('user_id')
-                ->constrained('customers')
-                ->nullOnDelete()
-                ->cascadeOnUpdate();
-        });
     }
 
     public function down(): void
     {
-        Schema::table('sales', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('customer_id');
-        });
-
         Schema::dropIfExists('customers');
     }
 };

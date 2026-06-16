@@ -10,9 +10,9 @@ return new class extends Migration {
         Schema::create('sale_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sale_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('item_id')->constrained()->cascadeOnUpdate()->cascadeOnDelete();
+            $table->foreignId('item_id')->constrained()->cascadeOnUpdate()->restrictOnDelete();
 
-            $table->string('description')->nullable();     // para servicios personalizados
+            $table->string('description')->nullable();
             $table->string('category', 30)->nullable();
             $table->decimal('quantity', 12, 2)->default(1);
             $table->integer('unit_price')->default(0);

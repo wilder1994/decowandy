@@ -43,8 +43,8 @@
     <x-dw-page-header title="Ítems" subtitle="Diseño e impresión se crean aquí. Papelería se registra en Compras." />
     <div class="flex flex-wrap gap-2">
       <button id="btnSheetLabels" type="button" class="dw-btn-secondary hidden text-sm">
-        <span class="material-symbols-outlined text-base">picture_as_pdf</span>
-        Etiquetas PDF
+        <span class="material-symbols-outlined text-base">print</span>
+        Imprimir etiquetas
       </button>
       <x-dw-button id="btnNew" type="button">
         <span class="material-symbols-outlined text-base">add</span>
@@ -218,6 +218,10 @@
   </div>
 
 @endsection
+
+@push('modals')
+@include('labels.partials.print-wizard')
+@endpush
 
 @push('scripts')
 <script>
@@ -892,18 +896,21 @@
     });
 
     fields.btnLabelSheet?.addEventListener('click', () => {
-      if (!state.editing?.id) return;
-      window.open(`/api/items/labels/sheet?ids[]=${state.editing.id}`, '_blank');
+      if (!state.editing?.id || !state.editing.barcode) return;
+      if (window.dwOpenLabelPrintWizard) {
+        window.dwOpenLabelPrintWizard({
+          id: state.editing.id,
+          name: state.editing.name,
+          barcode: state.editing.barcode,
+          quantity: 1,
+        });
+      }
     });
 
     btnSheetLabels?.addEventListener('click', () => {
-      const ids = state.items.filter((item) => item.barcode).map((item) => item.id);
-      if (!ids.length) {
-        showPageAlert('error', 'No hay productos con código en esta página.');
-        return;
+      if (window.dwOpenLabelPrintWizard) {
+        window.dwOpenLabelPrintWizard();
       }
-      const query = ids.map((id) => `ids[]=${id}`).join('&');
-      window.open(`/api/items/labels/sheet?${query}`, '_blank');
     });
 
     btnNew.addEventListener('click', () => {

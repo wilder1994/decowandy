@@ -4,6 +4,7 @@ import { initTheme } from './theme';
 import { openBarcodeScanner, closeBarcodeScanner } from './barcode-scanner';
 import { initColorCombobox } from './dw-color-combobox';
 import { showDwToast } from './dw-toast';
+import { initLabelPrintWizard } from './label-print-wizard';
 
 import Alpine from 'alpinejs';
 
@@ -17,4 +18,5 @@ Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initLabelPrintWizard();
 });

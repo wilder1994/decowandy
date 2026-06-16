@@ -2,7 +2,7 @@
 
 Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2025-06-13
+**Última actualización de esta documentación:** 2026-06-13
 
 ## Requisitos
 - PHP 8.2+
@@ -45,10 +45,14 @@ npm install
 npm run build
 ```
 
-6) Crea la base de datos, migra y provisiona el admin:
+6) Crea la base de datos, migra y provisiona el administrador:
 ```bash
-php artisan migrate
+php artisan migrate:fresh --seed
 php artisan storage:link
+```
+
+El seeder lee `ADMIN_NAME`, `ADMIN_EMAIL` y `ADMIN_PASSWORD` del `.env` y crea (o actualiza) el usuario administrador. Si ya migraste sin `--seed`, ejecuta:
+```bash
 php artisan decowandy:ensure-admin
 ```
 
@@ -81,14 +85,24 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
   - Toast global (`dw-toast.js`) para feedback inmediato.
   - Requiere **HTTPS** en celular (`getUserMedia`).
 - Búsqueda por código en API y POS; compras de papelería crean o actualizan ítems (`PurchasePapeleriaService`).
-- Etiquetas PNG/PDF por ítem o lote (`ItemLabelService`).
+- Etiquetas PNG/PDF por ítem o lote (`ItemLabelService`): compactas (nombre + Code 128 + número), **5 por fila** en carta, máx. **200 etiquetas**.
+- **Imprimir etiquetas** (wizard en Compras → Papelería e Inventario → Ítems): grilla con checkbox, nombre/código, cantidad; filtro en vivo; vista previa PDF con **PDF.js** (720px); descargar o imprimir.
+- API de etiquetas:
+  - `GET /api/items/labels/candidates?search=` — productos con barcode (papelería activa)
+  - `POST /api/items/labels/preview` — PDF inline para vista previa
+  - `POST /api/items/labels/sheet` — descarga del PDF
 - Alta rápida papelería: `POST /api/items/papeleria/quick`.
-- Dependencias: `picqer/php-barcode-generator`, `chillerlan/php-qrcode`, `html5-qrcode` (npm).
+- Dependencias: `picqer/php-barcode-generator`, `pdfjs-dist` (npm, vista previa), `html5-qrcode` (npm).
 
-Tras clonar o actualizar, ejecuta migraciones:
+Tras clonar o actualizar el esquema:
 ```bash
-php artisan migrate
+php artisan migrate:fresh --seed
 ```
+En entornos con datos reales, usa solo `php artisan migrate` (sin `--seed` ni `--fresh`).
+
+### Esquema de base de datos
+
+Las migraciones están **consolidadas**: una migración `create_*` por tabla, con el esquema final (roles/capabilities en `users`, barcode en `items`, `customer_id` en `sales`, FKs `restrictOnDelete` en historial de ventas/movimientos). No hay migraciones `add_*` ni parches sueltos. Instalación limpia = `migrate:fresh --seed`.
 
 ## Usuarios y permisos
 
@@ -109,6 +123,8 @@ Comando útil si cambias credenciales del admin en `.env`:
 ```bash
 php artisan decowandy:ensure-admin
 ```
+
+La lógica está en `AdminUserProvisioner` (comando `decowandy:ensure-admin` y `AdminUserSeeder`).
 
 ## Testing
 - Suite completa: `php artisan test`
@@ -269,7 +285,7 @@ Permite los puertos **80** y **443** en Windows (reglas de Apache HTTP Server).
 No uses `decowandy.test` desde el celular (ese dominio solo resuelve en la PC con `hosts`).
 
 ## Notas
-- El seeder de producción no carga datos de prueba; usa datos reales del negocio.
+- El seeder de producción solo crea el **administrador** desde `.env`; no carga datos de prueba del negocio.
 - Si cambias configuraciones en `.env`, ejecuta `php artisan config:clear` en local o `php artisan config:cache` al desplegar.
 - El proyecto usa traducciones y textos en español; manténlos coherentes al contribuir.
 - Tras cambios en frontend (`resources/js`, `resources/css`, vistas Blade con clases `dw-*`), compila con `npm run build`.

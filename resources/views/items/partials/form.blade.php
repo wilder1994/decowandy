@@ -73,7 +73,7 @@
       <h3 class="font-display text-sm font-semibold text-dw-text">Código de barras (papelería)</h3>
       <div id="labelActions" class="hidden flex flex-wrap gap-2">
         <a id="btnLabelPng" href="#" target="_blank" class="dw-btn-secondary text-xs py-1.5 px-2.5">Etiqueta PNG</a>
-        <button id="btnLabelSheet" type="button" class="dw-btn-secondary text-xs py-1.5 px-2.5">Hoja PDF</button>
+        <button id="btnLabelSheet" type="button" class="dw-btn-secondary text-xs py-1.5 px-2.5">Imprimir etiqueta</button>
       </div>
     </div>
 

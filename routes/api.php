@@ -27,7 +27,9 @@ Route::middleware(['web', 'auth'])->group(function () {
         Route::get('/items', [ItemController::class, 'index'])->name('api.items.index');
         Route::get('/items/next-barcode', [ItemController::class, 'nextBarcode'])->name('api.items.next-barcode');
         Route::post('/items/papeleria/quick', [ItemController::class, 'storePapeleriaQuick'])->name('api.items.papeleria.quick');
-        Route::get('/items/labels/sheet', [ItemController::class, 'labelSheet'])->name('api.items.labels.sheet');
+        Route::get('/items/labels/candidates', [ItemController::class, 'labelCandidates'])->name('api.items.labels.candidates');
+        Route::post('/items/labels/preview', [ItemController::class, 'labelPreview'])->name('api.items.labels.preview');
+        Route::post('/items/labels/sheet', [ItemController::class, 'labelSheet'])->name('api.items.labels.sheet');
         Route::get('/items/{item}/label.png', [ItemController::class, 'label'])->name('api.items.label');
         Route::post('/items', [ItemController::class, 'store'])->name('api.items.store');
         Route::put('/items/{item}', [ItemController::class, 'update'])->name('api.items.update');
