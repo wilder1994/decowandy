@@ -19,13 +19,21 @@
     $tabOrder = ['impresion', 'papeleria', 'diseno'];
   @endphp
 
-  <div class="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-    <x-dw-page-header title="Ventas" subtitle="Listado por categoría: Diseño, Papelería e Impresión." />
-    <div class="text-right text-sm text-dw-muted">
+  <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <x-dw-page-header class="!mb-0" title="Ventas" subtitle="Listado por categoría: Diseño, Papelería e Impresión." />
+    <div class="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+      @can('operate')
+        <button type="button" class="js-open-sale-modal dw-btn-primary inline-flex w-full items-center justify-center gap-2 sm:w-auto">
+          <span class="material-symbols-outlined text-base">add_shopping_cart</span>
+          Registrar venta
+        </button>
+      @endcan
+      <div class="text-right text-sm text-dw-muted">
       @if($filters['range']['label'])
         <span class="font-medium text-dw-text">{{ $filters['range']['label'] }}</span>
       @endif
       <div>Total general: <strong class="text-dw-text">${{ number_format($overallTotal, 0, ',', '.') }}</strong></div>
+      </div>
     </div>
   </div>
 

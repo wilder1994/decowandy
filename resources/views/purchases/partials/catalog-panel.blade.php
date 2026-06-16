@@ -762,13 +762,21 @@
         return;
       }
       window.dwOpenBarcodeScanner({
+        parentModal: modal,
         onDetected: (code) => {
           if (fields.barcode) fields.barcode.value = code;
           if (fields.barcodeSource && !/^DWY-/i.test(code)) {
             fields.barcodeSource.value = 'manufacturer';
           }
         },
-        onError: () => showModalAlert('error', 'No se pudo acceder a la cámara.'),
+        onError: () => {
+          showModalAlert('error', 'No se pudo acceder a la cámara.');
+          if (window.dwShowToast) window.dwShowToast('No se pudo acceder a la cámara.', 'error');
+        },
+        onScanError: (message) => {
+          showModalAlert('error', message);
+          if (window.dwShowToast) window.dwShowToast(message, 'error');
+        },
       });
     });
 

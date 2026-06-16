@@ -5,7 +5,7 @@
 @section('content')
     <x-dw-page-header title="Dashboard" subtitle="Resumen operativo del negocio." />
 
-    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
         <x-dw-kpi label="Ventas del día" icon="payments" :value="'$ ' . number_format($kpis['sales_today'], 0, ',', '.')" :hint="'vs ayer: $ ' . number_format($kpis['sales_yesterday'], 0, ',', '.')" />
         <x-dw-kpi label="Ganancia del día" icon="savings" tone="yellow" :value="'$ ' . number_format(max($kpis['sales_today'] - $kpis['expenses_today'], 0), 0, ',', '.')" :hint="'Gastos hoy: $ ' . number_format($kpis['expenses_today'], 0, ',', '.')" />
         <x-dw-kpi label="Ventas del mes" icon="trending_up" :value="'$ ' . number_format($kpis['sales_month'], 0, ',', '.')" :hint="'vs mes pasado: $ ' . number_format($kpis['sales_prev_month'], 0, ',', '.')" />

@@ -194,11 +194,23 @@
     }
 
     .dw-page-title {
-        @apply font-display text-xl font-bold text-dw-text;
+        @apply font-display text-lg font-bold text-dw-text sm:text-xl;
     }
 
     .dw-page-subtitle {
-        @apply text-sm text-dw-muted;
+        @apply text-xs leading-relaxed text-dw-muted sm:text-sm;
+    }
+
+    .dw-page-shell {
+        @apply px-3 py-4 sm:px-4 sm:py-5 lg:px-5 lg:py-6;
+    }
+
+    .dw-mobile-page {
+        @apply space-y-4;
+    }
+
+    .dw-kpi-card .font-display {
+        @apply text-lg sm:text-xl;
     }
 
     .dw-select {
@@ -231,11 +243,235 @@
     }
 
     .dw-toast {
-        @apply fixed right-4 top-4 z-[90] rounded-dw px-3 py-2 text-sm text-white shadow-dw-neon brand-gradient;
+        @apply fixed right-4 top-4 z-[110] rounded-dw px-3 py-2 text-sm text-white shadow-dw-neon brand-gradient;
+    }
+
+    .dw-global-toast {
+        @apply fixed left-4 right-4 top-4 z-[110] mx-auto flex max-w-md items-start gap-2 rounded-dw border px-3 py-2.5 text-sm shadow-dw-neon opacity-0 pointer-events-none transition;
+        transform: translateY(-0.5rem);
+    }
+
+    .dw-global-toast.is-visible {
+        @apply opacity-100 pointer-events-auto;
+        transform: translateY(0);
+    }
+
+    .dw-global-toast--success {
+        @apply border-dw-primary/40 bg-dw-lilac-soft text-dw-text;
+    }
+
+    .dw-global-toast--error {
+        @apply border-dw-rose/50 bg-dw-rose/15 text-dw-text;
+    }
+
+    .dw-global-toast--info {
+        @apply border-dw-border bg-dw-card text-dw-text;
+    }
+
+    .dw-modal-paused {
+        opacity: 0.25;
+        pointer-events: none;
+        filter: blur(1px);
+    }
+
+    .dw-scanner-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+    }
+
+    .dw-scanner-overlay__backdrop {
+        @apply absolute inset-0 bg-black/75;
+    }
+
+    .dw-scanner-overlay__shell {
+        @apply absolute inset-0 flex items-stretch justify-center p-0 sm:items-center sm:p-4;
+    }
+
+    .dw-scanner-overlay__panel {
+        @apply relative flex h-full w-full max-w-none flex-col bg-dw-card shadow-dw-neon sm:h-auto sm:max-h-[92vh] sm:max-w-lg sm:rounded-dw-lg;
+        border: 0.5px solid var(--dw-border-neon);
+    }
+
+    .dw-scanner-overlay__header {
+        @apply flex shrink-0 items-start justify-between gap-3 border-b px-4 py-3;
+        border-color: var(--dw-border);
+    }
+
+    .dw-scanner-overlay__title {
+        @apply font-display text-base font-semibold text-dw-text;
+    }
+
+    .dw-scanner-overlay__hint {
+        @apply mt-0.5 text-xs text-dw-muted;
+    }
+
+    .dw-scanner-overlay__close {
+        @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-dw text-dw-muted hover:bg-dw-lilac-soft;
+    }
+
+    .dw-scanner-overlay__viewport {
+        @apply relative min-h-0 flex-1 overflow-hidden bg-black;
+    }
+
+    .dw-scanner-overlay__viewport #dwBarcodeScannerRegion {
+        @apply h-full w-full;
+    }
+
+    .dw-scanner-overlay__viewport video {
+        object-fit: cover !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .dw-scanner-overlay__frame {
+        @apply pointer-events-none absolute inset-x-6 top-1/2 -translate-y-1/2 rounded-dw border-2 border-white/85;
+        height: 5.5rem;
+        box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.42);
+    }
+
+    .dw-scanner-overlay__frame::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(169, 138, 212, 0.95), transparent);
+        animation: dw-scan-line 2s ease-in-out infinite;
+    }
+
+    @keyframes dw-scan-line {
+        0%, 100% { transform: translateY(-1.75rem); opacity: 0.35; }
+        50% { transform: translateY(1.75rem); opacity: 1; }
+    }
+
+    .dw-scanner-overlay__error {
+        @apply mx-4 mt-3 rounded-dw border border-dw-rose/40 bg-dw-rose/10 px-3 py-2 text-xs text-dw-text;
+    }
+
+    .dw-scanner-overlay__actions {
+        @apply grid shrink-0 grid-cols-3 gap-2 border-t p-3;
+        border-color: var(--dw-border);
+    }
+
+    .dw-scanner-overlay__action {
+        @apply inline-flex flex-col items-center justify-center gap-1 rounded-dw border border-dw-border bg-dw-lilac-soft px-2 py-2 text-[11px] font-semibold text-dw-text transition;
+    }
+
+    .dw-scanner-overlay__action:hover,
+    .dw-scanner-overlay__action.is-active {
+        @apply border-dw-border-neon text-dw-primary;
+        box-shadow: var(--dw-glow-sm);
+    }
+
+    .dw-scanner-overlay__action--ghost {
+        @apply bg-dw-card text-dw-muted;
+    }
+
+    .dw-mobile-sale-fab {
+        @apply fixed bottom-5 right-4 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-dw-neon brand-gradient;
+        border: 0.5px solid var(--dw-border-neon);
+    }
+
+    .dw-mobile-sale-fab:active {
+        transform: scale(0.96);
+    }
+
+    .dw-purchase-feedback-sticky {
+        @apply sticky top-0 z-10 mb-4;
+    }
+
+    @media (max-width: 767px) {
+        .dw-admin-main-pad {
+            padding-bottom: 6rem;
+        }
+
+        .dw-header-bar {
+            @apply px-3;
+        }
+
+        .dw-mobile-sale-fab {
+            bottom: max(1.25rem, env(safe-area-inset-bottom));
+            right: 1rem;
+        }
+
+        .dw-pos-rail {
+            @apply gap-4 p-4;
+            padding-bottom: max(1rem, env(safe-area-inset-bottom));
+        }
+
+        .dw-pos-segment {
+            @apply py-2 text-[11px];
+        }
+
+        .dw-pos-combobox {
+            max-height: min(42vh, 14rem);
+            z-index: 80;
+        }
+
+        .dw-pos-cart {
+            @apply px-3 py-3;
+        }
+
+        .dw-pos-empty {
+            @apply min-h-[8rem] px-4;
+        }
+
+        .dw-pos-total {
+            @apply text-4xl;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .dw-purchase-lines-table thead {
+            display: none;
+        }
+
+        .dw-purchase-lines-table .line-row {
+            display: grid;
+            gap: 0.625rem;
+            padding: 0.875rem;
+            margin-bottom: 0.75rem;
+            border: 0.5px solid var(--dw-border);
+            border-radius: 0.75rem;
+            background-color: color-mix(in srgb, var(--dw-lilac-soft) 35%, var(--dw-card));
+        }
+
+        .dw-purchase-lines-table .line-row td {
+            display: block;
+            padding: 0;
+            border: 0;
+        }
+
+        .dw-purchase-lines-table .line-row td[data-label]::before {
+            content: attr(data-label);
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.625rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--dw-muted);
+        }
+
+        .dw-purchase-lines-table .line-row .unit {
+            text-align: left !important;
+            font-size: 0.75rem;
+        }
+
+        .dw-purchase-lines-table .line-row .remove-line {
+            width: 100%;
+        }
     }
 
     .dw-filter-panel {
-        @apply dw-card mb-4 p-4;
+        @apply dw-card mb-4 p-3 sm:p-4;
+    }
+
+    .dw-filter-panel .dw-btn-primary,
+    .dw-filter-panel .dw-btn-secondary {
+        @apply w-full sm:w-auto;
     }
 
     .dw-section-panel {
@@ -251,11 +487,29 @@
         @apply absolute inset-0 flex items-center justify-center p-3 sm:p-4;
     }
 
+    @media (max-width: 767px) {
+        .dw-pos-center {
+            @apply items-stretch p-0;
+        }
+    }
+
     .dw-pos-modal {
         @apply flex w-full flex-col overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon;
         width: min(920px, calc(100vw - 2rem));
         border: 0.5px solid var(--dw-border-neon);
         height: min(680px, 92vh);
+    }
+
+    @media (max-width: 767px) {
+        .dw-pos-modal {
+            width: 100%;
+            max-width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            border-radius: 0;
+            border-left: 0;
+            border-right: 0;
+        }
     }
 
     @media (min-width: 1024px) {
@@ -299,25 +553,72 @@
     }
 
     .dw-pos-toolbar {
-        @apply relative shrink-0 gap-x-2 gap-y-1 border-b px-3 py-2;
+        @apply flex shrink-0 flex-col gap-3 border-b px-3 py-3;
         border-color: var(--dw-border);
-        display: grid;
-        align-items: center;
-        grid-template-columns: auto 1px minmax(10rem, 1fr) 3.25rem 6.5rem 6.5rem 2rem;
-        grid-template-areas: 'customer divider product qty unit subtotal add';
     }
 
-    @media (max-width: 767px) {
-        .dw-pos-toolbar {
-            overflow-x: auto;
-            grid-template-columns: auto 1px minmax(9rem, 1fr) 3.25rem 6.5rem 6.5rem 2rem;
-            -webkit-overflow-scrolling: touch;
+    .dw-pos-toolbar__row {
+        @apply flex w-full min-w-0 items-center gap-2;
+    }
+
+    .dw-pos-toolbar__row--meta {
+        @apply flex-col items-stretch gap-2 sm:flex-row sm:items-center;
+    }
+
+    .dw-pos-toolbar__row--search {
+        @apply gap-2;
+    }
+
+    .dw-pos-toolbar__row--amounts {
+        @apply grid grid-cols-2 gap-2 sm:grid-cols-4;
+    }
+
+    .dw-pos-sector-scroll {
+        @apply w-full min-w-0 overflow-x-auto pb-0.5;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dw-pos-sector-filters {
+        @apply inline-flex min-w-max flex-nowrap gap-1.5;
+    }
+
+    .dw-pos-sector-filters .dw-pos-segment {
+        @apply shrink-0 px-2.5 py-1.5 text-[11px];
+    }
+
+    .dw-pos-field {
+        @apply flex min-w-0 flex-col gap-1;
+    }
+
+    .dw-pos-field__label {
+        @apply text-[10px] font-semibold uppercase tracking-wide text-dw-muted;
+    }
+
+    .dw-pos-field .dw-pos-input {
+        @apply w-full;
+        height: 2.25rem;
+    }
+
+    .dw-pos-btn-add {
+        @apply col-span-2 inline-flex h-[2.25rem] items-center justify-center gap-1.5 rounded-dw border-hairline border-transparent brand-gradient px-3 text-sm font-semibold text-white shadow-dw-neon-sm sm:col-span-1;
+    }
+
+    .dw-pos-btn-add__text {
+        @apply inline sm:hidden;
+    }
+
+    @media (min-width: 640px) {
+        .dw-pos-btn-add__text {
+            @apply hidden;
         }
     }
 
+    .dw-pos-btn-square--scan {
+        @apply h-[2.25rem] w-[2.25rem];
+    }
+
     .dw-pos-customer-zone {
-        grid-area: customer;
-        @apply relative;
+        @apply relative w-full shrink-0 sm:w-auto;
     }
 
     .dw-pos-customer-toggle {
@@ -340,44 +641,17 @@
         background-color: var(--dw-card);
     }
 
-    .dw-pos-sector-filters {
-        @apply flex flex-wrap gap-1;
-    }
-
-    .dw-pos-sector-filters .dw-pos-segment {
-        @apply px-2 py-1 text-[10px];
-    }
-
-    .dw-pos-toolbar-divider {
-        grid-area: divider;
-        @apply h-8 w-px shrink-0 justify-self-center;
-        background-color: var(--dw-border);
-    }
-
     .dw-pos-product-wrap {
-        grid-area: product;
-        @apply relative min-w-0;
+        @apply relative min-w-0 flex-1;
     }
 
-    .dw-pos-input--qty {
-        grid-area: qty;
-    }
-
-    .dw-pos-input--money:not(.dw-pos-input--money-readonly) {
-        grid-area: unit;
-    }
-
-    .dw-pos-input--money-readonly {
-        grid-area: subtotal;
-    }
-
-    .dw-pos-toolbar [id='addProductLine'] {
-        grid-area: add;
+    .dw-pos-input--qty,
+    .dw-pos-input--money {
+        width: 100%;
     }
 
     .dw-pos-toolbar-error {
-        @apply col-span-full text-[10px] text-rose-600;
-        grid-column: 1 / -1;
+        @apply w-full text-xs text-rose-600;
     }
 
     .dw-pos-input-badge {
@@ -405,15 +679,14 @@
 
     .dw-pos-input--product {
         width: 100%;
+        height: 2.25rem;
     }
 
     .dw-pos-input--qty {
-        width: 3.25rem;
         @apply text-center tabular-nums;
     }
 
     .dw-pos-input--money {
-        width: 6.5rem;
         @apply text-right tabular-nums;
     }
 

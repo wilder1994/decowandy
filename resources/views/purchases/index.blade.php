@@ -13,17 +13,16 @@
         'diseno' => 'Diseño',
     ];
 @endphp
-<div class="space-y-6">
-    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <x-dw-page-header title="Compras y catálogo" subtitle="Altas por sector, historial de compras y consulta del catálogo POS." />
-        <div class="relative flex w-full flex-wrap items-center gap-2 sm:w-auto">
-            <div class="relative">
-                <button id="addMenuBtn" type="button" class="dw-btn-primary inline-flex items-center gap-1">
+<div class="dw-mobile-page space-y-4 sm:space-y-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+        <x-dw-page-header class="!mb-0" title="Compras y catálogo" subtitle="Altas por sector, historial de compras y consulta del catálogo POS." />
+        <div class="relative w-full sm:w-auto">
+            <button id="addMenuBtn" type="button" class="dw-btn-primary inline-flex w-full items-center justify-center gap-1 sm:w-auto">
                     <span class="material-symbols-outlined text-base">add</span>
                     Agregar
                     <span class="material-symbols-outlined text-base">expand_more</span>
                 </button>
-                <div id="addMenu" class="absolute right-0 z-20 mt-1 hidden min-w-[220px] overflow-hidden rounded-dw border border-dw-border bg-dw-card shadow-dw-neon">
+                <div id="addMenu" class="absolute left-0 z-20 mt-1 hidden w-[min(280px,calc(100vw-2rem))] min-w-[220px] overflow-hidden rounded-dw border border-dw-border bg-dw-card shadow-dw-neon sm:left-auto sm:right-0 sm:w-auto">
                     <button type="button" class="add-menu-item block w-full px-4 py-2.5 text-left text-sm hover:bg-dw-lilac-soft" data-add="papeleria">
                         <span class="font-medium text-dw-text">Papelería</span>
                         <span class="block text-xs text-dw-muted">Compra con código · stock IN</span>
@@ -37,11 +36,10 @@
                         <span class="block text-xs text-dw-muted">Servicio / portafolio</span>
                     </button>
                 </div>
-            </div>
         </div>
     </div>
 
-    <div class="flex flex-wrap gap-2 border-b border-dw-border pb-1">
+    <div class="flex gap-2 overflow-x-auto pb-1 [-webkit-overflow-scrolling:touch]">
         <a href="{{ route('purchases.index', array_merge(request()->except('tab'), ['tab' => 'compras'])) }}"
            class="dw-tab {{ $activeTab === 'compras' ? '' : 'opacity-60' }}" data-active="{{ $activeTab === 'compras' ? 'true' : 'false' }}">Compras</a>
         <a href="{{ route('purchases.index', array_merge(request()->except('tab'), ['tab' => 'catalogo'])) }}"
@@ -51,16 +49,16 @@
     @if($activeTab === 'catalogo')
         @include('purchases.partials.catalog-panel', ['catalog' => $catalog])
     @else
-    <div id="purchasesTabPanel" class="space-y-6">
-    <div class="flex flex-wrap items-center gap-4">
-            <p class="whitespace-nowrap rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-3 py-1.5 text-sm text-dw-muted">
+    <div id="purchasesTabPanel" class="space-y-4 sm:space-y-6">
+    <div class="flex flex-wrap items-center gap-3">
+            <p class="w-full rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-3 py-2 text-sm text-dw-muted sm:w-auto">
                 Total filtrado:
                 <strong class="tabular-nums text-dw-text">${{ number_format($summaryTotal, 0, ',', '.') }}</strong>
             </p>
     </div>
 
     <form method="GET" action="{{ route('purchases.index') }}" class="dw-filter-panel">
-        <div class="grid gap-3 md:grid-cols-4 md:items-end">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:items-end">
             <div>
                 <label class="dw-label mb-1" for="from">Desde</label>
                 <input id="from" type="date" name="from" value="{{ $filters['from'] }}" class="dw-input">
@@ -148,11 +146,13 @@
     </div>
     @endif
 </div>
+@endsection
 
+@push('modals')
 {{-- Modal de compra --}}
-<div id="purchaseModal" class="hidden fixed inset-0 z-50">
+<div id="purchaseModal" class="dw-app-modal hidden fixed inset-0 z-50">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close="true"></div>
-    <div class="relative mx-auto mt-12 w-[min(920px,95%)] max-h-[92vh] overflow-y-auto rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+    <div class="relative mx-auto mt-6 w-[min(920px,95%)] max-h-[92vh] overflow-y-auto rounded-dw-lg bg-dw-card p-4 shadow-dw-neon dw-hairline-neon sm:mt-12 sm:p-5">
         <div class="mb-4 flex items-center justify-between">
             <h3 id="purchaseModalTitle" class="font-display text-xl font-semibold text-dw-text">Registrar compra · Papelería</h3>
             <button id="closePurchaseModal" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">
@@ -165,7 +165,7 @@
 </div>
 
 {{-- Modal servicio: Impresión / Diseño --}}
-<div id="serviceModal" class="hidden fixed inset-0 z-50">
+<div id="serviceModal" class="dw-app-modal hidden fixed inset-0 z-50">
     <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-service-close></div>
     <div class="relative mx-auto mt-20 w-[min(520px,92%)] rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
         <div class="mb-4 flex items-center justify-between">
@@ -214,7 +214,7 @@
         </form>
     </div>
 </div>
-@endsection
+@endpush
 
 @push('scripts')
 <script>
@@ -392,6 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
         feedbackBox.textContent = message;
         feedbackBox.classList.remove('hidden', 'dw-alert-success', 'dw-alert-error');
         feedbackBox.classList.add(type === 'error' ? 'dw-alert-error' : 'dw-alert-success');
+        if (window.dwShowToast) {
+            window.dwShowToast(message, type === 'error' ? 'error' : 'success');
+        }
     }
 
     function clearFeedback() {
@@ -528,12 +531,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             window.dwOpenBarcodeScanner({
+                parentModal: document.getElementById('purchaseModal'),
                 onDetected: (code) => {
                     if (barcodeInput) barcodeInput.value = code;
                     lookupBarcode(row, code);
-                    productInput?.focus();
+                    qtyInput?.focus();
+                    qtyInput?.select?.();
                 },
                 onError: () => showFeedback('No se pudo acceder a la cámara.', 'error'),
+                onScanError: (message) => showFeedback(message, 'error'),
             });
         });
 

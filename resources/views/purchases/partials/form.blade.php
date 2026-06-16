@@ -1,4 +1,6 @@
 <form id="purchase-form" class="space-y-5">
+    <div id="purchase-feedback" class="dw-purchase-feedback-sticky hidden rounded-dw border-hairline px-3 py-2 text-sm"></div>
+
     <div class="grid gap-4 md:grid-cols-2">
         <div>
             <label for="purchase-date" class="dw-label mb-1">Fecha</label>
@@ -39,7 +41,7 @@
             <button type="button" id="add-purchase-line" class="dw-btn-secondary text-xs">Agregar línea</button>
         </div>
         <div class="mt-3 overflow-x-auto">
-            <table class="dw-table min-w-full text-xs" id="purchase-lines-table">
+            <table class="dw-table dw-purchase-lines-table min-w-full text-xs" id="purchase-lines-table">
                 <thead id="purchase-lines-head">
                     <tr class="text-left purchase-head-papeleria">
                         <th class="px-2 py-2">Código</th>
@@ -67,7 +69,7 @@
 
     <template id="purchase-line-papeleria">
         <tr class="line-row line-row--papeleria">
-            <td class="px-2 py-2 align-top">
+            <td class="px-2 py-2 align-top" data-label="Código">
                 <input type="hidden" class="item-id" value="">
                 <div class="flex min-w-[9rem] flex-col gap-1">
                     <div class="flex gap-1">
@@ -80,23 +82,23 @@
                     <span class="line-status text-[10px] text-dw-muted"></span>
                 </div>
             </td>
-            <td class="px-2 py-2 align-top">
+            <td class="px-2 py-2 align-top" data-label="Producto">
                 <input type="text" class="product dw-input text-sm" placeholder="Nombre del producto" required>
             </td>
-            <td class="px-2 py-2 align-top">
+            <td class="px-2 py-2 align-top" data-label="Cantidad">
                 <input type="number" min="1" value="1" class="qty dw-input w-16 text-right text-sm">
             </td>
-            <td class="px-2 py-2 align-top">
+            <td class="px-2 py-2 align-top" data-label="Costo total">
                 <input type="number" min="0" value="0" class="cost dw-input w-24 text-right text-sm">
             </td>
-            <td class="px-2 py-2 align-top">
+            <td class="px-2 py-2 align-top" data-label="Precio venta">
                 <input type="number" min="0" value="0" class="sale-price dw-input w-24 text-right text-sm" placeholder="Sugerido">
             </td>
-            <td class="px-2 py-2 align-top" data-dw-color-combobox>
+            <td class="px-2 py-2 align-top" data-label="Color" data-dw-color-combobox>
                 <input type="text" class="color dw-input w-24 text-sm" value="N/A" placeholder="N/A">
             </td>
-            <td class="unit px-2 py-2 text-right font-semibold text-gray-600 align-top">0</td>
-            <td class="px-2 py-2 text-right align-top">
+            <td class="unit px-2 py-2 text-right font-semibold text-gray-600 align-top" data-label="Costo unitario">0</td>
+            <td class="px-2 py-2 text-right align-top" data-label="Acción">
                 <button type="button" class="remove-line dw-btn-ghost text-xs">Quitar</button>
             </td>
         </tr>
@@ -146,8 +148,6 @@
             <span id="summary-amount" class="font-display text-lg font-semibold text-dw-text">$0</span>
         </div>
     </div>
-
-    <div id="purchase-feedback" class="hidden rounded-dw border-hairline px-3 py-2 text-sm"></div>
 
     <div class="flex flex-col gap-2">
         <x-dw-button type="submit">Guardar compra</x-dw-button>

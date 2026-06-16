@@ -63,17 +63,19 @@
                         <button id="adminMenuBtn" type="button" class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-dw border border-dw-border bg-dw-card text-dw-text hover:bg-dw-lilac-soft md:hidden" aria-label="Abrir menú">
                             <span class="material-symbols-outlined text-xl">menu</span>
                         </button>
-                        <div class="min-w-0 text-xs font-medium uppercase tracking-wide text-dw-muted md:block">
-                            <span class="md:hidden truncate font-display normal-case text-sm text-dw-text">@yield('title', 'Panel DecoWandy')</span>
-                            <span class="hidden md:inline">Panel administrativo</span>
+                        <div class="min-w-0 md:block">
+                            <span class="font-display text-sm font-semibold text-dw-text md:hidden">DecoWandy</span>
+                            <span class="hidden text-xs font-medium uppercase tracking-wide text-dw-muted md:inline">Panel administrativo</span>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <x-dw-theme-toggle />
+                    <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                        <div class="hidden min-[420px]:block">
+                            <x-dw-theme-toggle />
+                        </div>
                         @can('operate')
-                            <x-dw-button id="openSaleModal" type="button" class="hidden sm:inline-flex">
+                            <x-dw-button id="openSaleModal" type="button" class="inline-flex shrink-0 gap-1 px-2.5 sm:px-4" aria-label="Registrar venta">
                                 <span class="material-symbols-outlined text-base">add_shopping_cart</span>
-                                Registrar venta
+                                <span class="hidden sm:inline">Registrar venta</span>
                             </x-dw-button>
                         @endcan
                         <div class="relative">
@@ -105,8 +107,8 @@
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto">
-                <div class="w-full px-4 py-5 lg:px-5 lg:py-6">
+            <div class="flex-1 overflow-y-auto dw-admin-main-pad">
+                <div class="dw-page-shell w-full">
                     @yield('content')
                 </div>
             </div>
@@ -116,6 +118,14 @@
             @endcan
         </main>
     </div>
+
+    @stack('modals')
+
+    @can('operate')
+        <button type="button" class="js-open-sale-modal dw-mobile-sale-fab md:hidden" aria-label="Registrar venta">
+            <span class="material-symbols-outlined text-[1.65rem]">point_of_sale</span>
+        </button>
+    @endcan
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {

@@ -74,8 +74,13 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
 ## Códigos de barras y etiquetas
 
 - Códigos internos formato `DWY-XXXXXX` (`ItemBarcodeService`).
-- Búsqueda por código en API y POS (`html5-qrcode` en navegador).
-- Compras de papelería crean o actualizan ítems y stock (`PurchasePapeleriaService`).
+- Escáner pro en navegador (`resources/js/barcode-scanner.js`, `html5-qrcode`):
+  - Pantalla casi fullscreen en móvil, marco de escaneo y línea animada.
+  - Soporte QR + códigos 1D (EAN, UPC, Code 128, Code 39, ITF, etc.).
+  - Linterna (si el dispositivo la soporta), reintentar y errores visibles en el propio escáner.
+  - Toast global (`dw-toast.js`) para feedback inmediato.
+  - Requiere **HTTPS** en celular (`getUserMedia`).
+- Búsqueda por código en API y POS; compras de papelería crean o actualizan ítems (`PurchasePapeleriaService`).
 - Etiquetas PNG/PDF por ítem o lote (`ItemLabelService`).
 - Alta rápida papelería: `POST /api/items/papeleria/quick`.
 - Dependencias: `picqer/php-barcode-generator`, `chillerlan/php-qrcode`, `html5-qrcode` (npm).
@@ -119,25 +124,32 @@ mysql -u root -e "CREATE DATABASE IF NOT EXISTS decowandy_testing CHARACTER SET 
 - Gastos, inversiones y reportes de finanzas (cashflow, ingresos vs gastos, utilidades).
 - API internas para ítems, compras, ventas y catálogo público.
 - Permisos modulares por rol (admin / personal con módulos combinables).
-- Panel responsive: menú lateral tipo drawer en móvil.
+- Panel responsive optimizado para celular (menú drawer, POS fullscreen, KPIs 2×2, formularios en tarjetas).
+- Escáner de códigos con linterna y feedback en pantalla.
 
 ## Interfaz (design system)
 
 El panel admin usa un design system propio con tokens Tailwind (`dw-*`) y componentes Blade reutilizables.
 
-**Tokens y estilos:** `tailwind.config.js`, `resources/css/app.css` (colores marca, tipografía Inter/Poppins, bordes hairline, sombras neon).
+**Tokens y estilos:** `tailwind.config.js` (incluye `resources/js/**/*.js` en el scan), `resources/css/app.css`.
 
 **Componentes Blade** (`resources/views/components/`):
 - `dw-button`, `dw-input`, `dw-card`, `dw-kpi`, `dw-badge`, `dw-nav-link`, `dw-page-header`
 
-**Tema claro / oscuro:** selector en el header del panel y en login (Claro, Oscuro, Sistema). La preferencia se guarda en `localStorage` (`dw-theme`).
+**Tema claro / oscuro:** selector en el header (oculto en pantallas muy pequeñas) y en login. Preferencia en `localStorage` (`dw-theme`).
 
-**Móvil:** en pantallas &lt; 768px el menú lateral queda oculto; se abre con el botón ☰ y se cierra con ✕, toque fuera o al elegir una sección (`dw-admin-sidebar` en `app.css`).
+**Móvil (&lt; 768px):**
+- Menú lateral tipo drawer (`dw-admin-sidebar`): ☰ abrir, ✕ / fuera / navegar para cerrar.
+- Header compacto con marca **DecoWandy** (sin título largo duplicado).
+- **Registrar venta:** icono en header, botón flotante (FAB) y botón destacado en `/ventas`.
+- Modales de compra al final del `<body>` (`@stack('modals')`) para evitar problemas de capas.
+- Compras: líneas en tarjetas, filtros en 2 columnas, feedback sticky arriba del formulario.
+- Dashboard: KPIs en grilla 2×2.
 
 **Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`):
-- Filtros de sector: Todos / Impresión / Papelería / Diseño.
-- Columna **Sector** en el carrito; venta mixta en un solo ticket.
-- Escáner de código de barras por cámara (requiere HTTPS en dispositivos móviles).
+- Pantalla completa en móvil; toolbar en 3 filas (cliente/sectores → búsqueda/escanear → cantidades/agregar).
+- Filtros de sector, columna **Sector** en carrito, venta mixta en un ticket.
+- Escáner integrado (HTTPS obligatorio en celular).
 
 Tras cambios en vistas, CSS o JS del frontend:
 ```bash
@@ -170,13 +182,16 @@ Para usar DecoWandy desde el teléfono u otro dispositivo en la red Tailscale:
 
 ### 1) VirtualHost Apache
 
-En `C:/laragon/etc/apache2/sites-enabled/auto.decowandy.test.conf`:
+En `C:/laragon/etc/apache2/sites-enabled/`:
+
+- `auto.decowandy.test.conf` — dominio local `decowandy.test`
+- `decowandy-tailscale.conf` — IP Tailscale dedicada (no lo regenera Laragon; recomendado para celular)
 
 ```apache
 ServerAlias *.decowandy.test TU_IP_TAILSCALE
 ```
 
-El `DocumentRoot` debe apuntar a `C:/laragon/www/decowandy/public`.
+El `DocumentRoot` debe apuntar a `C:/laragon/www/decowandy/public` en ambos casos.
 
 ### 2) HTTPS (obligatorio para cámara del escáner)
 

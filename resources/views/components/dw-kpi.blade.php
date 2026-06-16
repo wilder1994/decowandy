@@ -15,7 +15,7 @@
     };
 @endphp
 
-<x-dw-card hover class="p-3.5">
+<x-dw-card hover class="dw-kpi-card p-3 sm:p-3.5">
     <div class="flex items-center justify-between gap-2">
         <span class="text-xs font-medium uppercase tracking-wide text-dw-muted">{{ $label }}</span>
         @if ($icon)

@@ -20,70 +20,87 @@
       <div class="dw-pos-body">
         <div class="dw-pos-work">
           <div class="dw-pos-toolbar">
-            <div class="dw-pos-customer-zone">
-              <button id="toggleCustomerBar" type="button" class="dw-pos-customer-toggle" aria-expanded="false" aria-controls="customerBarPanel">
-                <span class="material-symbols-outlined text-[18px]">person</span>
-                <span id="customerToggleLabel" class="max-w-[9rem] truncate">Cliente</span>
-                <span class="material-symbols-outlined text-[16px] text-dw-muted">expand_more</span>
-              </button>
-              <div id="customerBarPanel" class="dw-pos-customer-panel hidden">
-                <input type="hidden" id="c_id">
-                <input type="hidden" id="c_name">
-                <input type="hidden" id="c_email">
-                <input type="hidden" id="c_phone">
-                <input id="c_document" type="text" placeholder="Cédula" aria-label="Cédula del cliente"
-                       class="dw-pos-input dw-pos-input--doc">
-                <button id="searchCustomer" type="button" class="dw-pos-btn-square" title="Buscar cliente">
-                  <span class="material-symbols-outlined text-[18px]">search</span>
+            <div class="dw-pos-toolbar__row dw-pos-toolbar__row--meta">
+              <div class="dw-pos-customer-zone">
+                <button id="toggleCustomerBar" type="button" class="dw-pos-customer-toggle" aria-expanded="false" aria-controls="customerBarPanel">
+                  <span class="material-symbols-outlined text-[18px]">person</span>
+                  <span id="customerToggleLabel" class="max-w-[9rem] truncate">Cliente</span>
+                  <span class="material-symbols-outlined text-[16px] text-dw-muted">expand_more</span>
                 </button>
-                <button id="newCustomer" type="button" class="dw-pos-btn-square dw-pos-btn-square--primary" title="Nuevo cliente">
-                  <span class="material-symbols-outlined text-[18px]">person_add</span>
-                </button>
-                <button id="clearCustomer" type="button" class="dw-pos-btn-square" title="Quitar cliente">
-                  <span class="material-symbols-outlined text-[18px]">close</span>
-                </button>
+                <div id="customerBarPanel" class="dw-pos-customer-panel hidden">
+                  <input type="hidden" id="c_id">
+                  <input type="hidden" id="c_name">
+                  <input type="hidden" id="c_email">
+                  <input type="hidden" id="c_phone">
+                  <input id="c_document" type="text" placeholder="Cédula" aria-label="Cédula del cliente"
+                         class="dw-pos-input dw-pos-input--doc">
+                  <button id="searchCustomer" type="button" class="dw-pos-btn-square" title="Buscar cliente">
+                    <span class="material-symbols-outlined text-[18px]">search</span>
+                  </button>
+                  <button id="newCustomer" type="button" class="dw-pos-btn-square dw-pos-btn-square--primary" title="Nuevo cliente">
+                    <span class="material-symbols-outlined text-[18px]">person_add</span>
+                  </button>
+                  <button id="clearCustomer" type="button" class="dw-pos-btn-square" title="Quitar cliente">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="dw-pos-sector-scroll">
+                <div class="dw-pos-segments dw-pos-sector-filters" id="posSectorFilters" role="group" aria-label="Filtrar por sector">
+                  <button type="button" class="dw-pos-segment is-active" data-pos-sector="all">Todos</button>
+                  <button type="button" class="dw-pos-segment" data-pos-sector="impresion">Impresión</button>
+                  <button type="button" class="dw-pos-segment" data-pos-sector="papeleria">Papelería</button>
+                  <button type="button" class="dw-pos-segment" data-pos-sector="diseno">Diseño</button>
+                </div>
               </div>
             </div>
 
-            <div class="dw-pos-toolbar-divider" aria-hidden="true"></div>
-
-            <div class="dw-pos-segments dw-pos-sector-filters" id="posSectorFilters" role="group" aria-label="Filtrar por sector">
-              <button type="button" class="dw-pos-segment is-active" data-pos-sector="all">Todos</button>
-              <button type="button" class="dw-pos-segment" data-pos-sector="impresion">Impresión</button>
-              <button type="button" class="dw-pos-segment" data-pos-sector="papeleria">Papelería</button>
-              <button type="button" class="dw-pos-segment" data-pos-sector="diseno">Diseño</button>
+            <div class="dw-pos-toolbar__row dw-pos-toolbar__row--search">
+              <div class="dw-pos-product-wrap" id="productCombobox">
+                <input id="p_product" type="text" placeholder="Buscar o escanear código…"
+                       class="dw-pos-input dw-pos-input--product w-full" autocomplete="off" spellcheck="false"
+                       role="combobox" aria-expanded="false" aria-controls="productComboboxList"
+                       aria-autocomplete="list" aria-label="Buscar producto o escanear código">
+                <span id="p_category_badge" class="dw-pos-input-badge hidden"></span>
+                <ul id="productComboboxList" class="dw-pos-combobox hidden" role="listbox" aria-label="Productos"></ul>
+              </div>
+              <button id="btnScanProduct" type="button" class="dw-pos-btn-square dw-pos-btn-square--scan" title="Escanear código">
+                <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
+              </button>
             </div>
 
-            <div class="dw-pos-toolbar-divider" aria-hidden="true"></div>
-
-            <div class="dw-pos-product-wrap" id="productCombobox">
-              <input id="p_product" type="text" placeholder="Buscar o escanear código…"
-                     class="dw-pos-input dw-pos-input--product w-full" autocomplete="off" spellcheck="false"
-                     role="combobox" aria-expanded="false" aria-controls="productComboboxList"
-                     aria-autocomplete="list" aria-label="Buscar producto o escanear código">
-              <span id="p_category_badge" class="dw-pos-input-badge hidden"></span>
-              <ul id="productComboboxList" class="dw-pos-combobox hidden" role="listbox" aria-label="Productos"></ul>
+            <div class="dw-pos-toolbar__row dw-pos-toolbar__row--amounts">
+              <label class="dw-pos-field">
+                <span class="dw-pos-field__label">Cant.</span>
+                <input id="p_qty" type="number" min="1" value="1" aria-label="Cantidad"
+                       class="dw-pos-input dw-pos-input--qty">
+              </label>
+              <label class="dw-pos-field">
+                <span class="dw-pos-field__label">Valor u.</span>
+                <input id="p_unit" type="text" inputmode="numeric" placeholder="0" aria-label="Valor unitario"
+                       class="dw-pos-input dw-pos-input--money">
+              </label>
+              <label class="dw-pos-field">
+                <span class="dw-pos-field__label">Subtotal</span>
+                <input id="p_total" type="text" inputmode="numeric" placeholder="0" aria-label="Subtotal" readonly
+                       class="dw-pos-input dw-pos-input--money dw-pos-input--money-readonly">
+              </label>
+              <button id="addProductLine" type="button" class="dw-pos-btn-add" title="Agregar (Enter)">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span class="dw-pos-btn-add__text">Agregar</span>
+              </button>
             </div>
-            <button id="btnScanProduct" type="button" class="dw-pos-btn-square" title="Escanear código">
-              <span class="material-symbols-outlined text-[18px]">qr_code_scanner</span>
-            </button>
-            <input id="p_qty" type="number" min="1" value="1" aria-label="Cantidad"
-                   class="dw-pos-input dw-pos-input--qty">
-            <input id="p_unit" type="text" inputmode="numeric" placeholder="0" aria-label="Valor unitario"
-                   class="dw-pos-input dw-pos-input--money">
-            <input id="p_total" type="text" inputmode="numeric" placeholder="0" aria-label="Subtotal" readonly
-                   class="dw-pos-input dw-pos-input--money dw-pos-input--money-readonly">
-            <button id="addProductLine" type="button" class="dw-pos-btn-square dw-pos-btn-square--primary" title="Agregar (Enter)">
-              <span class="material-symbols-outlined text-[18px]">add</span>
-            </button>
+
             <p id="qty_error" class="dw-pos-toolbar-error hidden"></p>
             <p id="stock_info" class="sr-only" aria-live="polite"></p>
           </div>
 
           <div class="dw-pos-cart">
             <div id="saleCartEmpty" class="dw-pos-empty">
-              <span class="material-symbols-outlined text-xl text-dw-muted/60">shopping_cart</span>
-              <span class="text-xs"><kbd class="rounded bg-dw-lilac-soft px-1">Filtro</kbd> sector · escanear → cantidad · <strong>+</strong> agregar · venta mixta</span>
+              <span class="material-symbols-outlined text-2xl text-dw-muted/60">shopping_cart</span>
+              <p class="text-sm font-medium text-dw-text">Carrito vacío</p>
+              <p class="mt-1 max-w-xs text-center text-xs leading-relaxed text-dw-muted">Busca un producto, escanea el código, ajusta cantidad y pulsa Agregar.</p>
             </div>
             <table id="saleCartTable" class="dw-pos-table hidden">
               <thead>
@@ -250,7 +267,7 @@ const SECTOR_LABELS = {
 };
 
 const saleModal = document.getElementById('saleModal');
-const openBtn   = document.getElementById('openSaleModal');
+const openSaleButtons = document.querySelectorAll('#openSaleModal, .js-open-sale-modal');
 const closeBtn  = document.getElementById('closeSaleModal');
 const cancelBtn = document.getElementById('cancelSale');
 const saveBtn   = document.getElementById('saveSale');
@@ -1410,8 +1427,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     window.dwOpenBarcodeScanner({
+      parentModal: document.getElementById('saleModal'),
       onDetected: (code) => lookupBarcode(code),
       onError: () => showSaleToast('No se pudo acceder a la cámara.'),
+      onScanError: (message) => showSaleToast(message),
     });
   });
   document.getElementById('closeBarcodeQuickModal')?.addEventListener('click', closeBarcodeQuickModal);
@@ -1431,7 +1450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.addEventListener('click', submitSale);
   }
 
-  openBtn?.addEventListener('click', async () => {
+  const handleOpenSale = async () => {
     try {
       const axiosInstance = window.axios;
       if (axiosInstance) {
@@ -1457,6 +1476,10 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn('No se pudo actualizar el catálogo en vivo', e);
     }
     openModal();
+  };
+
+  openSaleButtons.forEach((btn) => {
+    btn.addEventListener('click', handleOpenSale);
   });
 });
 </script>
