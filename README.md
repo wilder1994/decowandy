@@ -2,12 +2,12 @@
 
 Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-06-13
+**Última actualización de esta documentación:** 2026-06-16
 
 ## Requisitos
 - PHP 8.2+
 - Composer
-- Node.js 18+
+- Node.js 20+ (`pdfjs-dist` exige Node ≥ 20; ver `.nvmrc`)
 - MySQL/MariaDB
 
 ## Puesta en marcha (Laragon)
@@ -20,27 +20,34 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-3) Configura la base de datos en `.env`:
+3) Configura la base de datos y dominios en `.env` (copia desde `.env.example`):
 ```env
 DB_DATABASE=decowandy
 DB_USERNAME=root
 DB_PASSWORD=
 APP_URL=http://decowandy.test
-SANCTUM_STATEFUL_DOMAINS=decowandy.test,localhost,127.0.0.1
+SANCTUM_STATEFUL_DOMAINS=decowandy.test,TU_IP_TAILSCALE,TU_HOST_TAILSCALE,localhost,127.0.0.1
 SESSION_SECURE_COOKIE=
 ```
+`TU_IP_TAILSCALE` y `TU_HOST_TAILSCALE` (MagicDNS, p. ej. `yuri.tailXXXX.ts.net`) son opcionales al inicio; son **obligatorios** si usarás el celular por Tailscale (ver sección más abajo).
 
-4) Define el administrador inicial en `.env`:
+4) Define el administrador inicial en `.env` (**no** uses `DB_PASSWORD` para esto):
 ```env
 ADMIN_NAME=DecoWandy
 ADMIN_EMAIL=tu-correo@gmail.com
 ADMIN_PASSWORD=tu_contraseña_segura
 ```
-La contraseña debe tener al menos 8 caracteres.
+La contraseña debe tener al menos 8 caracteres. En Laragon, `DB_PASSWORD` suele quedar vacío (`root` sin clave).
 
-5) Instala dependencias y compila assets:
+5) Instala dependencias y compila assets (Node 20):
 ```bash
 composer install
+npm install
+npm run build
+```
+En Laragon con varias versiones de Node, usa la 20 para este proyecto (`.nvmrc`). Ejemplo Windows:
+```powershell
+$env:Path = "C:\laragon\bin\nodejs\node-v20;$env:Path"
 npm install
 npm run build
 ```
@@ -196,43 +203,95 @@ Los assets compilados van a `public/build/` (no se versionan; cada entorno debe 
 
 ## Acceso desde la red local (Laragon / Apache)
 
-**Por nombre local:** `http://decowandy.test` con `auto.decowandy.test.conf` y entrada en `hosts`.
+**Por nombre local:** `http://decowandy.test` con `auto.decowandy.test.conf` y entrada `127.0.0.1 decowandy.test` en `hosts`.
 
-**Por IP en la LAN:** añade `ServerAlias TU_IP_LAN` al VirtualHost de DecoWandy en `C:/laragon/etc/apache2/sites-enabled/auto.decowandy.test.conf`. Apache debe escuchar en `0.0.0.0:80`.
+**Por IP en la LAN:** archivo dedicado `C:/laragon/etc/apache2/sites-enabled/decowandy-lan-ip.conf` con `ServerName TU_IP_LAN` y `DocumentRoot` apuntando a `decowandy/public`. Apache escucha en `0.0.0.0:80`.
 
-Tras editar la configuración de Apache, **reinicia Apache** en Laragon.
+> **Escáner en celular por LAN:** HTTP en la IP local **no** activa la cámara (`getUserMedia`). Para escanear desde el teléfono usa **HTTPS por Tailscale** (sección siguiente).
+
+Tras editar Apache, **reinicia Apache** en Laragon.
 
 ## Acceso por Tailscale (celular / remoto)
 
-Para usar DecoWandy desde el teléfono u otro dispositivo en la red Tailscale:
+Para usar DecoWandy desde el teléfono (POS, escáner de códigos, compras) u otro dispositivo en la red Tailscale.
+
+**Obtén tu IP y hostname Tailscale** (en la PC servidor):
+```bash
+tailscale ip -4
+tailscale status
+```
+Anota `TU_IP_TAILSCALE` (p. ej. `100.x.x.x`) y `TU_HOST_TAILSCALE` (MagicDNS, p. ej. `yuri.tailXXXX.ts.net`).
 
 ### 1) VirtualHost Apache
 
-En `C:/laragon/etc/apache2/sites-enabled/`:
+En `C:/laragon/etc/apache2/sites-enabled/` (fuera del repo; no lo regenera Laragon):
 
-- `auto.decowandy.test.conf` — dominio local `decowandy.test`
-- `decowandy-tailscale.conf` — IP Tailscale dedicada (no lo regenera Laragon; recomendado para celular)
+| Archivo | Uso |
+|---------|-----|
+| `auto.decowandy.test.conf` | PC local: `http://decowandy.test` |
+| `decowandy-lan-ip.conf` | LAN: `http://TU_IP_LAN` (sin escáner) |
+| `decowandy-tailscale.conf` | Celular/remoto: HTTPS + redirect desde HTTP |
+
+Ejemplo `decowandy-tailscale.conf` (HTTP → HTTPS, solo Tailscale):
 
 ```apache
-ServerAlias *.decowandy.test TU_IP_TAILSCALE
+# HTTP: redirige a HTTPS (obligatorio para escáner)
+<VirtualHost *:80>
+    ServerName TU_HOST_TAILSCALE
+    ServerAlias TU_IP_TAILSCALE
+    DocumentRoot "C:/laragon/www/decowandy/public"
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</VirtualHost>
+
+# HTTPS: certificado local (ver paso 2)
+<VirtualHost *:443>
+    ServerName TU_HOST_TAILSCALE
+    ServerAlias TU_IP_TAILSCALE
+    DocumentRoot "C:/laragon/www/decowandy/public"
+    SSLEngine on
+    SSLCertificateFile "C:/laragon/etc/ssl/decowandy.test.crt"
+    SSLCertificateKeyFile "C:/laragon/etc/ssl/decowandy.test.key"
+    SSLCertificateChainFile "C:/laragon/etc/ssl/decowandy-ca.crt"
+    <Directory "C:/laragon/www/decowandy/public">
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
 ```
 
-El `DocumentRoot` debe apuntar a `C:/laragon/www/decowandy/public` en ambos casos.
+El `DocumentRoot` debe ser `C:/laragon/www/decowandy/public`. Apache ya incluye `Listen 443` vía `C:/laragon/etc/apache2/httpd-ssl.conf`.
 
 ### 2) HTTPS (obligatorio para cámara del escáner)
 
-El escáner por cámara (`getUserMedia`) exige contexto seguro: **HTTPS** o `localhost`. En el celular debes usar HTTPS.
+El escáner (`resources/js/barcode-scanner.js`, `html5-qrcode`) usa `getUserMedia`, que exige **contexto seguro**: HTTPS o `localhost`. En el celular debes usar **HTTPS** con la IP o MagicDNS de Tailscale.
 
-Configuración en Laragon (`C:/laragon/etc/ssl/`):
+Certificados en `C:/laragon/etc/ssl/` (no versionar claves ni `.env`):
 
-1. **CA local** (`decowandy-ca.crt` / `decowandy-ca.key`) — se instala en el teléfono.
-2. **Certificado del sitio** (`decowandy.test.crt` / `decowandy.test.key`) — solo en el servidor Apache.
+| Archivo | Rol |
+|---------|-----|
+| `decowandy-ca.crt` / `.key` | CA local (instalar `.cer` en Android) |
+| `decowandy.test.crt` / `.key` | Certificado del sitio (Apache `:443`) |
+| `decowandy-ca.cnf` | Config OpenSSL de la CA |
+| `decowandy.test.cnf` | Config del sitio con SAN (dominio + IP Tailscale) |
 
-El VirtualHost `:443` referencia el certificado del sitio. HTTP desde la IP Tailscale puede redirigir a HTTPS.
+El certificado del sitio debe incluir en **SAN** al menos: `decowandy.test`, `TU_HOST_TAILSCALE`, `TU_IP_TAILSCALE`, `localhost`, `127.0.0.1`.
 
-Generar o renovar certificados (OpenSSL de Laragon):
+Ejemplo `decowandy.test.cnf` (sección `[alt_names]`):
+```ini
+DNS.1 = decowandy.test
+DNS.2 = TU_HOST_TAILSCALE
+DNS.3 = localhost
+IP.1 = TU_IP_TAILSCALE
+IP.2 = 127.0.0.1
+```
+
+Generar o renovar (OpenSSL de Laragon: `C:/laragon/bin/git/mingw64/bin/openssl.exe`):
 
 ```bash
+cd C:/laragon/etc/ssl
+
 # CA (una vez)
 openssl genrsa -out decowandy-ca.key 4096
 openssl req -x509 -new -nodes -key decowandy-ca.key -sha256 -days 825 \
@@ -244,30 +303,30 @@ openssl req -new -key decowandy.test.key -out decowandy.test.csr -config decowan
 openssl x509 -req -in decowandy.test.csr -CA decowandy-ca.crt -CAkey decowandy-ca.key \
   -CAcreateserial -out decowandy.test.crt -days 825 -sha256 \
   -extensions v3_req -extfile decowandy.test.cnf
-```
 
-Copia `decowandy-ca.crt` al teléfono como `decowandy-ca.cer` para instalarlo.
+# Para Android
+copy decowandy-ca.crt decowandy-ca.cer
+```
 
 ### 3) Instalar CA en Android
 
 1. Envía `decowandy-ca.cer` al teléfono (WhatsApp, correo, etc.).
 2. **Ajustes → Seguridad → Cifrado y credenciales → Instalar certificado → Certificado CA**.
 3. No uses “Certificado de usuario/VPN” (pedirá clave privada).
-4. Reinicia el navegador y abre `https://TU_IP_TAILSCALE/login`.
+4. Reinicia el navegador.
+5. Con **Tailscale activo** en el celular, abre `https://TU_IP_TAILSCALE/login`.
 
 ### 4) Variables `.env`
 
 ```env
 APP_URL=http://decowandy.test
-SANCTUM_STATEFUL_DOMAINS=decowandy.test,TU_IP_TAILSCALE,localhost,127.0.0.1
+SANCTUM_STATEFUL_DOMAINS=decowandy.test,TU_IP_TAILSCALE,TU_HOST_TAILSCALE,localhost,127.0.0.1
 SESSION_SECURE_COOKIE=
 ```
 
-Laravel genera URLs según el host de la petición (`AppServiceProvider`), así PC y celular pueden coexistir.
-
-```bash
-php artisan config:clear
-```
+- `APP_URL` queda en `decowandy.test` para la PC local.
+- Laravel adapta URLs al host de la petición (`AppServiceProvider::boot`), así PC (`http://decowandy.test`) y celular (`https://TU_IP_TAILSCALE`) coexisten.
+- Tras cambiar `.env`: `php artisan config:clear`.
 
 ### 5) Firewall
 
@@ -278,11 +337,19 @@ Permite los puertos **80** y **443** en Windows (reglas de Apache HTTP Server).
 | Uso | URL |
 |-----|-----|
 | Login | `https://TU_IP_TAILSCALE/login` |
-| POS / ventas | `https://TU_IP_TAILSCALE/ventas` |
+| POS / escáner | `https://TU_IP_TAILSCALE/ventas` |
 | Compras | `https://TU_IP_TAILSCALE/compras` |
 | Inventario | `https://TU_IP_TAILSCALE/inventario` |
 
-No uses `decowandy.test` desde el celular (ese dominio solo resuelve en la PC con `hosts`).
+Alternativa MagicDNS: `https://TU_HOST_TAILSCALE/ventas`.
+
+**No uses** `decowandy.test` desde el celular (solo resuelve en la PC con `hosts`).
+
+**Checklist rápido escáner en celular:**
+1. Tailscale conectado en PC y celular.
+2. CA instalada en Android.
+3. URL con `https://` (no `http://`).
+4. Permiso de cámara concedido en el navegador.
 
 ## Notas
 - El seeder de producción solo crea el **administrador** desde `.env`; no carga datos de prueba del negocio.

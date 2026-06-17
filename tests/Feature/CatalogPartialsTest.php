@@ -33,7 +33,7 @@ class CatalogPartialsTest extends TestCase
         $html = view('welcome.partials.category-card', ['category' => $category])->render();
 
         $this->assertStringContainsString('Papelería', $html);
-        $this->assertStringContainsString('#papeleria-full', $html);
+        $this->assertStringContainsString(route('catalog.category', 'papeleria'), $html);
         $this->assertStringContainsString('Item 1', $html);
         $this->assertStringContainsString('Item 5', $html);
         $this->assertStringNotContainsString('Item 6', $html, 'La vista previa solo debe mostrar los primeros 5 ítems.');
@@ -70,7 +70,8 @@ class CatalogPartialsTest extends TestCase
         $this->assertStringContainsString('Diseño', $html);
         $this->assertStringContainsString('Identidad Visual', $html);
         $this->assertStringContainsString('55.000', $html);
-        $this->assertStringContainsString('https://wa.me/57XXXXXXXXXX?text=Hola%2C+me+interesa%3A+Identidad+Visual', $html);
+        $this->assertStringContainsString('href="#contacto"', $html);
+        $this->assertStringContainsString('Contacto', $html);
         $this->assertStringContainsString('$ —', $html);
         $this->assertStringNotContainsString('Nada cargado', $html);
     }
