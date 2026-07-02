@@ -2,7 +2,7 @@
 
 Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-06-16
+**Última actualización de esta documentación:** 2026-06-16 (catálogo: lista PDF, toolbar compacta, modal papelería unificado, cabecera Compras en una línea)
 
 ## Requisitos
 - PHP 8.2+
@@ -74,13 +74,22 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
 
 | Módulo | Ruta | Rol |
 |--------|------|-----|
-| **Compras y catálogo** | `/compras` | Altas por sector, historial de compras, pestaña Catálogo |
-| **Inventario** | `/inventario` | Stock, alertas, ajustes y reordenar |
+| **Compras y catálogo** | `/compras` | Pestañas **Compras** (historial y filtros) y **Catálogo** (ficha POS por sector). Alta papelería vía **Agregar**; impresión/diseño como servicio o insumo. |
+| **Inventario** | `/inventario` | Stock, alertas, ajustes (no papelería) y **Comprar más** para reposición papelería |
 | **Ventas (POS)** | `/ventas` | Venta mixta: impresión, diseño y papelería en un ticket |
 
 - `/items` redirige a `/inventario` (compatibilidad).
-- **Papelería** se da de alta desde **Compras** (compra con código de barras); no desde inventario ni alta directa en API.
+- **Papelería** se da de alta desde **Compras → Agregar** (modal unificado de compra con código de barras); la ficha comercial (precio, stock, código, visibilidad) se edita en **Compras → Catálogo**.
+- **Reposición papelería** desde **Inventario → Comprar más** (mismo modal de compra, modo reposición).
 - **Impresión / Diseño** se registran en Compras → Agregar, o desde el catálogo en la pestaña Catálogo.
+
+### Catálogo (`/compras?tab=catalogo`)
+
+- Toolbar compacta por sector (segment control + buscador + acciones).
+- Tabla paginada con edición de ficha completa en modal (stock, mínimo, código DWY, color, precios).
+- **Generar código** (`DWY-XXXX`) en edición: previsualiza con `GET /api/items/next-barcode` y persiste con `generate_barcode` en `PUT /api/items/{id}`.
+- **Lista** — modal con selección múltiple, filtro en vivo y **Descargar PDF** de productos del sector activo.
+- **Etiquetas** (solo papelería) — wizard de impresión por lote (mismo flujo que Inventario).
 
 ## Códigos de barras y etiquetas
 
@@ -93,11 +102,14 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
   - Requiere **HTTPS** en celular (`getUserMedia`).
 - Búsqueda por código en API y POS; compras de papelería crean o actualizan ítems (`PurchasePapeleriaService`).
 - Etiquetas PNG/PDF por ítem o lote (`ItemLabelService`): compactas (nombre + Code 128 + número), **5 por fila** en carta, máx. **200 etiquetas**.
-- **Imprimir etiquetas** (wizard en Compras → Papelería e Inventario → Ítems): grilla con checkbox, nombre/código, cantidad; filtro en vivo; vista previa PDF con **PDF.js** (720px); descargar o imprimir.
+- **Imprimir etiquetas** (wizard en Compras → Catálogo (papelería) e Inventario): grilla con checkbox, nombre/código, cantidad; filtro en vivo; vista previa PDF con **PDF.js** (720px); descargar o imprimir.
 - API de etiquetas:
   - `GET /api/items/labels/candidates?search=` — productos con barcode (papelería activa)
   - `POST /api/items/labels/preview` — PDF inline para vista previa
   - `POST /api/items/labels/sheet` — descarga del PDF
+- **Lista de catálogo (PDF):**
+  - `GET /api/items/catalog-export?sector=` — productos activos del sector (hasta 500, para el modal Lista)
+  - `POST /api/items/catalog-list/pdf` — PDF con `sector` + `item_ids[]` de los seleccionados
 - Alta rápida papelería: `POST /api/items/papeleria/quick`.
 - Dependencias: `picqer/php-barcode-generator`, `pdfjs-dist` (npm, vista previa), `html5-qrcode` (npm).
 
@@ -141,8 +153,9 @@ mysql -u root -e "CREATE DATABASE IF NOT EXISTS decowandy_testing CHARACTER SET 
 ```
 
 ## Funcionalidades clave
-- Inventario con control de stock, mínimos, alertas y ajustes.
-- Compras por sector con impacto en inventario (papelería con barcode).
+- Inventario con control de stock, mínimos, alertas y ajustes (papelería: solo reposición vía compra, sin ajuste manual).
+- Compras por sector con impacto en inventario; modal unificado papelería (alta y reposición).
+- Catálogo POS por sector: edición de ficha, lista exportable a PDF y etiquetas (papelería).
 - Ventas con modal POS, filtros por sector, venta mixta y validación de stock.
 - Gastos, inversiones y reportes de finanzas (cashflow, ingresos vs gastos, utilidades).
 - API internas para ítems, compras, ventas y catálogo público.
@@ -166,7 +179,7 @@ El panel admin usa un design system propio con tokens Tailwind (`dw-*`) y compon
 - Header compacto con marca **DecoWandy** (sin título largo duplicado).
 - **Registrar venta:** icono en header, botón flotante (FAB) y botón destacado en `/ventas`.
 - Modales de compra al final del `<body>` (`@stack('modals')`) para evitar problemas de capas.
-- Compras: líneas en tarjetas, filtros en 2 columnas, feedback sticky arriba del formulario.
+- Compras: líneas en tarjetas, filtros en 2 columnas, feedback sticky arriba del formulario; cabecera en una línea (título + pestañas Compras/Catálogo + Agregar).
 - Dashboard: KPIs en grilla 2×2.
 
 **Modal POS — Registrar venta** (`resources/views/sales/partials/modal-create.blade.php`, estilos en `resources/css/app.css`):

@@ -6,62 +6,112 @@
     $inventoryConfig = $catalog['inventoryConfig'];
 @endphp
 
-<div id="catalogPanel" class="space-y-4">
-  <div class="flex flex-wrap items-center gap-3">
-    <div class="flex flex-wrap gap-2">
-      @foreach($sectors as $key => $label)
-        <button data-sector="{{ $key }}" type="button" class="tab-btn dw-tab" data-default="{{ $loop->first ? '1' : '0' }}">{{ $label }}</button>
-      @endforeach
+<div id="catalogPanel" class="space-y-2">
+  <div id="itemsAlert" class="hidden rounded-dw border-hairline px-3 py-2 text-sm"></div>
+
+  <div class="dw-card overflow-hidden p-0">
+    <div class="dw-catalog-toolbar flex flex-col gap-2 border-b border-dw-border px-3 py-2 sm:flex-row sm:items-center sm:gap-2 md:px-4">
+      <div class="dw-segment-tabs">
+        @foreach($sectors as $key => $label)
+          <button data-sector="{{ $key }}" type="button" class="dw-segment-tab tab-btn" data-default="{{ $loop->first ? '1' : '0' }}">{{ $label }}</button>
+        @endforeach
+      </div>
+
+      <div class="relative min-w-0 flex-1">
+        <span class="material-symbols-outlined pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[18px] text-dw-muted">search</span>
+        <input id="searchBox" type="search" placeholder="Buscar por nombre, código…" class="dw-input w-full pl-8">
+      </div>
+
+      <div class="flex shrink-0 items-center gap-1.5 self-end sm:self-auto">
+        <button id="btnCatalogList" type="button" class="dw-btn-secondary inline-flex h-8 items-center gap-1 px-2.5 text-xs sm:text-sm">
+          <span class="material-symbols-outlined text-base">checklist</span>
+          Lista
+        </button>
+        <button id="btnSheetLabels" type="button" class="dw-btn-secondary hidden inline-flex h-8 items-center gap-1 px-2.5 text-xs sm:text-sm">
+          <span class="material-symbols-outlined text-base">print</span>
+          Etiquetas
+        </button>
+      </div>
     </div>
-    <div class="relative ml-auto w-full max-w-xs">
-      <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-dw-muted text-base">search</span>
-      <input id="searchBox" type="search" placeholder="Buscar por nombre, código…" class="dw-input pl-9">
+
+    <p id="catalogContextLine" class="border-b border-dw-border/60 px-3 py-1 text-[11px] text-dw-muted md:px-4"></p>
+
+    <div class="px-3 py-3 md:px-4">
+      <div class="overflow-x-auto">
+        <table class="dw-table min-w-full text-sm">
+          <thead>
+            <tr class="text-left" id="itemsTableHead">
+              <th class="py-2 pr-4">Producto</th>
+              <th class="py-2 pr-4 papeleria-col hidden">Código</th>
+              <th class="py-2 pr-4 papeleria-col hidden">Color</th>
+              <th class="py-2 pr-4">Categoría</th>
+              <th class="py-2 pr-4">Tipo</th>
+              <th class="py-2 pr-4">Precio (COP)</th>
+              <th class="py-2 pr-4">Visible</th>
+              <th class="py-2 pr-2 w-32 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTableBody">
+            {{-- filas generadas por JS --}}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="paginationControls" class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-dw-muted">
+        <div id="paginationInfo"></div>
+        <div class="flex items-center gap-2">
+          <button id="btnPrev"
+                  type="button"
+                  class="dw-btn-secondary px-3 py-1 disabled:cursor-not-allowed disabled:opacity-60">
+            Anterior
+          </button>
+          <button id="btnNext"
+                  type="button"
+                  class="dw-btn-secondary px-3 py-1 disabled:cursor-not-allowed disabled:opacity-60">
+            Siguiente
+          </button>
+        </div>
+      </div>
     </div>
-    <button id="btnSheetLabels" type="button" class="dw-btn-secondary hidden text-sm">
-      <span class="material-symbols-outlined text-base">print</span>
-      Imprimir etiquetas
-    </button>
   </div>
 
-  <p class="text-xs text-dw-muted">Consulta y edita precios. Las altas nuevas se hacen con <strong>Agregar</strong> en la barra superior.</p>
-
-  {{-- Tabla --}}
-  <div class="dw-card p-4">
-    <div class="overflow-x-auto">
-      <table class="dw-table min-w-full text-sm">
-        <thead>
-          <tr class="text-left" id="itemsTableHead">
-            <th class="py-2 pr-4">Producto</th>
-            <th class="py-2 pr-4 papeleria-col hidden">Código</th>
-            <th class="py-2 pr-4 papeleria-col hidden">Color</th>
-            <th class="py-2 pr-4">Categoría</th>
-            <th class="py-2 pr-4">Tipo</th>
-            <th class="py-2 pr-4">Stock</th>
-            <th class="py-2 pr-4">Mínimo</th>
-            <th class="py-2 pr-4">Precio (COP)</th>
-            <th class="py-2 pr-4">Visible</th>
-            <th class="py-2 pr-2 w-32 text-right">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="itemsTableBody">
-          {{-- filas generadas por JS --}}
-        </tbody>
-      </table>
-    </div>
-
-    <div id="paginationControls" class="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-dw-muted">
-      <div id="paginationInfo"></div>
-      <div class="flex items-center gap-2">
-        <button id="btnPrev"
-                type="button"
-                class="dw-btn-secondary px-3 py-1 disabled:cursor-not-allowed disabled:opacity-60">
-          Anterior
+  {{-- Modal lista de productos (PDF) --}}
+  <div id="catalogListModal" class="hidden fixed inset-0 z-50 flex items-start justify-center">
+    <div class="absolute inset-0 z-40 bg-black/30" data-cl-close="true"></div>
+    <div class="relative z-50 mx-auto mt-8 flex max-h-[90vh] w-[min(920px,96%)] flex-col overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon dw-hairline-neon">
+      <div class="flex items-center justify-between border-b border-dw-border px-4 py-3">
+        <h2 class="font-display text-lg font-semibold">Lista de productos</h2>
+        <button id="catalogListClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-full hover:bg-dw-lilac-soft">
+          <span class="material-symbols-outlined">close</span>
         </button>
-        <button id="btnNext"
-                type="button"
-                class="dw-btn-secondary px-3 py-1 disabled:cursor-not-allowed disabled:opacity-60">
-          Siguiente
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 border-b border-dw-border px-4 py-2">
+        <div class="relative min-w-[12rem] flex-1">
+          <span class="material-symbols-outlined pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[18px] text-dw-muted">search</span>
+          <input id="catalogListSearch" type="search" placeholder="Filtrar en la lista…" class="dw-input h-8 w-full pl-8 text-sm">
+        </div>
+        <span id="catalogListCounts" class="text-xs text-dw-muted"></span>
+        <button id="catalogListDownloadPdf" type="button" class="dw-btn-primary h-8 text-sm" disabled>
+          Descargar PDF
         </button>
+      </div>
+
+      <div class="flex-1 overflow-auto px-4 py-2">
+        <table class="dw-table min-w-full text-sm">
+          <thead>
+            <tr class="text-left">
+              <th class="w-10 py-2 pr-2">
+                <input id="catalogListSelectAll" type="checkbox" aria-label="Seleccionar todos">
+              </th>
+              <th class="py-2 pr-4">Nombre</th>
+              <th class="py-2 pr-4">Código</th>
+              <th class="py-2 pr-4">Color</th>
+              <th class="py-2 pr-2 text-right">Precio</th>
+            </tr>
+          </thead>
+          <tbody id="catalogListBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -79,8 +129,17 @@
 
       <div id="modalAlert" class="hidden mb-4 rounded-xl border px-3 py-2 text-sm"></div>
 
+      <div id="catalogEditMeta" class="mb-4 hidden rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-3 py-2 text-sm text-dw-text">
+        <span id="catalogEditMetaText"></span>
+      </div>
+
       <form id="itemForm" class="space-y-5">
-        @include('items.partials.form', ['item' => null, 'createSectors' => $createSectors])
+        @include('items.partials.form', [
+            'item' => null,
+            'createSectors' => $createSectors,
+            'catalogMode' => true,
+            'allSectors' => $sectors,
+        ])
         <div class="sticky bottom-0 flex items-center justify-end gap-2 bg-dw-card pt-2">
           <button id="modalCancel" type="button" class="dw-btn-secondary">Cancelar</button>
           <button id="modalSave" type="submit" class="dw-btn-primary">
@@ -115,11 +174,13 @@
     }
 
     const initialPayload = @json($initialPayload, JSON_UNESCAPED_UNICODE);
+    const catalogMode = true;
     const sectorLabels = @json($sectors, JSON_UNESCAPED_UNICODE);
     const createSectors = @json($createSectors ?? [], JSON_UNESCAPED_UNICODE);
     const inventoryConfig = @json($inventoryConfig, JSON_UNESCAPED_UNICODE);
 
-    const tabButtons = Array.from(document.querySelectorAll('[data-sector]'));
+    const tabButtons = Array.from(document.querySelectorAll('#catalogPanel [data-sector]'));
+    const catalogContextLine = document.getElementById('catalogContextLine');
     const papeleriaBanner = null;
     const searchBox = document.getElementById('searchBox');
     const tableBody = document.getElementById('itemsTableBody');
@@ -161,6 +222,12 @@
       packSize: document.getElementById('f_pack_size'),
       barcodeSource: document.getElementById('f_barcode_source'),
       btnGenBarcode: document.getElementById('btnGenBarcode'),
+      btnRestoreInternalSku: document.getElementById('btnRestoreInternalSku'),
+      barcodeMissingHint: document.getElementById('barcodeMissingHint'),
+      barcodePendingHint: document.getElementById('barcodePendingHint'),
+      barcodeRestoreHint: document.getElementById('barcodeRestoreHint'),
+      catalogEditMeta: document.getElementById('catalogEditMeta'),
+      catalogEditMetaText: document.getElementById('catalogEditMetaText'),
       btnScanBarcode: document.getElementById('btnScanBarcode'),
       labelActions: document.getElementById('labelActions'),
       btnLabelPng: document.getElementById('btnLabelPng'),
@@ -182,6 +249,7 @@
       priceWarningSignature: null,
       priceWarningOpen: false,
       pendingPayload: null,
+      previewedNewBarcode: false,
       costSuggested: false,
     };
 
@@ -206,12 +274,17 @@
     }
 
     function showPageAlert(type, message) {
-      itemsAlert.textContent = message;
-      itemsAlert.classList.remove('hidden', 'dw-alert-success', 'dw-alert-error');
-      itemsAlert.classList.add(type === 'success' ? 'dw-alert-success' : 'dw-alert-error');
-      setTimeout(() => {
-        itemsAlert.classList.add('hidden');
-      }, 4000);
+      if (itemsAlert) {
+        itemsAlert.textContent = message;
+        itemsAlert.classList.remove('hidden', 'dw-alert-success', 'dw-alert-error');
+        itemsAlert.classList.add(type === 'success' ? 'dw-alert-success' : 'dw-alert-error');
+        setTimeout(() => {
+          itemsAlert.classList.add('hidden');
+        }, 4000);
+      }
+      if (window.dwShowToast) {
+        window.dwShowToast(message, type === 'error' ? 'error' : 'success');
+      }
     }
 
     function showModalAlert(type, message) {
@@ -291,10 +364,62 @@
       }
     }
 
+    function updateSectorUi(sector) {
+      const isPapeleria = sector === 'papeleria';
+      const readonly = document.getElementById('sectorReadonly');
+      if (readonly) {
+        readonly.classList.toggle('hidden', !isPapeleria);
+      }
+      if (fields.sector) {
+        fields.sector.classList.toggle('hidden', isPapeleria);
+        if (isPapeleria) {
+          fields.sector.value = 'papeleria';
+        }
+      }
+    }
+
     function updateStockVisibility() {
       const shouldShow = fields.stockable.checked;
-      fields.stockFields.classList.toggle('hidden', !shouldShow);
+      fields.stockFields?.classList.toggle('hidden', !shouldShow);
       updatePapeleriaVisibility();
+    }
+
+    function updateCatalogEditMeta(item = null) {
+      if (!fields.catalogEditMeta || !fields.catalogEditMetaText) {
+        return;
+      }
+      if (!state.editing?.id || !item) {
+        fields.catalogEditMeta.classList.add('hidden');
+        return;
+      }
+      const stock = item.stock ?? fields.stock?.value ?? 0;
+      const min = item.min_stock ?? fields.minStock?.value ?? 0;
+      const code = (fields.barcode?.value || item.barcode || '').trim() || 'Sin código';
+      fields.catalogEditMetaText.textContent = `Stock actual: ${stock} · Mínimo: ${min} · Código: ${code}`;
+      fields.catalogEditMeta.classList.remove('hidden');
+    }
+
+    function updateBarcodeEditState(item = null) {
+      const isPapeleriaEdit = Boolean(state.editing?.id) && (item?.sector ?? fields.sector?.value) === 'papeleria';
+      const barcodeValue = (fields.barcode?.value || '').trim();
+      const internalSku = (item?.internal_sku || state.editing?.internal_sku || '').trim();
+      const missing = isPapeleriaEdit && !barcodeValue;
+
+      fields.barcodeMissingHint?.classList.toggle('hidden', !missing);
+      fields.barcodePendingHint?.classList.toggle('hidden', !state.previewedNewBarcode || !barcodeValue);
+      fields.barcodeRestoreHint?.classList.toggle('hidden', !missing || !internalSku);
+
+      if (fields.barcodeRestoreHint && missing && internalSku) {
+        fields.barcodeRestoreHint.textContent = `Código guardado en ficha: ${internalSku}`;
+      }
+
+      if (fields.btnRestoreInternalSku) {
+        const showRestore = missing && internalSku.length > 0;
+        fields.btnRestoreInternalSku.classList.toggle('hidden', !showRestore);
+        fields.btnRestoreInternalSku.dataset.code = showRestore ? internalSku : '';
+      }
+
+      updateCatalogEditMeta(item ?? state.editing);
     }
 
     function shouldWarn(cost, sale) {
@@ -339,7 +464,7 @@
     }
 
     function tableColspan() {
-      return state.sector === 'papeleria' ? 10 : 8;
+      return state.sector === 'papeleria' ? 8 : 6;
     }
 
     function renderTable() {
@@ -368,13 +493,6 @@
           ? '<span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">Sí</span>'
           : '<span class="dw-badge-warning">No</span>';
 
-        const stockNumber = item.type === 'product' ? Number(item.stock ?? 0) : null;
-        const minStock = item.type === 'product' ? Number(item.min_stock ?? 0) : null;
-        const stockBadge = stockNumber === null
-          ? '<span class="dw-badge-primary">Servicio</span>'
-          : `<div class="font-semibold ${stockNumber <= minStock ? 'text-dw-rose' : 'text-dw-primary'}">${stockNumber}</div>`;
-        const minStockLabel = stockNumber === null ? '-' : minStock;
-
         const papeleriaCols = showPapeleria
           ? `<td class="py-2 pr-4 font-mono text-xs">${escapeHtml(item.barcode || '—')}</td>
              <td class="py-2 pr-4 text-dw-muted">${escapeHtml(item.color && item.color !== 'N/A' ? item.color : '—')}</td>`
@@ -388,8 +506,6 @@
           ${papeleriaCols}
           <td class="py-2 pr-4">${sectorLabels[item.sector] ?? item.sector}</td>
           <td class="py-2 pr-4">${item.type === 'product' ? 'Producto' : 'Servicio'}</td>
-          <td class="py-2 pr-4">${stockBadge}</td>
-          <td class="py-2 pr-4">${minStockLabel}</td>
           <td class="py-2 pr-4">${formatMoney(item.sale_price)}</td>
           <td class="py-2 pr-4">${activeBadge}</td>
           <td class="py-2 pr-2 text-right">
@@ -401,7 +517,24 @@
       });
     }
 
+    function updateCatalogContextLine() {
+      if (!catalogContextLine) {
+        return;
+      }
+      const label = sectorLabels[state.sector] || state.sector;
+      if (state.loading) {
+        catalogContextLine.textContent = `${label} · Cargando…`;
+        return;
+      }
+      if (!state.total) {
+        catalogContextLine.textContent = `${label} · Sin productos`;
+        return;
+      }
+      catalogContextLine.textContent = `${label} · ${state.total} producto(s) en catálogo`;
+    }
+
     function renderPagination() {
+      updateCatalogContextLine();
       if (!state.total) {
         paginationInfo.textContent = 'Sin resultados';
         btnPrev.disabled = true;
@@ -432,6 +565,7 @@
 
     async function loadItems(page = 1) {
       state.loading = true;
+      updateCatalogContextLine();
       renderTable();
       try {
         const { data } = await axiosInstance.get('/api/items', {
@@ -477,6 +611,7 @@
       if (fields.packSize) fields.packSize.value = '';
       if (fields.barcodeSource) fields.barcodeSource.value = state.sector === 'papeleria' ? 'internal' : 'manufacturer';
       state.editing = null;
+      state.previewedNewBarcode = false;
       state.costSuggested = false;
       state.priceWarningAcknowledged = false;
       state.priceWarningSignature = null;
@@ -485,6 +620,7 @@
       updateLabelActions(null);
       updateStockVisibility();
       updateSuggestedPriceHint();
+      updateBarcodeEditState();
       clearModalAlert();
     }
 
@@ -508,19 +644,27 @@
         fields.sector.value = sectorOverride;
       }
       state.sector = fields.sector?.value || state.sector;
+      updateSectorUi(state.sector);
       modalTitle.textContent = 'Nuevo producto';
       updateStockVisibility();
       openModal();
     }
 
+    function openEditItem(item) {
+      fillForm(item);
+    }
+
     window.catalogOpenCreate = openNew;
-    window.catalogOpenEdit = (item) => fillForm(item);
+    window.catalogOpenEdit = openEditItem;
 
     function fillForm(item) {
       state.editing = item;
-      modalTitle.textContent = 'Editar producto';
+      state.previewedNewBarcode = false;
+      const sector = item.sector ?? state.sector;
+      modalTitle.textContent = sector === 'papeleria' ? 'Editar producto · Papelería' : 'Editar producto';
       fields.name.value = item.name ?? '';
-      fields.sector.value = item.sector ?? state.sector;
+      updateSectorUi(sector);
+      fields.sector.value = sector;
       fields.salePrice.value = Number(item.sale_price ?? 0);
       fields.cost.value = item.cost ?? '';
       fields.unit.value = item.unit ?? '';
@@ -540,6 +684,7 @@
       updateStockVisibility();
       updatePriceWarning();
       updateSuggestedPriceHint();
+      updateBarcodeEditState(item);
       clearModalAlert();
       openModal();
     }
@@ -565,7 +710,8 @@
       }
 
       if (payload.sector === 'papeleria' && payload.type === 'product') {
-        payload.barcode = fields.barcode?.value.trim() || null;
+        const barcodeValue = fields.barcode?.value.trim() ?? '';
+        payload.barcode = barcodeValue || null;
         payload.color = fields.color?.value.trim() || 'N/A';
         payload.scan_mode = fields.scanMode?.value || 'unit';
         payload.pack_size = fields.packSize?.value !== '' ? Number(fields.packSize.value) : null;
@@ -629,15 +775,29 @@
       modalSave.textContent = 'Guardando…';
 
       try {
+        let successMessage = '';
+        const reloadPage = state.editing ? state.page : 1;
+
         if (state.editing) {
-          await axiosInstance.put(`/api/items/${state.editing.id}`, payload);
-          showPageAlert('success', 'Ítem actualizado correctamente.');
+          const { data } = await axiosInstance.put(`/api/items/${state.editing.id}`, payload);
+          const savedItem = data?.item ?? null;
+          const codeMsg = savedItem?.barcode ? ` Código: ${savedItem.barcode}.` : '';
+          successMessage = `Producto actualizado correctamente.${codeMsg}`;
         } else {
           await axiosInstance.post('/api/items', payload);
-          showPageAlert('success', 'Ítem creado correctamente.');
+          successMessage = 'Ítem creado correctamente.';
         }
+
+        state.previewedNewBarcode = false;
         closeModal();
-        await loadItems(state.editing ? state.page : 1);
+        resetForm();
+        showPageAlert('success', successMessage);
+
+        try {
+          await loadItems(reloadPage);
+        } catch (reloadError) {
+          console.warn('No se pudo recargar el listado tras guardar.', reloadError);
+        }
       } catch (error) {
         showModalAlert('error', extractErrorMessage(error));
       } finally {
@@ -714,7 +874,7 @@
         const id = Number(editBtn.dataset.editId);
         const item = state.items.find((it) => Number(it.id) === id);
         if (item) {
-          fillForm(item);
+          openEditItem(item);
         }
         return;
       }
@@ -745,16 +905,50 @@
     });
 
     fields.btnGenBarcode?.addEventListener('click', async () => {
+      if (!state.editing?.id) {
+        showModalAlert('error', 'Solo puedes generar código al editar un producto existente.');
+        return;
+      }
       try {
         const { data } = await axiosInstance.get('/api/items/next-barcode');
-        if (data?.barcode && fields.barcode) {
-          fields.barcode.value = data.barcode;
-          if (fields.barcodeSource) fields.barcodeSource.value = 'internal';
+        if (!data?.barcode || !fields.barcode) {
+          return;
         }
+        const hadBarcode = Boolean((state.editing?.barcode || '').trim());
+        fields.barcode.value = data.barcode;
+        if (fields.barcodeSource) {
+          fields.barcodeSource.value = 'internal';
+        }
+        state.previewedNewBarcode = !hadBarcode;
+        updateBarcodeEditState(state.editing);
+        fields.barcode.focus();
+        fields.barcode.select();
       } catch (error) {
         showModalAlert('error', extractErrorMessage(error));
       }
     });
+
+    fields.btnRestoreInternalSku?.addEventListener('click', () => {
+      const code = fields.btnRestoreInternalSku.dataset.code || state.editing?.internal_sku || '';
+      if (!code || !fields.barcode) return;
+      state.previewedNewBarcode = false;
+      fields.barcode.value = code;
+      if (fields.barcodeSource) fields.barcodeSource.value = 'internal';
+      updateBarcodeEditState(state.editing);
+      if (window.dwShowToast) {
+        window.dwShowToast(`Código recuperado: ${code}`, 'success');
+      }
+    });
+
+    fields.barcode?.addEventListener('input', () => {
+      if (!fields.barcode?.value.trim()) {
+        state.previewedNewBarcode = false;
+      }
+      updateBarcodeEditState(state.editing);
+    });
+
+    fields.stock?.addEventListener('input', () => updateCatalogEditMeta(state.editing));
+    fields.minStock?.addEventListener('input', () => updateCatalogEditMeta(state.editing));
 
     fields.btnScanBarcode?.addEventListener('click', () => {
       if (!window.dwOpenBarcodeScanner) {
@@ -765,9 +959,11 @@
         parentModal: modal,
         onDetected: (code) => {
           if (fields.barcode) fields.barcode.value = code;
+          state.previewedNewBarcode = false;
           if (fields.barcodeSource && !/^DWY-/i.test(code)) {
             fields.barcodeSource.value = 'manufacturer';
           }
+          updateBarcodeEditState(state.editing);
         },
         onError: () => {
           showModalAlert('error', 'No se pudo acceder a la cámara.');
@@ -781,12 +977,13 @@
     });
 
     fields.btnLabelSheet?.addEventListener('click', () => {
-      if (!state.editing?.id || !state.editing.barcode) return;
+      const barcode = fields.barcode?.value?.trim() || state.editing?.barcode;
+      if (!state.editing?.id || !barcode) return;
       if (window.dwOpenLabelPrintWizard) {
         window.dwOpenLabelPrintWizard({
           id: state.editing.id,
-          name: state.editing.name,
-          barcode: state.editing.barcode,
+          name: fields.name?.value?.trim() || state.editing.name,
+          barcode,
           quantity: 1,
         });
       }
@@ -837,6 +1034,15 @@
     toggleTabs();
     togglePapeleriaColumns();
     updateStockVisibility();
+    updateCatalogContextLine();
+
+    window.dwInitCatalogListModal?.({
+      axios: axiosInstance,
+      getSector: () => state.sector,
+      sectorLabels,
+      btnOpen: document.getElementById('btnCatalogList'),
+    });
+
     loadItems(state.page);
   });
 </script>

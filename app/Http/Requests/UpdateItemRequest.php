@@ -43,6 +43,7 @@ class UpdateItemRequest extends FormRequest
             'internal_sku' => 'sometimes|nullable|string|max:64',
             'featured' => 'sometimes|boolean',
             'active' => 'sometimes|boolean',
+            'generate_barcode' => 'sometimes|boolean',
         ];
     }
 }

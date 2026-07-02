@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="space-y-6">
-  <x-dw-page-header title="Inventario" subtitle="Existencias, alertas y reorden. Los productos se registran en Compras y catálogo." />
+  <x-dw-page-header title="Inventario" subtitle="Existencias, alertas y compras de reposición. La ficha comercial se edita en Catálogo." />
 
   <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <div class="dw-card p-3.5">
@@ -47,7 +47,11 @@
               <td class="py-2 pr-4 font-semibold text-dw-rose">{{ $row->stock }}</td>
               <td class="py-2 pr-4 text-dw-muted">{{ $row->min_stock }}</td>
               <td class="py-2 pr-4 text-right">
-                <a href="{{ route('purchases.index', ['tab' => 'compras', 'open' => 'papeleria', 'reorder' => $row->id]) }}" class="dw-link text-xs">Reordenar</a>
+                @if($row->sector === 'papeleria')
+                  <button type="button" class="dw-link text-xs" data-restock-id="{{ $row->id }}" data-restock-name="{{ $row->name }}" data-restock-barcode="{{ $row->barcode ?? '' }}" data-restock-stock="{{ $row->stock }}" data-restock-min="{{ $row->min_stock }}" data-restock-sale-price="{{ (int) ($row->sale_price ?? 0) }}" data-restock-color="{{ $row->color ?? 'N/A' }}">Comprar más</button>
+                @else
+                  <button type="button" class="dw-link text-xs" data-adjust-id="{{ $row->id }}" data-adjust-name="{{ $row->name }}" data-adjust-stock="{{ $row->stock }}" data-adjust-min="{{ $row->min_stock }}">Ajustar</button>
+                @endif
               </td>
             </tr>
           @endforeach
@@ -101,9 +105,11 @@
               <td class="px-3 py-2 text-right font-semibold {{ $item->stock <= $item->min_stock ? 'text-dw-rose' : 'text-dw-primary' }}">{{ $item->stock }}</td>
               <td class="px-3 py-2 text-right text-dw-muted">{{ $item->min_stock }}</td>
               <td class="px-3 py-2 text-right whitespace-nowrap">
-                <button type="button" class="dw-link text-xs mr-2" data-adjust-id="{{ $item->id }}" data-adjust-name="{{ $item->name }}" data-adjust-stock="{{ $item->stock }}" data-adjust-min="{{ $item->min_stock }}">Ajustar</button>
+                @if($item->sector !== 'papeleria')
+                  <button type="button" class="dw-link text-xs mr-2" data-adjust-id="{{ $item->id }}" data-adjust-name="{{ $item->name }}" data-adjust-stock="{{ $item->stock }}" data-adjust-min="{{ $item->min_stock }}">Ajustar</button>
+                @endif
                 @if($item->sector === 'papeleria')
-                  <a href="{{ route('purchases.index', ['tab' => 'compras', 'open' => 'papeleria', 'reorder' => $item->id]) }}" class="dw-link text-xs">Reordenar</a>
+                  <button type="button" class="dw-link text-xs" data-restock-id="{{ $item->id }}" data-restock-name="{{ $item->name }}" data-restock-barcode="{{ $item->barcode ?? '' }}" data-restock-stock="{{ $item->stock }}" data-restock-min="{{ $item->min_stock }}" data-restock-sale-price="{{ (int) ($item->sale_price ?? 0) }}" data-restock-color="{{ $item->color ?? 'N/A' }}">Comprar más</button>
                 @endif
               </td>
             </tr>
@@ -144,20 +150,37 @@
 </div>
 @endsection
 
+@push('modals')
+@include('purchases.partials.papeleria-modal')
+@include('purchases.partials.papeleria-modal-config')
+@endpush
+
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const axiosInstance = window.axios;
-  const modal = document.getElementById('adjustModal');
+  const adjustModal = document.getElementById('adjustModal');
   const itemId = document.getElementById('adjustItemId');
   const itemName = document.getElementById('adjustItemName');
   const stockInput = document.getElementById('adjustStock');
   const minInput = document.getElementById('adjustMin');
-  const feedback = document.getElementById('adjustFeedback');
+  const adjustFeedback = document.getElementById('adjustFeedback');
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content;
 
-  function closeModal() {
-    modal?.classList.add('hidden');
+  function closeAdjustModal() {
+    adjustModal?.classList.add('hidden');
+  }
+
+  function restockItemFromButton(btn) {
+    return {
+      id: Number(btn.dataset.restockId),
+      name: btn.dataset.restockName || '',
+      barcode: btn.dataset.restockBarcode || '',
+      stock: Number(btn.dataset.restockStock || 0),
+      min_stock: Number(btn.dataset.restockMin || 0),
+      sale_price: Number(btn.dataset.restockSalePrice || 0),
+      color: btn.dataset.restockColor || 'N/A',
+    };
   }
 
   document.querySelectorAll('[data-adjust-id]').forEach((btn) => {
@@ -166,25 +189,32 @@ document.addEventListener('DOMContentLoaded', () => {
       itemName.textContent = btn.dataset.adjustName;
       stockInput.value = btn.dataset.adjustStock;
       minInput.value = btn.dataset.adjustMin;
-      feedback?.classList.add('hidden');
-      modal?.classList.remove('hidden');
+      adjustFeedback?.classList.add('hidden');
+      adjustModal?.classList.remove('hidden');
     });
   });
 
-  modal?.querySelectorAll('[data-adjust-close]').forEach((el) => el.addEventListener('click', closeModal));
+  document.querySelectorAll('[data-restock-id]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const item = restockItemFromButton(btn);
+      window.dwOpenPapeleriaModal?.({ mode: 'restock', item: item });
+    });
+  });
+
+  adjustModal?.querySelectorAll('[data-adjust-close]').forEach((el) => el.addEventListener('click', closeAdjustModal));
 
   document.getElementById('adjustSave')?.addEventListener('click', async () => {
     if (!axiosInstance || !itemId.value) return;
     try {
-      await axiosInstance.put(`/api/items/${itemId.value}`, {
+      await axiosInstance.patch(`/api/inventory/items/${itemId.value}/stock`, {
         stock: parseInt(stockInput.value || '0', 10),
         min_stock: parseInt(minInput.value || '0', 10),
       }, { headers: { 'X-CSRF-TOKEN': csrf } });
       window.location.reload();
     } catch (e) {
-      feedback.textContent = 'No se pudo guardar el ajuste.';
-      feedback.classList.remove('hidden');
-      feedback.classList.add('text-red-600');
+      adjustFeedback.textContent = e.response?.data?.message || 'No se pudo guardar el ajuste.';
+      adjustFeedback.classList.remove('hidden');
+      adjustFeedback.classList.add('text-red-600');
     }
   });
 });

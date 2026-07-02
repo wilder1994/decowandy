@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CatalogListPdfRequest;
 use App\Http\Requests\LabelSheetRequest;
 use App\Http\Requests\StoreItemRequest;
 use App\Http\Requests\UpdateItemRequest;
@@ -10,6 +11,7 @@ use App\Models\Item;
 use App\Models\Stock;
 use App\Services\InventoryService;
 use App\Services\ItemBarcodeService;
+use App\Services\ItemCatalogListService;
 use App\Services\ItemLabelService;
 use App\Services\PurchasePapeleriaService;
 use Illuminate\Http\Request;
@@ -22,6 +24,7 @@ class ItemController extends Controller
         private readonly InventoryService $inventory,
         private readonly ItemBarcodeService $barcodes,
         private readonly ItemLabelService $labels,
+        private readonly ItemCatalogListService $catalogList,
         private readonly PurchasePapeleriaService $papeleria,
     ) {}
 
@@ -163,6 +166,31 @@ class ItemController extends Controller
         return $this->labels->renderPng($item);
     }
 
+    public function catalogExport(Request $request)
+    {
+        $validated = $request->validate([
+            'sector' => 'required|string',
+        ]);
+
+        $sector = (string) $validated['sector'];
+        $rows = $this->catalogList->exportForSector($sector);
+
+        return response()->json([
+            'ok' => true,
+            'sector' => $sector,
+            'data' => $rows->values(),
+            'total' => $rows->count(),
+        ]);
+    }
+
+    public function catalogListPdf(CatalogListPdfRequest $request)
+    {
+        return $this->catalogList->renderPdf(
+            $request->sector(),
+            $request->itemIds(),
+        );
+    }
+
     public function labelCandidates(Request $request)
     {
         $search = trim((string) $request->query('search', ''));
@@ -232,7 +260,15 @@ class ItemController extends Controller
 
     public function update(UpdateItemRequest $request, Item $item)
     {
-        $data = $this->prepareItemData($request->validated(), false, $item);
+        $validated = $request->validated();
+        $generateBarcode = (bool) ($validated['generate_barcode'] ?? false);
+        unset($validated['generate_barcode']);
+
+        if ($generateBarcode && trim((string) ($validated['barcode'] ?? '')) === '') {
+            unset($validated['barcode']);
+        }
+
+        $data = $this->prepareItemData($validated, false, $item);
         $stockData = array_filter([
             'stock' => $data['stock'] ?? null,
             'min_stock' => $data['min_stock'] ?? null,
@@ -242,8 +278,41 @@ class ItemController extends Controller
 
         $previousType = $item->type;
 
-        $item = DB::transaction(function () use ($item, $data, $stockData, $previousType) {
-            $item->fill($data);
+        $item = DB::transaction(function () use ($item, $validated, $data, $stockData, $previousType, $generateBarcode) {
+            $sector = (string) ($data['sector'] ?? $item->sector);
+            $shouldAssignBarcode = $generateBarcode
+                && $sector === 'papeleria'
+                && trim((string) ($data['barcode'] ?? '')) === '';
+
+            if ($shouldAssignBarcode) {
+                $code = $this->barcodes->nextInternalCode();
+                $this->barcodes->assertUniqueBarcode($code, $item->id);
+                $data['barcode'] = $code;
+                $data['internal_sku'] = $code;
+                $data['barcode_source'] = 'internal';
+            }
+
+            $fillable = array_intersect_key($data, array_flip(array_keys($validated)));
+
+            $papeleriaFieldKeys = ['barcode', 'scan_mode', 'pack_size', 'barcode_source', 'internal_sku', 'color'];
+            $mergePapeleriaFields = array_key_exists('sector', $validated)
+                || array_key_exists('type', $validated)
+                || array_key_exists('barcode', $validated)
+                || $shouldAssignBarcode;
+
+            if ($mergePapeleriaFields) {
+                foreach ($papeleriaFieldKeys as $key) {
+                    if (array_key_exists($key, $data)) {
+                        $fillable[$key] = $data[$key];
+                    }
+                }
+            }
+
+            if (! empty($data['barcode'])) {
+                $this->barcodes->assertUniqueBarcode($data['barcode'], $item->id);
+            }
+
+            $item->fill($fillable);
             $item->save();
             $this->syncStock($item, $stockData, false, $previousType);
 
@@ -284,18 +353,26 @@ class ItemController extends Controller
             $data['slug'] = Str::slug($data['name']) . '-' . Str::random(6);
         }
 
-        $data['sale_price'] = (float) ($data['sale_price'] ?? $item?->sale_price ?? 0);
-        $data['cost'] = (float) ($data['cost'] ?? $item?->cost ?? 0);
+        if ($isCreate || array_key_exists('sale_price', $data)) {
+            $data['sale_price'] = (float) ($data['sale_price'] ?? $item?->sale_price ?? 0);
+        }
+        if ($isCreate || array_key_exists('cost', $data)) {
+            $data['cost'] = (float) ($data['cost'] ?? $item?->cost ?? 0);
+        }
         if ($isCreate || array_key_exists('stock', $data)) {
             $data['stock'] = (int) ($data['stock'] ?? 0);
         }
         if ($isCreate || array_key_exists('min_stock', $data)) {
             $data['min_stock'] = (int) ($data['min_stock'] ?? 0);
         }
-        $data['featured'] = (bool) ($data['featured'] ?? $item?->featured ?? false);
-        $data['active'] = (bool) ($data['active'] ?? $item?->active ?? true);
+        if ($isCreate || array_key_exists('featured', $data)) {
+            $data['featured'] = (bool) ($data['featured'] ?? $item?->featured ?? false);
+        }
+        if ($isCreate || array_key_exists('active', $data)) {
+            $data['active'] = (bool) ($data['active'] ?? $item?->active ?? true);
+        }
 
-        $data = $this->barcodes->applyPapeleriaDefaults($data, $isCreate);
+        $data = $this->barcodes->applyPapeleriaDefaults($data, $isCreate, $item);
 
         if (! empty($data['barcode'])) {
             $this->barcodes->assertUniqueBarcode($data['barcode'], $item?->id);

@@ -229,6 +229,26 @@
         @apply border-dw-border-neon bg-dw-lilac-soft text-dw-primary shadow-dw-neon-sm;
     }
 
+    .dw-segment-tabs {
+        @apply inline-flex max-w-full overflow-x-auto rounded-dw border-hairline border-dw-border;
+    }
+
+    .dw-segment-tab {
+        @apply shrink-0 border-0 border-r border-dw-border bg-dw-card px-2.5 py-1 text-xs font-semibold text-dw-muted transition last:border-r-0 sm:px-3 sm:py-1.5 sm:text-sm;
+    }
+
+    .dw-segment-tab:hover {
+        @apply bg-dw-lilac-soft text-dw-primary-dark;
+    }
+
+    .dw-segment-tab[data-active='true'] {
+        @apply bg-dw-lilac-soft text-dw-primary shadow-[inset_0_-2px_0_0_var(--dw-primary)];
+    }
+
+    .dw-catalog-toolbar .dw-input {
+        @apply h-8 py-1 text-sm;
+    }
+
     .dw-link {
         @apply text-xs font-semibold text-dw-primary hover:text-dw-primary-dark hover:underline;
     }

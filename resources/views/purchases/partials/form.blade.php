@@ -1,7 +1,12 @@
 <form id="purchase-form" class="space-y-5">
+@php
+    $categoryOptions = $categoryOptions ?? collect(array_keys(config('decowandy.catalog_categories', [])));
+    $itemsCatalog = $itemsCatalog ?? collect();
+    $sectorLabels = $sectorLabels ?? config('decowandy.sectors', []);
+@endphp
     <div id="purchase-feedback" class="dw-purchase-feedback-sticky hidden rounded-dw border-hairline px-3 py-2 text-sm"></div>
 
-    <div class="grid gap-4 md:grid-cols-2">
+    <div id="purchaseMetaFields" class="grid gap-4 md:grid-cols-2">
         <div>
             <label for="purchase-date" class="dw-label mb-1">Fecha</label>
             <input type="date" id="purchase-date" name="date" value="{{ now()->toDateString() }}" required class="dw-input">
@@ -32,7 +37,7 @@
     </div>
 
     <div id="papeleriaPurchaseHint" class="rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-3 py-2 text-xs text-dw-muted">
-        <strong class="text-dw-text">Papelería:</strong> escanea el código o genera DWY. Si el producto no existe, se crea al guardar la compra con el stock de esta línea.
+        <strong class="text-dw-text">Papelería:</strong> usa <em>Reutilizar código</em> al escanear un producto que ya existe, o <em>Generar nuevo DWY</em> solo para un SKU nuevo. Si el código coincide, se suma stock sin duplicar el producto.
     </div>
 
     <div>
@@ -78,8 +83,10 @@
                             <span class="material-symbols-outlined text-base">qr_code_scanner</span>
                         </button>
                     </div>
-                    <button type="button" class="gen-barcode dw-btn-ghost text-[10px]">Generar DWY</button>
+                    <button type="button" class="reuse-barcode dw-btn-ghost text-[10px]">Reutilizar código</button>
+                    <button type="button" class="gen-barcode dw-btn-ghost text-[10px]">Generar nuevo DWY</button>
                     <span class="line-status text-[10px] text-dw-muted"></span>
+                    <span class="stock-hint text-[10px] text-dw-muted"></span>
                 </div>
             </td>
             <td class="px-2 py-2 align-top" data-label="Producto">
@@ -94,8 +101,10 @@
             <td class="px-2 py-2 align-top" data-label="Precio venta">
                 <input type="number" min="0" value="0" class="sale-price dw-input w-24 text-right text-sm" placeholder="Sugerido">
             </td>
-            <td class="px-2 py-2 align-top" data-label="Color" data-dw-color-combobox>
-                <input type="text" class="color dw-input w-24 text-sm" value="N/A" placeholder="N/A">
+            <td class="px-2 py-2 align-top" data-label="Color">
+                <div class="relative min-w-[6rem]" data-dw-color-combobox>
+                    <input type="text" class="color dw-input w-full text-sm" value="N/A" placeholder="N/A">
+                </div>
             </td>
             <td class="unit px-2 py-2 text-right font-semibold text-gray-600 align-top" data-label="Costo unitario">0</td>
             <td class="px-2 py-2 text-right align-top" data-label="Acción">
@@ -150,7 +159,7 @@
     </div>
 
     <div class="flex flex-col gap-2">
-        <x-dw-button type="submit">Guardar compra</x-dw-button>
-        <span class="text-xs text-dw-muted">Papelería crea o actualiza productos automáticamente al guardar.</span>
+        <x-dw-button type="submit" id="purchaseSubmitBtn">Guardar compra</x-dw-button>
+        <span id="purchaseSubmitHint" class="text-xs text-dw-muted">Papelería crea o reutiliza productos por código al guardar.</span>
     </div>
 </form>

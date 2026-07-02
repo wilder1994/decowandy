@@ -428,4 +428,165 @@ class ItemApiTest extends TestCase
             'quantity' => 5,
         ]);
     }
+
+    public function test_partial_stock_update_preserves_papeleria_barcode(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $item = Item::factory()->create([
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'barcode' => '7701234567890',
+            'active' => true,
+        ]);
+
+        Stock::create([
+            'item_id' => $item->id,
+            'quantity' => 5,
+            'min_threshold' => 0,
+        ]);
+
+        $this->putJson("/api/items/{$item->id}", [
+            'stock' => 10,
+            'min_stock' => 2,
+        ])
+            ->assertOk()
+            ->assertJsonPath('item.stock', 10)
+            ->assertJsonPath('item.barcode', '7701234567890');
+
+        $this->assertDatabaseHas('items', [
+            'id' => $item->id,
+            'barcode' => '7701234567890',
+        ]);
+    }
+
+    public function test_inventory_adjust_stock_endpoint_preserves_item_barcode(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $item = Item::factory()->create([
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'barcode' => 'DWY-0042',
+            'active' => true,
+        ]);
+
+        Stock::create([
+            'item_id' => $item->id,
+            'quantity' => 4,
+            'min_threshold' => 1,
+        ]);
+
+        $this->patchJson("/api/inventory/items/{$item->id}/stock", [
+            'stock' => 9,
+            'min_stock' => 3,
+        ])
+            ->assertOk()
+            ->assertJsonPath('item.stock', 9)
+            ->assertJsonPath('item.min_stock', 3)
+            ->assertJsonPath('item.barcode', 'DWY-0042');
+
+        $this->assertDatabaseHas('items', [
+            'id' => $item->id,
+            'barcode' => 'DWY-0042',
+        ]);
+
+        $this->assertDatabaseHas('stocks', [
+            'item_id' => $item->id,
+            'quantity' => 9,
+            'min_threshold' => 3,
+        ]);
+    }
+
+    public function test_update_papeleria_with_generate_barcode_assigns_code_on_save(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        Item::factory()->create([
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'barcode' => 'DWY-0099',
+            'active' => true,
+        ]);
+
+        $item = Item::factory()->create([
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'barcode' => null,
+            'internal_sku' => null,
+            'active' => true,
+            'name' => 'Producto sin código',
+        ]);
+
+        Stock::create([
+            'item_id' => $item->id,
+            'quantity' => 2,
+            'min_threshold' => 1,
+        ]);
+
+        $response = $this->putJson("/api/items/{$item->id}", [
+            'name' => 'Producto sin código',
+            'sector' => 'papeleria',
+            'type' => 'product',
+            'sale_price' => 1500,
+            'active' => true,
+            'stock' => 2,
+            'min_stock' => 1,
+            'color' => 'Azul',
+            'generate_barcode' => true,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('item.barcode', 'DWY-0100')
+            ->assertJsonPath('item.internal_sku', 'DWY-0100');
+
+        $this->assertDatabaseHas('items', [
+            'id' => $item->id,
+            'barcode' => 'DWY-0100',
+            'internal_sku' => 'DWY-0100',
+        ]);
+    }
+
+    public function test_update_papeleria_persists_stock_from_catalog_edit(): void
+    {
+        $user = User::factory()->staffInventory()->create();
+        $this->actingAs($user);
+
+        $item = Item::factory()->create([
+            'type' => 'product',
+            'sector' => 'papeleria',
+            'barcode' => 'DWY-0200',
+            'active' => true,
+        ]);
+
+        Stock::create([
+            'item_id' => $item->id,
+            'quantity' => 5,
+            'min_threshold' => 2,
+        ]);
+
+        $this->putJson("/api/items/{$item->id}", [
+            'name' => $item->name,
+            'sector' => 'papeleria',
+            'type' => 'product',
+            'sale_price' => 2000,
+            'active' => true,
+            'stock' => 12,
+            'min_stock' => 4,
+            'barcode' => 'DWY-0200',
+            'color' => 'N/A',
+        ])
+            ->assertOk()
+            ->assertJsonPath('item.stock', 12)
+            ->assertJsonPath('item.min_stock', 4);
+
+        $this->assertDatabaseHas('stocks', [
+            'item_id' => $item->id,
+            'quantity' => 12,
+            'min_threshold' => 4,
+        ]);
+    }
 }

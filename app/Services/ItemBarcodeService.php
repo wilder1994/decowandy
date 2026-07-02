@@ -82,28 +82,40 @@ class ItemBarcodeService
         }
     }
 
-    public function applyPapeleriaDefaults(array $data, bool $isCreate): array
+    public function applyPapeleriaDefaults(array $data, bool $isCreate, ?Item $item = null): array
     {
-        if (($data['sector'] ?? '') !== 'papeleria') {
-            $data['barcode'] = null;
-            $data['scan_mode'] = null;
-            $data['pack_size'] = null;
-            $data['barcode_source'] = null;
-            $data['internal_sku'] = null;
-            $data['color'] = 'N/A';
+        $sector = (string) ($data['sector'] ?? $item?->sector ?? '');
+
+        if ($sector !== 'papeleria') {
+            if ($isCreate || array_key_exists('sector', $data)) {
+                $data['barcode'] = null;
+                $data['scan_mode'] = null;
+                $data['pack_size'] = null;
+                $data['barcode_source'] = null;
+                $data['internal_sku'] = null;
+                $data['color'] = 'N/A';
+            }
 
             return $data;
         }
 
-        $data['color'] = trim((string) ($data['color'] ?? '')) ?: 'N/A';
+        if (! $isCreate && ! array_intersect(array_keys($data), ['sector', 'type', 'barcode', 'color', 'scan_mode', 'pack_size', 'barcode_source', 'name'])) {
+            return $data;
+        }
 
-        if (($data['type'] ?? 'product') === 'product') {
-            $data['scan_mode'] = in_array($data['scan_mode'] ?? 'unit', ['unit', 'pack'], true)
-                ? $data['scan_mode']
+        $data['color'] = trim((string) ($data['color'] ?? $item?->color ?? '')) ?: 'N/A';
+
+        $type = (string) ($data['type'] ?? $item?->type ?? 'product');
+
+        if ($type === 'product') {
+            $data['scan_mode'] = in_array($data['scan_mode'] ?? $item?->scan_mode ?? 'unit', ['unit', 'pack'], true)
+                ? ($data['scan_mode'] ?? $item?->scan_mode ?? 'unit')
                 : 'unit';
         } else {
-            $data['scan_mode'] = null;
-            $data['pack_size'] = null;
+            if ($isCreate || array_key_exists('type', $data)) {
+                $data['scan_mode'] = null;
+                $data['pack_size'] = null;
+            }
         }
 
         if (! empty($data['barcode'])) {

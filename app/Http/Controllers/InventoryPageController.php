@@ -25,7 +25,17 @@ class InventoryPageController extends Controller
         ];
 
         $query = Item::query()
-            ->select('items.id', 'items.name', 'items.sector', 'items.barcode', 'items.active', 'stocks.quantity as stock', 'stocks.min_threshold as min_stock')
+            ->select(
+                'items.id',
+                'items.name',
+                'items.sector',
+                'items.barcode',
+                'items.sale_price',
+                'items.color',
+                'items.active',
+                'stocks.quantity as stock',
+                'stocks.min_threshold as min_stock'
+            )
             ->join('stocks', 'stocks.item_id', '=', 'items.id')
             ->where('items.type', 'product')
             ->where('items.active', true);
@@ -44,7 +54,16 @@ class InventoryPageController extends Controller
         $items = $query->orderBy('items.name')->paginate(15)->withQueryString();
 
         $lowStockItems = Item::query()
-            ->select('items.id', 'items.name', 'items.sector', 'stocks.quantity as stock', 'stocks.min_threshold as min_stock')
+            ->select(
+                'items.id',
+                'items.name',
+                'items.sector',
+                'items.barcode',
+                'items.sale_price',
+                'items.color',
+                'stocks.quantity as stock',
+                'stocks.min_threshold as min_stock'
+            )
             ->join('stocks', 'stocks.item_id', '=', 'items.id')
             ->where('items.type', 'product')
             ->where('items.active', true)
@@ -62,6 +81,13 @@ class InventoryPageController extends Controller
                 'search' => $search,
                 'sector' => $sector,
             ],
+            'inventoryConfig' => [
+                'colors' => config('decowandy.inventory.colors', ['N/A']),
+                'markup_percent' => (int) config('decowandy.inventory.markup_percent', 40),
+            ],
+            'categoryOptions' => collect(array_keys(config('decowandy.catalog_categories', []))),
+            'itemsCatalog' => collect(),
+            'sectorLabels' => $sectors,
         ]);
     }
 }
