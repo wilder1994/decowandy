@@ -34,11 +34,11 @@
                 <a href="{{ route('catalog.category', 'diseno') }}" class="text-dw-text transition hover:text-dw-primary">Diseño</a>
                 <a href="#contacto" class="text-dw-text transition hover:text-dw-primary">Contacto</a>
             </nav>
-            <div class="flex items-center gap-2">
-                <a href="{{ route('login') }}" class="dw-btn-secondary hidden sm:inline-flex">
+            <div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                <a href="{{ route('login') }}" class="dw-btn-secondary px-2.5 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm">
                     Ingresar
                 </a>
-                <a href="{{ $dwWhatsappHref }}" class="dw-btn-primary"
+                <a href="{{ $dwWhatsappHref }}" class="dw-btn-primary px-2.5 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
                    @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif>
                     {{ $dwHasWhatsapp ? 'Pedir por WhatsApp' : 'Ver contacto' }}
                 </a>
