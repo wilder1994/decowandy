@@ -2,7 +2,7 @@
 
 Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-09-20 (contacto público Outlook + WhatsApp; sidebar fijo y portada móvil)
+**Última actualización de esta documentación:** 2026-09-20 (editor público: portadas, productos del inventario, preview in-situ; stock informativo + WhatsApp)
 
 ## Requisitos
 - PHP 8.2+
@@ -72,6 +72,12 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
 
 ### Contacto público
 En el pie de la tienda: correo Outlook `decowandy2025@hotmail.com` y WhatsApp `317 836 2567` (`DW_CONTACT_EMAIL` y `DW_WHATSAPP` en `.env`; Colombia se arma como `57…` para `wa.me`).
+
+### Editor de página pública (Ajustes)
+- **Vista previa in-situ:** no abre otra pestaña; tarjeta + listado se refrescan en la misma pantalla.
+- **Portada por categoría:** subir / reemplazar / quitar imagen (JPG/PNG/WebP, máx. 2 MB) en `catalog_category_settings`.
+- **Productos:** se **seleccionan del inventario** (`items` + stock). No se crean fichas sueltas. Foto opcional por publicación.
+- El stock público es informativo; **solo baja** cuando el admin registra una venta en el POS. El cliente pide por WhatsApp.
 
 ### Sidebar del panel
 En escritorio el menú lateral queda **fijo** a la izquierda (el contenido no lo empuja al hacer scroll). Si hay más módulos que el alto de la pantalla, **solo la lista de enlaces hace scroll**. A media altura, en el borde derecho, hay una **flecha** para plegar (iconos) o expandir el menú; el estado se guarda en `localStorage` (`dw-sidebar`). En móvil se mantiene el cajón con hamburguesa.

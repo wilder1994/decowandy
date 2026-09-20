@@ -1,3 +1,4 @@
+{{-- resources/views/welcome/partials/category-list.blade.php --}}
 @props(['category'])
 
 @php
@@ -11,6 +12,12 @@
     <h2 class="text-xl font-semibold mb-4">{{ $category['name'] ?? '' }}</h2>
     <div class="grid gap-6 md:grid-cols-3">
         @forelse($items as $item)
+            @php
+                $stock = (int) ($item->stock_quantity ?? 0);
+                $waMsg = $stock > 0
+                    ? "Hola DecoWandy, vi «{$item->title}» en línea. Hay {$stock} disponibles. ¿Me los puedes vender? Ya puedo transferir."
+                    : "Hola DecoWandy, vi «{$item->title}» en línea. ¿Cuándo vuelven a tener stock?";
+            @endphp
             <div class="rounded-3xl bg-white border border-gray-100 shadow-sm overflow-hidden">
                 <div class="h-36 bg-slate-100 overflow-hidden">
                     @if($item->image_path)
@@ -22,6 +29,9 @@
                     @if($item->description)
                         <p class="text-sm text-gray-600">{{ $item->description }}</p>
                     @endif
+                    <p class="mt-2 text-xs {{ $stock > 0 ? 'text-emerald-700' : 'text-rose-600' }}">
+                        {{ $stock > 0 ? $stock.' disponibles' : 'Agotado' }}
+                    </p>
                     <div class="mt-3 flex items-center justify-between">
                         <span class="text-[color:var(--dw-accent)] font-semibold">
                             @if($item->show_price && $item->price)
@@ -30,7 +40,7 @@
                                 $ —
                             @endif
                         </span>
-                        <a href="{{ \App\Support\PublicContact::whatsappHref('Hola, me interesa: '.$item->title) }}"
+                        <a href="{{ \App\Support\PublicContact::whatsappHref($waMsg) }}"
                            @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
                            class="text-sm px-3 py-1 rounded-xl bg-[color:var(--dw-primary)] text-white">{{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}</a>
                     </div>

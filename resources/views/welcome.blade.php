@@ -104,7 +104,7 @@
                         @if($d->description)
                             <p class="text-sm text-gray-600">{{ $d->description }}</p>
                         @endif
-                        <div class="mt-3 flex items-center justify-between">
+                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                             <span class="text-[color:var(--dw-accent)] font-semibold">
                                 @if($d->show_price && $d->price)
                                     $ {{ number_format($d->price, 0, ',', '.') }}
@@ -112,9 +112,18 @@
                                     Cotizar
                                 @endif
                             </span>
-                            <a href="{{ \App\Support\PublicContact::whatsappHref('Hola, me interesa: '.$d->title) }}"
-                               @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
-                               class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">{{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}</a>
+                            @php
+                                $stock = (int) ($d->stock_quantity ?? 0);
+                                $waMsg = $stock > 0
+                                    ? "Hola DecoWandy, vi el destacado «{$d->title}». Hay {$stock} disponibles. ¿Me los puedes vender?"
+                                    : "Hola DecoWandy, vi el destacado «{$d->title}». ¿Cuándo vuelven a tener stock?";
+                            @endphp
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs {{ $stock > 0 ? 'text-emerald-700' : 'text-rose-600' }}">{{ $stock > 0 ? $stock.' disp.' : 'Agotado' }}</span>
+                                <a href="{{ \App\Support\PublicContact::whatsappHref($waMsg) }}"
+                                   @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
+                                   class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">{{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}</a>
+                            </div>
                         </div>
                     </div>
                 </div>

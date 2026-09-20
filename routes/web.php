@@ -85,11 +85,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('can:manage-public-page')->prefix('ajustes/welcome')->group(function () {
         Route::get('/', [CatalogController::class, 'settings'])->name('settings.public');
         Route::get('/api/items', [CatalogController::class, 'index'])->name('catalog.index');
+        Route::get('/api/inventory-options', [CatalogController::class, 'inventoryOptions'])->name('catalog.inventory-options');
         Route::post('/api/items', [CatalogController::class, 'store'])->name('catalog.store');
         Route::post('/api/items/{catalogItem}', [CatalogController::class, 'update'])->name('catalog.update');
         Route::post('/api/items/{catalogItem}/delete', [CatalogController::class, 'destroy'])->name('catalog.destroy');
         Route::post('/api/sort', [CatalogController::class, 'sort'])->name('catalog.sort');
         Route::get('/api/preview', [CatalogController::class, 'preview'])->name('catalog.preview');
+        Route::post('/api/categories/{slug}/cover', [CatalogController::class, 'updateCover'])->name('catalog.cover.update');
+        Route::delete('/api/categories/{slug}/cover', [CatalogController::class, 'destroyCover'])->name('catalog.cover.destroy');
     });
 });
 
