@@ -5,8 +5,7 @@
 
 @section('content')
 @php
-    $dwWhatsappNumber = preg_replace('/\D+/', '', env('DW_WHATSAPP', ''));
-    $dwHasWhatsapp = strlen($dwWhatsappNumber) >= 10;
+    $dwHasWhatsapp = \App\Support\PublicContact::hasWhatsapp();
 @endphp
 <section class="max-w-7xl mx-auto px-4 py-12">
     <div class="flex items-center justify-between mb-8">
@@ -45,7 +44,7 @@
                                     $ —
                                 @endif
                             </span>
-                            <a href="{{ $dwHasWhatsapp ? 'https://wa.me/'.$dwWhatsappNumber.'?text='.rawurlencode('Hola, me interesa: '.$d->title) : '#contacto' }}"
+                            <a href="{{ \App\Support\PublicContact::whatsappHref('Hola, me interesa: '.$d->title) }}"
                                @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
                                class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">
                                {{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}

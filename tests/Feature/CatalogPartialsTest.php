@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class CatalogPartialsTest extends TestCase
@@ -64,6 +65,8 @@ class CatalogPartialsTest extends TestCase
                 $this->makeItem(['title' => 'Presentación', 'show_price' => 0]),
             ]),
         ];
+
+        Config::set('contact.whatsapp', '');
 
         $html = view('welcome.partials.category-list', ['category' => $category])->render();
 

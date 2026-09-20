@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
@@ -20,11 +21,14 @@ class PublicStorefrontTest extends TestCase
         $response->assertDontSee('href="#papeleria"', false);
         $response->assertDontSee('href="#impresion"', false);
         $response->assertDontSee('href="#diseno"', false);
-        $response->assertDontSee(route('catalog.category', 'papeleria') . '#papeleria-full', false);
+        $response->assertDontSee('contacto@decowandy.com');
+        $response->assertSee('decowandy2025@hotmail.com', false);
+        $response->assertSee('317 836 2567', false);
     }
 
     public function test_category_page_uses_contact_fallback_when_whatsapp_is_not_configured(): void
     {
+        Config::set('contact.whatsapp', '');
         DB::table('catalog_items')->insert([
             'category' => 'Papelería',
             'title' => 'Cartulina Iris',

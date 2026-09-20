@@ -15,12 +15,10 @@
 </head>
 <body class="min-h-full">
     @php
-        $dwWhatsappNumber = preg_replace('/\D+/', '', env('DW_WHATSAPP', ''));
-        $dwHasWhatsapp = strlen($dwWhatsappNumber) >= 10;
-        $dwWhatsappText = rawurlencode('Hola DecoWandy, quiero realizar un pedido');
-        $dwWhatsappHref = $dwHasWhatsapp
-            ? "https://wa.me/{$dwWhatsappNumber}?text={$dwWhatsappText}"
-            : '#contacto';
+        $dwHasWhatsapp = \App\Support\PublicContact::hasWhatsapp();
+        $dwWhatsappHref = \App\Support\PublicContact::whatsappHref();
+        $dwContactEmail = \App\Support\PublicContact::email();
+        $dwWhatsappDisplay = \App\Support\PublicContact::whatsappDisplay();
     @endphp
     <header class="sticky top-0 z-40 border-b dw-hairline bg-dw-card/95 backdrop-blur">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-2.5">
@@ -60,10 +58,16 @@
             <div>
                 <h3 class="mb-2 font-display text-sm font-semibold">Contacto</h3>
                 <p class="text-sm text-dw-muted">Jamundí, Colombia</p>
+                <a href="mailto:{{ $dwContactEmail }}" class="mt-2 flex items-center gap-2 text-sm text-dw-text hover:text-dw-primary">
+                    @include('partials.icons.outlook')
+                    <span>{{ $dwContactEmail }}</span>
+                </a>
                 @if($dwHasWhatsapp)
-                    <p class="text-sm text-dw-muted">Tel/WhatsApp: <span class="font-semibold text-dw-text">{{ $dwWhatsappNumber }}</span></p>
+                    <a href="{{ $dwWhatsappHref }}" target="_blank" rel="noopener" class="mt-2 flex items-center gap-2 text-sm text-[#25D366] hover:opacity-90">
+                        @include('partials.icons.whatsapp')
+                        <span class="font-semibold text-dw-text">{{ $dwWhatsappDisplay }}</span>
+                    </a>
                 @endif
-                <p class="text-sm text-dw-muted">Email: contacto@decowandy.com</p>
             </div>
             <div>
                 <h3 class="mb-2 font-display text-sm font-semibold">Enlaces</h3>
