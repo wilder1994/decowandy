@@ -74,7 +74,7 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
 En el pie de la tienda: correo Outlook `decowandy2025@hotmail.com` y WhatsApp `317 836 2567` (`DW_CONTACT_EMAIL` y `DW_WHATSAPP` en `.env`; Colombia se arma como `57…` para `wa.me`).
 
 ### Editor de página pública (Ajustes)
-- **Vista previa in-situ:** no abre otra pestaña; tarjeta + listado se refrescan en la misma pantalla.
+- **Vista previa in-situ:** la portada se edita como la tarjeta real de la tienda (sin panel aparte ni otra pestaña).
 - **Portada por categoría:** subir / reemplazar / quitar imagen (JPG/PNG/WebP, máx. 2 MB) en `catalog_category_settings`.
 - **Productos:** se **seleccionan del inventario** (`items` + stock). No se crean fichas sueltas. Foto opcional por publicación.
 - El stock público es informativo; **solo baja** cuando el admin registra una venta en el POS. El cliente pide por WhatsApp.

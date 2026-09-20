@@ -8,7 +8,7 @@
 
 <a href="{{ route('catalog.category', $slug) }}"
    class="block rounded-3xl overflow-hidden shadow-md hover:-translate-y-1 hover:shadow-xl transition bg-white">
-    <div class="h-40 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200 relative" @if(!empty($category['card_background'] ?? null) && empty($category['cover_image'] ?? null)) style="background: {{ $category['card_background'] }}" @endif>
+    <div class="h-48 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200 relative" @if(!empty($category['card_background'] ?? null) && empty($category['cover_image'] ?? null)) style="background: {{ $category['card_background'] }}" @endif>
         <div class="absolute top-3 left-3 z-10 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 text-[color:var(--dw-primary)] text-xs shadow-sm">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
                 <path d="M4 5h16M7 9h10M5 9l1 10h12l1-10" stroke-linecap="round" stroke-linejoin="round"/>

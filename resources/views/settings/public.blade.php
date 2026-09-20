@@ -10,12 +10,20 @@
       : collect($categories ?? []);
   $initialCategory = $categoryCollection->first();
   $covers = $covers ?? collect();
+  $categoryMeta = $categoryCollection->mapWithKeys(fn ($c) => [
+      $c['slug'] => [
+          'name' => $c['name'],
+          'slug' => $c['slug'],
+          'cta_label' => $c['cta_label'] ?? 'Ver más',
+          'tag_empty' => $c['tag_empty'] ?? 'Sin productos',
+          'card_background' => $c['card_background'] ?? null,
+      ],
+  ]);
 @endphp
 
 <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-  <x-dw-page-header title="Editor de página de bienvenida" subtitle="Portadas, productos del inventario y vista previa en esta misma pantalla." />
+  <x-dw-page-header title="Editor de página de bienvenida" subtitle="La portada se ve igual que en la tienda. Sube o quita la imagen aquí." />
   <div class="flex flex-wrap items-center gap-2">
-    <x-dw-button id="btnFocusPreview" variant="secondary" type="button">Ver vista previa</x-dw-button>
     @can('manage-users')
       <x-dw-button variant="secondary" :href="route('settings.users')">Panel de usuarios</x-dw-button>
     @endcan
@@ -23,50 +31,48 @@
   </div>
 </div>
 
-<div class="grid gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
-  <div class="min-w-0 space-y-4">
-    <div class="flex flex-wrap gap-2">
-      @foreach($categoryCollection as $category)
-        <button type="button" class="tab-btn dw-tab" data-cat="{{ $category['name'] }}" data-slug="{{ $category['slug'] }}" data-active="false">{{ $category['name'] }}</button>
-      @endforeach
-    </div>
-
-    <div class="dw-card p-4">
-      <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h3 class="font-display text-sm font-semibold text-dw-text">Portada de la tarjeta</h3>
-          <p class="text-xs text-dw-muted">Imagen que se muestra en “Explora por categoría”.</p>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          <label class="dw-btn-secondary cursor-pointer px-3 py-1.5 text-xs">
-            Subir imagen
-            <input id="coverInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
-          </label>
-          <button id="btnClearCover" type="button" class="dw-btn-secondary px-3 py-1.5 text-xs text-dw-rose">Quitar</button>
-        </div>
-      </div>
-      <div id="coverPreview" class="flex h-36 items-center justify-center overflow-hidden rounded-dw bg-dw-lilac-soft">
-        <span class="text-sm text-dw-muted">Sin portada (degradado por defecto)</span>
-      </div>
-    </div>
-
-    <div id="cardsGrid" class="grid gap-4 sm:grid-cols-2"></div>
+<div class="space-y-4">
+  <div class="flex flex-wrap gap-2">
+    @foreach($categoryCollection as $category)
+      <button type="button" class="tab-btn dw-tab" data-cat="{{ $category['name'] }}" data-slug="{{ $category['slug'] }}" data-active="false">{{ $category['name'] }}</button>
+    @endforeach
   </div>
 
-  <aside id="previewPanel" class="min-w-0 space-y-3 xl:sticky xl:top-24 xl:self-start">
-    <div class="flex items-center justify-between">
-      <h3 class="font-display text-sm font-semibold text-dw-text">Vista previa pública</h3>
-      <span class="text-xs text-dw-muted">Sin salir de Ajustes</span>
+  <div class="dw-card p-4">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h3 class="font-display text-sm font-semibold text-dw-text">Portada de la tarjeta</h3>
+        <p class="text-xs text-dw-muted">Así se verá en “Explora por categoría”.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <label class="dw-btn-secondary cursor-pointer px-3 py-1.5 text-xs">
+          Subir imagen
+          <input id="coverInput" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
+        </label>
+        <button id="btnClearCover" type="button" class="dw-btn-secondary px-3 py-1.5 text-xs text-dw-rose">Quitar</button>
+      </div>
     </div>
-    <div class="dw-card overflow-hidden p-3">
-      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-dw-muted">Tarjeta</p>
-      <div id="previewCard" class="min-h-[10rem]"></div>
+
+    <div id="coverCard" class="mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-md">
+      <div id="coverPreview" class="relative h-48 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200">
+        <div id="coverCta" class="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs text-[color:var(--dw-primary)] shadow-sm">
+          <span class="material-symbols-outlined text-sm">inventory_2</span>
+          <span id="coverCtaLabel">Ver más</span>
+        </div>
+        <span id="coverEmptyHint" class="flex h-full items-center justify-center text-sm text-dw-muted">Sin portada (degradado por defecto)</span>
+      </div>
+      <div class="space-y-3 p-6">
+        <div class="flex items-center justify-between">
+          <h3 id="coverName" class="text-xl font-semibold text-dw-text">Categoría</h3>
+          <span id="coverSlug" class="rounded-full bg-purple-50 px-2 py-1 text-xs text-purple-700"></span>
+        </div>
+        <p id="coverEmpty" class="text-sm text-gray-500"></p>
+        <p class="mt-1 font-semibold text-[color:var(--dw-accent)]">Ver productos</p>
+      </div>
     </div>
-    <div class="dw-card overflow-hidden p-3">
-      <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-dw-muted">Listado de categoría</p>
-      <div id="previewList" class="max-h-[28rem] overflow-y-auto"></div>
-    </div>
-  </aside>
+  </div>
+
+  <div id="cardsGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
 </div>
 
 <div id="itemModal" class="hidden fixed inset-0 z-50">
@@ -145,7 +151,6 @@
       update: "{{ url('ajustes/welcome/api/items') }}",
       destroy:"{{ url('ajustes/welcome/api/items') }}",
       sort:   "{{ route('catalog.sort') }}",
-      preview:"{{ route('catalog.preview') }}",
       inventory: "{{ route('catalog.inventory-options') }}",
       coverUpdate: "{{ url('ajustes/welcome/api/categories') }}",
       coverDestroy: "{{ url('ajustes/welcome/api/categories') }}",
@@ -153,6 +158,7 @@
     defaultCategory: "{{ $initialCategory['name'] ?? 'Papelería' }}",
     defaultSlug: "{{ $initialCategory['slug'] ?? 'papeleria' }}",
     covers: @json($covers),
+    categories: @json($categoryMeta),
   };
 </script>
 <script src="{{ asset('js/catalog-editor.js') }}?v={{ filemtime(public_path('js/catalog-editor.js')) }}"></script>

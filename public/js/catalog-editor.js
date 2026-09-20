@@ -56,14 +56,54 @@
     if (initial) setActive(initial);
   }
 
+  function titleCaseSlug(slug) {
+    return (slug || '')
+      .split('-')
+      .map((p) => (p ? p.charAt(0).toUpperCase() + p.slice(1) : ''))
+      .join(' ');
+  }
+
   function renderCover() {
     const box = $('coverPreview');
     if (!box) return;
+
+    const meta = (CATALOG.categories && CATALOG.categories[st.activeSlug]) || {
+      name: st.activeCat,
+      slug: st.activeSlug,
+      cta_label: 'Ver más',
+      tag_empty: 'Sin productos',
+      card_background: null,
+    };
     const url = (CATALOG.covers && CATALOG.covers[st.activeSlug]) || '';
+
+    if ($('coverCtaLabel')) $('coverCtaLabel').textContent = meta.cta_label || 'Ver más';
+    if ($('coverName')) $('coverName').textContent = meta.name || st.activeCat;
+    if ($('coverSlug')) $('coverSlug').textContent = titleCaseSlug(meta.slug || st.activeSlug);
+    if ($('coverEmpty')) {
+      $('coverEmpty').textContent = st.list.length
+        ? `${st.list.length} producto(s) publicados`
+        : (meta.tag_empty || 'Sin productos');
+    }
+
+    const existingImg = box.querySelector('img.cover-img');
+    const emptyHint = $('coverEmptyHint');
+
     if (url) {
-      box.innerHTML = `<img src="${esc(url)}" alt="Portada" class="h-full w-full object-cover">`;
+      box.style.background = '';
+      if (emptyHint) emptyHint.classList.add('hidden');
+      if (existingImg) {
+        existingImg.src = url;
+      } else {
+        const img = document.createElement('img');
+        img.src = url;
+        img.alt = meta.name || 'Portada';
+        img.className = 'cover-img absolute inset-0 h-full w-full object-cover';
+        box.appendChild(img);
+      }
     } else {
-      box.innerHTML = `<span class="text-sm text-dw-muted">Sin portada (degradado por defecto)</span>`;
+      if (existingImg) existingImg.remove();
+      if (emptyHint) emptyHint.classList.remove('hidden');
+      box.style.background = meta.card_background || '';
     }
   }
 
@@ -79,7 +119,6 @@
       CATALOG.covers = CATALOG.covers || {};
       CATALOG.covers[st.activeSlug] = data.cover_image || '';
       renderCover();
-      await refreshPreview();
     } catch (e) {
       console.error(e);
       alert(e.message || 'No se pudo subir la portada.');
@@ -96,7 +135,6 @@
       CATALOG.covers = CATALOG.covers || {};
       CATALOG.covers[st.activeSlug] = null;
       renderCover();
-      await refreshPreview();
     } catch (e) {
       console.error(e);
       alert('No se pudo quitar la portada.');
@@ -109,30 +147,10 @@
       const data = await fetchJSON(url, { headers: headers() });
       st.list = data.items || [];
       renderGrid();
-      await refreshPreview();
+      renderCover();
     } catch (e) {
       console.error(e);
       alert('No fue posible cargar los productos.');
-    }
-  }
-
-  async function refreshPreview() {
-    const card = $('previewCard');
-    const list = $('previewList');
-    if (!card || !list || !CATALOG.routes.preview) return;
-
-    const url = `${CATALOG.routes.preview}?category=${encodeURIComponent(st.activeCat)}`;
-    try {
-      const data = await fetchJSON(url, { headers: headers({ Accept: 'application/json' }) });
-      if (data.card) card.innerHTML = data.card;
-      if (data.list) list.innerHTML = data.list;
-      if (data.cover_image !== undefined) {
-        CATALOG.covers = CATALOG.covers || {};
-        CATALOG.covers[st.activeSlug] = data.cover_image;
-        renderCover();
-      }
-    } catch (e) {
-      console.error(e);
     }
   }
 
@@ -350,7 +368,7 @@
         headers: headers({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ category: st.activeCat, ids })
       });
-      await refreshPreview();
+      renderCover();
     } catch (e) {
       console.error(e);
       alert('No se pudo guardar el nuevo orden.');
@@ -363,10 +381,6 @@
     $('modalClose').addEventListener('click', () => showModal(false));
     $('modalCancel').addEventListener('click', () => showModal(false));
     $('modalSave').addEventListener('click', saveItem);
-
-    $('btnFocusPreview')?.addEventListener('click', () => {
-      $('previewPanel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
 
     $('coverInput')?.addEventListener('change', (e) => {
       const file = e.target.files && e.target.files[0];
