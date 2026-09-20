@@ -2,7 +2,7 @@
 
 Aplicación Laravel para gestionar catálogo, ventas, compras, gastos, inventario e inversiones de DecoWandy. Incluye panel administrativo, API internas, códigos de barras, etiquetas y reportes financieros.
 
-**Última actualización de esta documentación:** 2026-06-16 (catálogo: lista PDF, toolbar compacta, modal papelería unificado, cabecera Compras en una línea)
+**Última actualización de esta documentación:** 2026-09-20 (sidebar del panel fijo, scroll interno y plegado; relación `Stock::item()` para el dashboard)
 
 ## Requisitos
 - PHP 8.2+
@@ -69,6 +69,9 @@ No necesitas `php artisan serve` ni `npm run dev` en uso diario si los assets ya
 
 ### VirtualHost local
 Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entrada `127.0.0.1 decowandy.test` en `hosts`. Tras cambios en Apache, reinicia Laragon.
+
+### Sidebar del panel
+En escritorio el menú lateral queda **fijo** a la izquierda (el contenido no lo empuja al hacer scroll). Si hay más módulos que el alto de la pantalla, **solo la lista de enlaces hace scroll**. A media altura, en el borde derecho, hay una **flecha** para plegar (iconos) o expandir el menú; el estado se guarda en `localStorage` (`dw-sidebar`). En móvil se mantiene el cajón con hamburguesa.
 
 ## Módulos del panel
 

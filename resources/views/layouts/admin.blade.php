@@ -9,23 +9,32 @@
     <title>@yield('title', 'Panel DecoWandy')</title>
     @include('partials.dw-head-assets')
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        (function () {
+            try {
+                if (window.matchMedia('(min-width: 768px)').matches && localStorage.getItem('dw-sidebar') === 'collapsed') {
+                    document.documentElement.classList.add('dw-sidebar-collapsed');
+                }
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body class="min-h-full">
     <div id="adminSidebarBackdrop" class="dw-admin-backdrop md:hidden" aria-hidden="true"></div>
 
-    <div class="min-h-screen md:grid md:grid-cols-12">
+    <div class="min-h-screen">
 
-        <aside id="adminSidebar" class="dw-admin-sidebar fixed inset-y-0 left-0 z-40 flex h-screen w-[min(17.5rem,85vw)] flex-col border-r bg-dw-card dw-hairline md:static md:col-span-3 md:w-auto lg:col-span-2">
-            <div class="flex items-center justify-between gap-2.5 px-4 py-3.5">
-                <div class="flex items-center gap-2.5">
-                    <img src="{{ asset('images/logo-decowandy.png') }}" alt="DecoWandy" class="h-8 w-auto">
-                    <div class="font-display text-sm font-bold text-dw-text">DecoWandy</div>
+        <aside id="adminSidebar" class="dw-admin-sidebar dw-hairline fixed inset-y-0 left-0 z-40 flex h-screen flex-col border-r bg-dw-card">
+            <div class="dw-sidebar-brand flex shrink-0 items-center justify-between gap-2.5 px-4 py-3.5">
+                <div class="flex min-w-0 items-center gap-2.5">
+                    <img src="{{ asset('images/logo-decowandy.png') }}" alt="DecoWandy" class="h-8 w-auto shrink-0">
+                    <div class="dw-sidebar-brand-text font-display truncate text-sm font-bold text-dw-text">DecoWandy</div>
                 </div>
-                <button id="adminMenuClose" type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-dw text-dw-muted hover:bg-dw-lilac-soft md:hidden" aria-label="Cerrar menú">
+                <button id="adminMenuClose" type="button" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-dw text-dw-muted hover:bg-dw-lilac-soft md:hidden" aria-label="Cerrar menú">
                     <span class="material-symbols-outlined text-xl">close</span>
                 </button>
             </div>
-            <nav class="flex-1 space-y-0.5 overflow-y-auto px-2 pb-4 text-sm">
+            <nav class="min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain px-2 pb-4 text-sm">
                 @can('access-dashboard')
                     <x-dw-nav-link :href="url('/dashboard')" :active="request()->is('dashboard')" icon="dashboard">Dashboard</x-dw-nav-link>
                 @endcan
@@ -53,9 +62,12 @@
                     <x-dw-nav-link :href="route('settings.public')" :active="request()->is('ajustes/welcome*')" icon="settings">Ajustes</x-dw-nav-link>
                 @endcan
             </nav>
+            <button id="adminSidebarToggle" type="button" class="dw-sidebar-toggle" aria-controls="adminSidebar" aria-expanded="true" aria-label="Ocultar menú">
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">chevron_left</span>
+            </button>
         </aside>
 
-        <main class="flex min-h-screen w-full flex-col overflow-hidden md:col-span-9 lg:col-span-10">
+        <main class="dw-admin-main flex min-h-screen w-full flex-col overflow-hidden">
 
             <header class="dw-header-bar sticky top-0 z-30 border-b dw-hairline backdrop-blur">
                 <div class="flex w-full items-center justify-between gap-2 px-4 py-2.5 lg:px-5">
@@ -142,7 +154,30 @@
             const backdrop = document.getElementById('adminSidebarBackdrop');
             const openBtn = document.getElementById('adminMenuBtn');
             const closeBtn = document.getElementById('adminMenuClose');
+            const collapseBtn = document.getElementById('adminSidebarToggle');
             const mobileQuery = window.matchMedia('(max-width: 767px)');
+            const collapseIcon = collapseBtn?.querySelector('.material-symbols-outlined');
+
+            const applyDesktopCollapsed = (collapsed) => {
+                document.documentElement.classList.toggle('dw-sidebar-collapsed', collapsed);
+                try {
+                    localStorage.setItem('dw-sidebar', collapsed ? 'collapsed' : 'expanded');
+                } catch (e) {}
+                if (!collapseBtn) return;
+                collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                collapseBtn.setAttribute('aria-label', collapsed ? 'Abrir menú' : 'Ocultar menú');
+                if (collapseIcon) {
+                    collapseIcon.textContent = collapsed ? 'chevron_right' : 'chevron_left';
+                }
+            };
+
+            applyDesktopCollapsed(document.documentElement.classList.contains('dw-sidebar-collapsed'));
+
+            collapseBtn?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (mobileQuery.matches) return;
+                applyDesktopCollapsed(!document.documentElement.classList.contains('dw-sidebar-collapsed'));
+            });
 
             const openSidebar = () => {
                 if (!sidebar || !backdrop || !mobileQuery.matches) return;
@@ -179,7 +214,18 @@
             });
 
             mobileQuery.addEventListener('change', (event) => {
-                if (!event.matches) closeSidebar();
+                if (event.matches) {
+                    closeSidebar();
+                    document.documentElement.classList.remove('dw-sidebar-collapsed');
+                    if (collapseIcon) collapseIcon.textContent = 'chevron_left';
+                    return;
+                }
+                closeSidebar();
+                let collapsedPref = false;
+                try {
+                    collapsedPref = localStorage.getItem('dw-sidebar') === 'collapsed';
+                } catch (e) {}
+                applyDesktopCollapsed(collapsedPref);
             });
 
             closeSidebar();
