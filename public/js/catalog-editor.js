@@ -569,8 +569,12 @@
     $('modalClose').addEventListener('click', () => showModal(false));
     $('modalCancel').addEventListener('click', () => showModal(false));
     document.querySelectorAll('[data-close-item-modal]').forEach((el) => {
-      el.addEventListener('click', () => showModal(false));
+      el.addEventListener('click', (e) => {
+        if (e.target.closest('[data-item-modal-panel]')) return;
+        showModal(false);
+      });
     });
+    document.querySelector('[data-item-modal-panel]')?.addEventListener('click', (e) => e.stopPropagation());
     $('modalSave').addEventListener('click', saveItem);
 
     $('coverInput')?.addEventListener('change', (e) => {

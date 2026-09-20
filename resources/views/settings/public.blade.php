@@ -77,94 +77,97 @@
 </div>
 
 {{-- Modal: agregar / editar ítem del catálogo --}}
-<div id="itemModal" class="hidden fixed inset-0 z-50">
+<div id="itemModal" class="fixed inset-0 z-50 hidden">
   <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close-item-modal></div>
-  <div class="relative mx-auto mt-8 w-[min(520px,95vw)] max-h-[90vh] overflow-y-auto rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
-    <div class="mb-4 flex items-center justify-between">
-      <h2 id="modalTitle" class="font-display text-xl font-semibold text-dw-text">Agregar al catálogo</h2>
-      <button id="modalClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
-    </div>
-
-    <div class="space-y-4">
-      <div>
-        <label class="dw-label mb-1" for="f_category">Categoría</label>
-        <select id="f_category" class="dw-select">
-          @foreach($categoryCollection as $category)
-            <option value="{{ $category['name'] }}">{{ $category['name'] }}</option>
-          @endforeach
-        </select>
+  <div class="absolute inset-0 flex items-center justify-center p-4" data-close-item-modal>
+    <div class="flex max-h-[min(92vh,40rem)] w-full max-w-md flex-col overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon dw-hairline-neon" data-item-modal-panel>
+      <div class="flex shrink-0 items-center justify-between border-b border-dw-border px-4 py-3">
+        <h2 id="modalTitle" class="font-display text-lg font-semibold text-dw-text">Agregar al catálogo</h2>
+        <button id="modalClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
       </div>
 
-      <div>
-        <label class="dw-label mb-1" for="f_item_id">Producto del inventario</label>
-        <select id="f_item_id" class="dw-select">
-          <option value="">Selecciona un producto…</option>
-        </select>
-        <p id="f_item_hint" class="mt-1 text-xs text-dw-muted">Solo aparecen ítems activos del sector, aún no publicados en esta categoría.</p>
-      </div>
-
-      <div>
-        <label class="dw-label mb-1" for="f_desc">Nota pública (opcional)</label>
-        <textarea id="f_desc" rows="2" class="dw-input" maxlength="160" placeholder="Texto corto bajo el nombre en la tienda"></textarea>
-        <p class="mt-1 text-xs text-dw-muted">Se muestra debajo del título en la vista pública.</p>
-      </div>
-
-      <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-dw-text">
-        <label class="flex items-center gap-2">
-          <input id="f_showPrice" type="checkbox" class="rounded border-dw-border text-dw-primary" checked>
-          <span>Mostrar precio</span>
-        </label>
-        <label class="flex items-center gap-2">
-          <input id="f_visible" type="checkbox" class="rounded border-dw-border text-dw-primary" checked>
-          <span>Visible en la tienda</span>
-        </label>
-        <label class="flex items-center gap-2">
-          <input id="f_featured" type="checkbox" class="rounded border-dw-border text-dw-primary">
-          <span>Destacado</span>
-        </label>
-      </div>
-
-      <div>
-        <label class="dw-label mb-1">Imagen (opcional)</label>
-        <div id="imageDropzone"
-             class="relative flex min-h-[9rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-dw border border-dashed border-dw-border bg-dw-lilac-soft/60 px-4 py-6 text-center transition hover:border-dw-primary hover:bg-dw-lilac-soft"
-             tabindex="0"
-             role="button"
-             aria-label="Subir o pegar imagen">
-          <input id="f_image" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
-          <img id="f_preview" alt="" class="absolute inset-0 hidden h-full w-full object-cover">
-          <div id="imageDropEmpty" class="pointer-events-none space-y-1">
-            <span class="material-symbols-outlined text-3xl text-dw-primary">add_photo_alternate</span>
-            <p class="text-sm font-medium text-dw-text">Arrastra, pega o haz clic</p>
-            <p class="text-xs text-dw-muted">JPG, PNG o WebP · se abrirá el recorte</p>
-          </div>
+      <div class="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
+        <div>
+          <label class="dw-label mb-1" for="f_category">Categoría</label>
+          <select id="f_category" class="dw-select">
+            @foreach($categoryCollection as $category)
+              <option value="{{ $category['name'] }}">{{ $category['name'] }}</option>
+            @endforeach
+          </select>
         </div>
-        <button id="btnClearImg" type="button" class="mt-2 hidden text-sm font-semibold text-dw-rose hover:underline">Quitar imagen</button>
-      </div>
-    </div>
 
-    <div class="mt-5 flex items-center justify-end gap-2">
-      <button id="modalCancel" type="button" class="dw-btn-secondary">Cancelar</button>
-      <button id="modalSave" type="button" class="dw-btn-primary">Guardar</button>
+        <div>
+          <label class="dw-label mb-1" for="f_item_id">Producto del inventario</label>
+          <select id="f_item_id" class="dw-select">
+            <option value="">Selecciona un producto…</option>
+          </select>
+          <p id="f_item_hint" class="mt-1 text-xs text-dw-muted">Ítems activos del sector, aún no publicados aquí.</p>
+        </div>
+
+        <div>
+          <label class="dw-label mb-1" for="f_desc">Nota pública (opcional)</label>
+          <textarea id="f_desc" rows="2" class="dw-input" maxlength="160" placeholder="Texto corto bajo el nombre en la tienda"></textarea>
+        </div>
+
+        <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-dw-text">
+          <label class="flex items-center gap-2">
+            <input id="f_showPrice" type="checkbox" class="rounded border-dw-border text-dw-primary" checked>
+            <span>Mostrar precio</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input id="f_visible" type="checkbox" class="rounded border-dw-border text-dw-primary" checked>
+            <span>Visible</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <input id="f_featured" type="checkbox" class="rounded border-dw-border text-dw-primary">
+            <span>Destacado</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="dw-label mb-1">Imagen (opcional)</label>
+          <div id="imageDropzone"
+               class="relative mx-auto flex aspect-video w-full max-w-xs cursor-pointer flex-col items-center justify-center overflow-hidden rounded-dw border border-dashed border-dw-border bg-dw-lilac-soft/60 px-3 py-4 text-center transition hover:border-dw-primary hover:bg-dw-lilac-soft"
+               tabindex="0"
+               role="button"
+               aria-label="Subir o pegar imagen">
+            <input id="f_image" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
+            <img id="f_preview" alt="" class="absolute inset-0 hidden h-full w-full object-cover">
+            <div id="imageDropEmpty" class="pointer-events-none space-y-0.5">
+              <span class="material-symbols-outlined text-2xl text-dw-primary">add_photo_alternate</span>
+              <p class="text-sm font-medium text-dw-text">Arrastra, pega o haz clic</p>
+              <p class="text-xs text-dw-muted">Se abrirá el recorte</p>
+            </div>
+          </div>
+          <button id="btnClearImg" type="button" class="mx-auto mt-1.5 hidden block text-sm font-semibold text-dw-rose hover:underline">Quitar imagen</button>
+        </div>
+      </div>
+
+      <div class="flex shrink-0 items-center justify-end gap-2 border-t border-dw-border px-4 py-3">
+        <button id="modalCancel" type="button" class="dw-btn-secondary">Cancelar</button>
+        <button id="modalSave" type="button" class="dw-btn-primary">Guardar</button>
+      </div>
     </div>
   </div>
 </div>
 
 {{-- Modal: recorte de imagen --}}
-<div id="cropModal" class="hidden fixed inset-0 z-[60]">
+<div id="cropModal" class="fixed inset-0 z-[60] hidden">
   <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-  <div class="relative mx-auto mt-6 flex w-[min(640px,95vw)] max-h-[92vh] flex-col overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon">
-    <div class="flex items-center justify-between border-b border-dw-border px-5 py-3">
-      <h3 class="font-display text-lg font-semibold text-dw-text">Ajustar imagen</h3>
-      <button id="cropClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
-    </div>
-    <div class="min-h-[280px] max-h-[60vh] bg-neutral-900 p-3">
-      <img id="cropImage" alt="Recorte" class="block max-w-full">
-    </div>
-    <p class="px-5 pt-3 text-xs text-dw-muted">Mueve y amplía para encuadrar lo que se verá en la tarjeta pública.</p>
-    <div class="flex items-center justify-end gap-2 px-5 py-4">
-      <button id="cropCancel" type="button" class="dw-btn-secondary">Cancelar</button>
-      <button id="cropApply" type="button" class="dw-btn-primary">Usar recorte</button>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon dw-hairline-neon">
+      <div class="flex shrink-0 items-center justify-between border-b border-dw-border px-4 py-3">
+        <h3 class="font-display text-lg font-semibold text-dw-text">Ajustar imagen</h3>
+        <button id="cropClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
+      </div>
+      <div class="min-h-0 flex-1 bg-neutral-900 p-3" style="max-height: 55vh;">
+        <img id="cropImage" alt="Recorte" class="block max-h-full max-w-full">
+      </div>
+      <p class="shrink-0 px-4 pt-2 text-xs text-dw-muted">Mueve y amplía para encuadrar la tarjeta pública.</p>
+      <div class="flex shrink-0 items-center justify-end gap-2 px-4 py-3">
+        <button id="cropCancel" type="button" class="dw-btn-secondary">Cancelar</button>
+        <button id="cropApply" type="button" class="dw-btn-primary">Usar recorte</button>
+      </div>
     </div>
   </div>
 </div>
