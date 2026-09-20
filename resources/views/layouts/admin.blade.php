@@ -18,6 +18,7 @@
             } catch (e) {}
         })();
     </script>
+    @stack('head')
 </head>
 <body class="min-h-full">
     <div id="adminSidebarBackdrop" class="dw-admin-backdrop md:hidden" aria-hidden="true"></div>

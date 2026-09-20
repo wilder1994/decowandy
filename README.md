@@ -76,7 +76,7 @@ En el pie de la tienda: correo Outlook `decowandy2025@hotmail.com` y WhatsApp `3
 ### Editor de página pública (Ajustes)
 - **Vista previa in-situ:** la portada se edita como la tarjeta real de la tienda (sin panel aparte ni otra pestaña).
 - **Portada por categoría:** subir / reemplazar / quitar imagen (JPG/PNG/WebP, máx. 2 MB) en `catalog_category_settings`.
-- **Productos:** se **seleccionan del inventario** (`items` + stock). No se crean fichas sueltas. Foto opcional por publicación.
+- **Agregar al catálogo:** CTA en la misma fila que las categorías. Se elige un ítem del inventario (lista desplegable), nota pública opcional y foto con arrastrar/pegar + recorte antes de guardar.
 - El stock público es informativo; **solo baja** cuando el admin registra una venta en el POS. El cliente pide por WhatsApp.
 
 ### Sidebar del panel

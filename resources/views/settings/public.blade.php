@@ -3,6 +3,10 @@
 
 @section('title','Ajustes — Editor de página de bienvenida')
 
+@push('head')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+@endpush
+
 @section('content')
 @php
   $categoryCollection = ($categories ?? collect()) instanceof \Illuminate\Support\Collection
@@ -21,21 +25,18 @@
   ]);
 @endphp
 
-<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+<div class="mb-4">
   <x-dw-page-header title="Editor de página de bienvenida" subtitle="La portada se ve igual que en la tienda. Sube o quita la imagen aquí." />
-  <div class="flex flex-wrap items-center gap-2">
-    @can('manage-users')
-      <x-dw-button variant="secondary" :href="route('settings.users')">Panel de usuarios</x-dw-button>
-    @endcan
-    <x-dw-button id="btnAdd" type="button">Agregar producto</x-dw-button>
-  </div>
 </div>
 
 <div class="space-y-4">
-  <div class="flex flex-wrap gap-2">
-    @foreach($categoryCollection as $category)
-      <button type="button" class="tab-btn dw-tab" data-cat="{{ $category['name'] }}" data-slug="{{ $category['slug'] }}" data-active="false">{{ $category['name'] }}</button>
-    @endforeach
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <div class="flex flex-wrap gap-2">
+      @foreach($categoryCollection as $category)
+        <button type="button" class="tab-btn dw-tab" data-cat="{{ $category['name'] }}" data-slug="{{ $category['slug'] }}" data-active="false">{{ $category['name'] }}</button>
+      @endforeach
+    </div>
+    <x-dw-button id="btnAdd" type="button">Agregar al catálogo</x-dw-button>
   </div>
 
   <div class="dw-card p-4">
@@ -75,16 +76,17 @@
   <div id="cardsGrid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
 </div>
 
+{{-- Modal: agregar / editar ítem del catálogo --}}
 <div id="itemModal" class="hidden fixed inset-0 z-50">
-  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-  <div class="relative mx-auto mt-10 w-[min(720px,95vw)] max-h-[90vh] overflow-y-auto rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
-    <div class="mb-3 flex items-center justify-between">
-      <h2 id="modalTitle" class="font-display text-xl font-semibold text-dw-text">Agregar producto</h2>
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" data-close-item-modal></div>
+  <div class="relative mx-auto mt-8 w-[min(520px,95vw)] max-h-[90vh] overflow-y-auto rounded-dw-lg bg-dw-card p-5 shadow-dw-neon dw-hairline-neon">
+    <div class="mb-4 flex items-center justify-between">
+      <h2 id="modalTitle" class="font-display text-xl font-semibold text-dw-text">Agregar al catálogo</h2>
       <button id="modalClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
     </div>
 
-    <div class="grid grid-cols-12 gap-4">
-      <div class="col-span-12 md:col-span-4">
+    <div class="space-y-4">
+      <div>
         <label class="dw-label mb-1" for="f_category">Categoría</label>
         <select id="f_category" class="dw-select">
           @foreach($categoryCollection as $category)
@@ -93,20 +95,21 @@
         </select>
       </div>
 
-      <div class="col-span-12 md:col-span-8">
-        <label class="dw-label mb-1" for="f_item_search">Producto del inventario</label>
-        <input id="f_item_search" type="search" class="dw-input" placeholder="Buscar por nombre o código…" autocomplete="off">
-        <input id="f_item_id" type="hidden" value="">
-        <div id="f_item_selected" class="mt-2 hidden rounded-dw border-hairline border-dw-border bg-dw-lilac-soft px-3 py-2 text-sm text-dw-text"></div>
-        <div id="f_item_results" class="mt-1 hidden max-h-48 overflow-y-auto rounded-dw border border-dw-border bg-dw-card py-1 shadow-dw-neon"></div>
+      <div>
+        <label class="dw-label mb-1" for="f_item_id">Producto del inventario</label>
+        <select id="f_item_id" class="dw-select">
+          <option value="">Selecciona un producto…</option>
+        </select>
+        <p id="f_item_hint" class="mt-1 text-xs text-dw-muted">Solo aparecen ítems activos del sector, aún no publicados en esta categoría.</p>
       </div>
 
-      <div class="col-span-12">
+      <div>
         <label class="dw-label mb-1" for="f_desc">Nota pública (opcional)</label>
-        <textarea id="f_desc" rows="2" class="dw-input" placeholder="Texto corto para el cliente"></textarea>
+        <textarea id="f_desc" rows="2" class="dw-input" maxlength="160" placeholder="Texto corto bajo el nombre en la tienda"></textarea>
+        <p class="mt-1 text-xs text-dw-muted">Se muestra debajo del título en la vista pública.</p>
       </div>
 
-      <div class="col-span-12 md:col-span-5 space-y-2 text-sm text-dw-text">
+      <div class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-dw-text">
         <label class="flex items-center gap-2">
           <input id="f_showPrice" type="checkbox" class="rounded border-dw-border text-dw-primary" checked>
           <span>Mostrar precio</span>
@@ -121,23 +124,47 @@
         </label>
       </div>
 
-      <div class="col-span-12 md:col-span-3">
-        <label class="dw-label mb-1" for="f_image">Imagen (opcional)</label>
-        <input id="f_image" type="file" accept="image/*" class="dw-input">
-        <button id="btnClearImg" type="button" class="mt-2 text-sm font-semibold text-dw-rose hover:underline">Quitar imagen</button>
-      </div>
-
-      <div class="col-span-12 md:col-span-4">
-        <label class="dw-label mb-1">Previsualización</label>
-        <div class="flex h-28 items-center justify-center overflow-hidden rounded-dw border-hairline border-dw-border bg-dw-lilac-soft">
-          <img id="f_preview" alt="" class="max-h-28 object-contain">
+      <div>
+        <label class="dw-label mb-1">Imagen (opcional)</label>
+        <div id="imageDropzone"
+             class="relative flex min-h-[9rem] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-dw border border-dashed border-dw-border bg-dw-lilac-soft/60 px-4 py-6 text-center transition hover:border-dw-primary hover:bg-dw-lilac-soft"
+             tabindex="0"
+             role="button"
+             aria-label="Subir o pegar imagen">
+          <input id="f_image" type="file" accept="image/jpeg,image/png,image/webp" class="hidden">
+          <img id="f_preview" alt="" class="absolute inset-0 hidden h-full w-full object-cover">
+          <div id="imageDropEmpty" class="pointer-events-none space-y-1">
+            <span class="material-symbols-outlined text-3xl text-dw-primary">add_photo_alternate</span>
+            <p class="text-sm font-medium text-dw-text">Arrastra, pega o haz clic</p>
+            <p class="text-xs text-dw-muted">JPG, PNG o WebP · se abrirá el recorte</p>
+          </div>
         </div>
+        <button id="btnClearImg" type="button" class="mt-2 hidden text-sm font-semibold text-dw-rose hover:underline">Quitar imagen</button>
       </div>
     </div>
 
     <div class="mt-5 flex items-center justify-end gap-2">
       <button id="modalCancel" type="button" class="dw-btn-secondary">Cancelar</button>
       <button id="modalSave" type="button" class="dw-btn-primary">Guardar</button>
+    </div>
+  </div>
+</div>
+
+{{-- Modal: recorte de imagen --}}
+<div id="cropModal" class="hidden fixed inset-0 z-[60]">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="relative mx-auto mt-6 flex w-[min(640px,95vw)] max-h-[92vh] flex-col overflow-hidden rounded-dw-lg bg-dw-card shadow-dw-neon">
+    <div class="flex items-center justify-between border-b border-dw-border px-5 py-3">
+      <h3 class="font-display text-lg font-semibold text-dw-text">Ajustar imagen</h3>
+      <button id="cropClose" type="button" class="flex h-8 w-8 items-center justify-center rounded-dw border-hairline border-dw-border text-dw-muted hover:bg-dw-lilac-soft">✕</button>
+    </div>
+    <div class="min-h-[280px] max-h-[60vh] bg-neutral-900 p-3">
+      <img id="cropImage" alt="Recorte" class="block max-w-full">
+    </div>
+    <p class="px-5 pt-3 text-xs text-dw-muted">Mueve y amplía para encuadrar lo que se verá en la tarjeta pública.</p>
+    <div class="flex items-center justify-end gap-2 px-5 py-4">
+      <button id="cropCancel" type="button" class="dw-btn-secondary">Cancelar</button>
+      <button id="cropApply" type="button" class="dw-btn-primary">Usar recorte</button>
     </div>
   </div>
 </div>
@@ -161,5 +188,6 @@
     categories: @json($categoryMeta),
   };
 </script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
 <script src="{{ asset('js/catalog-editor.js') }}?v={{ filemtime(public_path('js/catalog-editor.js')) }}"></script>
 @endsection

@@ -118,7 +118,7 @@ class CatalogController extends Controller
                 });
             })
             ->orderBy('name')
-            ->limit(40)
+            ->limit($search !== '' ? 40 : 200)
             ->get()
             ->map(fn (Item $item) => [
                 'id' => $item->id,

@@ -10,8 +10,12 @@
     file: null,
     clearImage: false,
     selectedItem: null,
-    searchTimer: null,
+    cropper: null,
+    cropObjectUrl: null,
+    previewObjectUrl: null,
   };
+
+  const CROP_ASPECT = 16 / 9;
 
   const esc = (s) => (s || '').replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
   const fmtCOP = (n) => String(Math.max(0, Number(n || 0))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -164,7 +168,7 @@
     return `
       <div class="dw-card flex flex-col p-4">
         <div class="mb-3 flex h-36 items-center justify-center overflow-hidden rounded-dw bg-dw-lilac-soft">
-          ${x.image_path ? `<img src="${esc(x.image_path)}" class="max-h-36 object-contain">` : `<div class="text-sm text-dw-muted">Sin imagen</div>`}
+          ${x.image_path ? `<img src="${esc(x.image_path)}" class="h-full w-full object-cover">` : `<div class="text-sm text-dw-muted">Sin imagen</div>`}
         </div>
         <div class="font-semibold text-dw-text">${esc(x.title)}</div>
         <div class="mt-0.5 text-sm text-dw-muted">${esc(x.description || '')}</div>
@@ -188,7 +192,7 @@
     const grid = $('cardsGrid');
     grid.innerHTML = '';
     if (!st.list.length) {
-      grid.innerHTML = `<div class="col-span-full py-10 text-center text-dw-muted">Sin productos publicados en esta categoría. Usa “Agregar producto”.</div>`;
+      grid.innerHTML = `<div class="col-span-full py-10 text-center text-dw-muted">Sin ítems en esta categoría. Usa “Agregar al catálogo”.</div>`;
       return;
     }
     grid.innerHTML = st.list.map(cardHTML).join('');
@@ -201,37 +205,118 @@
     $('itemModal').classList.toggle('hidden', !v);
   }
 
-  function setSelectedItem(item) {
-    st.selectedItem = item;
-    $('f_item_id').value = item ? String(item.id) : '';
-    const box = $('f_item_selected');
-    if (!item) {
-      box.classList.add('hidden');
-      box.textContent = '';
+  function syncImageUi() {
+    const preview = $('f_preview');
+    const empty = $('imageDropEmpty');
+    const clearBtn = $('btnClearImg');
+    const hasImg = !!(preview && preview.src && !preview.classList.contains('hidden') && preview.getAttribute('src'));
+
+    if (hasImg && preview.src) {
+      preview.classList.remove('hidden');
+      if (empty) empty.classList.add('hidden');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+    } else {
+      if (preview) {
+        preview.classList.add('hidden');
+        preview.removeAttribute('src');
+      }
+      if (empty) empty.classList.remove('hidden');
+      if (clearBtn) clearBtn.classList.add('hidden');
+    }
+  }
+
+  function setImagePreview(url) {
+    const preview = $('f_preview');
+    if (!preview) return;
+    if (st.previewObjectUrl) {
+      URL.revokeObjectURL(st.previewObjectUrl);
+      st.previewObjectUrl = null;
+    }
+    if (url) {
+      preview.src = url;
+      preview.classList.remove('hidden');
+    } else {
+      preview.removeAttribute('src');
+      preview.classList.add('hidden');
+    }
+    syncImageUi();
+  }
+
+  function clearItemImage({ markClear = false } = {}) {
+    st.file = null;
+    if (markClear) st.clearImage = true;
+    const input = $('f_image');
+    if (input) input.value = '';
+    setImagePreview('');
+  }
+
+  function setSelectedFromSelect() {
+    const sel = $('f_item_id');
+    if (!sel || !sel.value) {
+      st.selectedItem = null;
       return;
     }
-    box.classList.remove('hidden');
-    box.textContent = `${item.name} · $ ${fmtCOP(item.sale_price)} · stock ${item.stock}`;
+    const opt = sel.selectedOptions[0];
+    st.selectedItem = {
+      id: +sel.value,
+      name: opt.dataset.name || opt.textContent,
+      sale_price: +(opt.dataset.price || 0),
+      stock: +(opt.dataset.stock || 0),
+    };
+  }
+
+  async function loadInventoryOptions({ keepId = null } = {}) {
+    const sel = $('f_item_id');
+    if (!sel) return;
+
+    const category = $('f_category').value;
+    const except = st.editing ? `&except_catalog_id=${st.editing.id}` : '';
+    const url = `${CATALOG.routes.inventory}?category=${encodeURIComponent(category)}${except}`;
+
+    sel.disabled = true;
+    sel.innerHTML = `<option value="">Cargando…</option>`;
+
+    try {
+      const data = await fetchJSON(url, { headers: headers() });
+      const items = data.items || [];
+      let html = `<option value="">Selecciona un producto…</option>`;
+
+      if (keepId && st.editing) {
+        html += `<option value="${keepId}" data-name="${esc(st.editing.title)}" data-price="${st.editing.price || 0}" data-stock="${st.editing.stock_quantity || 0}" selected>${esc(st.editing.title)} · $ ${fmtCOP(st.editing.price)} · stock ${st.editing.stock_quantity || 0}</option>`;
+      }
+
+      items.forEach((it) => {
+        if (keepId && +it.id === +keepId) return;
+        html += `<option value="${it.id}" data-name="${esc(it.name)}" data-price="${it.sale_price}" data-stock="${it.stock}">${esc(it.name)} · $ ${fmtCOP(it.sale_price)} · stock ${it.stock}</option>`;
+      });
+
+      sel.innerHTML = html;
+      if (keepId) sel.value = String(keepId);
+      setSelectedFromSelect();
+    } catch (e) {
+      console.error(e);
+      sel.innerHTML = `<option value="">No se pudo cargar el inventario</option>`;
+      st.selectedItem = null;
+    } finally {
+      sel.disabled = !!st.editing;
+    }
   }
 
   function openNew() {
     st.editing = null;
     st.clearImage = false;
-    $('modalTitle').textContent = 'Agregar producto del inventario';
+    $('modalTitle').textContent = 'Agregar al catálogo';
     $('f_category').value = st.activeCat;
-    $('f_item_search').value = '';
-    $('f_item_search').disabled = false;
-    setSelectedItem(null);
-    $('f_item_results').classList.add('hidden');
-    $('f_item_results').innerHTML = '';
+    $('f_category').disabled = false;
+    $('f_item_id').disabled = false;
+    if ($('f_item_hint')) $('f_item_hint').classList.remove('hidden');
     $('f_desc').value = '';
     $('f_showPrice').checked = true;
     $('f_visible').checked = true;
     $('f_featured').checked = false;
-    $('f_image').value = '';
-    $('f_preview').src = '';
-    st.file = null;
+    clearItemImage();
     showModal(true);
+    loadInventoryOptions();
   }
 
   function openEdit(id) {
@@ -239,71 +324,113 @@
     if (!it) return;
     st.editing = it;
     st.clearImage = false;
-    $('modalTitle').textContent = 'Editar producto del catálogo';
+    $('modalTitle').textContent = 'Editar ítem del catálogo';
     $('f_category').value = it.category;
-    $('f_item_search').value = '';
-    $('f_item_search').disabled = true;
-    setSelectedItem({
-      id: it.item_id,
-      name: it.title,
-      sale_price: it.price,
-      stock: it.stock_quantity || 0,
-    });
-    $('f_item_results').classList.add('hidden');
+    $('f_category').disabled = true;
+    if ($('f_item_hint')) $('f_item_hint').classList.add('hidden');
     $('f_desc').value = it.description || '';
     $('f_showPrice').checked = !!it.show_price;
     $('f_visible').checked = !!it.visible;
     $('f_featured').checked = !!it.featured;
-    $('f_image').value = '';
-    $('f_preview').src = it.image_path || '';
-    st.file = null;
+    clearItemImage();
+    if (it.image_path) setImagePreview(it.image_path);
     showModal(true);
+    loadInventoryOptions({ keepId: it.item_id });
   }
 
-  async function searchInventory(q) {
-    const results = $('f_item_results');
-    if (!q || q.length < 1) {
-      results.classList.add('hidden');
-      results.innerHTML = '';
+  function destroyCropper() {
+    if (st.cropper) {
+      st.cropper.destroy();
+      st.cropper = null;
+    }
+    if (st.cropObjectUrl) {
+      URL.revokeObjectURL(st.cropObjectUrl);
+      st.cropObjectUrl = null;
+    }
+  }
+
+  function showCropModal(v) {
+    $('cropModal').classList.toggle('hidden', !v);
+    if (!v) destroyCropper();
+  }
+
+  function openCropperWithFile(file) {
+    if (!file || !file.type || !file.type.startsWith('image/')) {
+      alert('Selecciona una imagen válida (JPG, PNG o WebP).');
+      return;
+    }
+    if (typeof Cropper === 'undefined') {
+      alert('No se pudo cargar el editor de imagen. Recarga la página.');
       return;
     }
 
-    const except = st.editing ? `&except_catalog_id=${st.editing.id}` : '';
-    const url = `${CATALOG.routes.inventory}?category=${encodeURIComponent($('f_category').value)}&q=${encodeURIComponent(q)}${except}`;
-    try {
-      const data = await fetchJSON(url, { headers: headers() });
-      const items = data.items || [];
-      if (!items.length) {
-        results.innerHTML = `<div class="px-3 py-2 text-sm text-dw-muted">Sin coincidencias en inventario.</div>`;
-        results.classList.remove('hidden');
+    destroyCropper();
+    st.cropObjectUrl = URL.createObjectURL(file);
+    const img = $('cropImage');
+    showCropModal(true);
+
+    const startCropper = () => {
+      if (st.cropper) {
+        st.cropper.destroy();
+        st.cropper = null;
+      }
+      st.cropper = new Cropper(img, {
+        aspectRatio: CROP_ASPECT,
+        viewMode: 1,
+        autoCropArea: 1,
+        responsive: true,
+        background: false,
+        movable: true,
+        zoomable: true,
+        rotatable: false,
+        scalable: false,
+      });
+    };
+
+    img.onload = startCropper;
+    img.src = st.cropObjectUrl;
+    if (img.complete) startCropper();
+  }
+
+  function applyCrop() {
+    if (!st.cropper) return;
+    const canvas = st.cropper.getCroppedCanvas({
+      maxWidth: 1600,
+      maxHeight: 900,
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
+    if (!canvas) {
+      alert('No se pudo generar el recorte.');
+      return;
+    }
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        alert('No se pudo generar el recorte.');
         return;
       }
-      results.innerHTML = items.map((it) => `
-        <button type="button" class="block w-full px-3 py-2 text-left text-sm hover:bg-dw-lilac-soft" data-id="${it.id}"
-          data-name="${esc(it.name)}" data-price="${it.sale_price}" data-stock="${it.stock}">
-          <span class="font-medium text-dw-text">${esc(it.name)}</span>
-          <span class="block text-xs text-dw-muted">$ ${fmtCOP(it.sale_price)} · ${it.stock} disp.</span>
-        </button>
-      `).join('');
-      results.classList.remove('hidden');
-      results.querySelectorAll('button').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          setSelectedItem({
-            id: +btn.dataset.id,
-            name: btn.dataset.name,
-            sale_price: +btn.dataset.price,
-            stock: +btn.dataset.stock,
-          });
-          $('f_item_search').value = '';
-          results.classList.add('hidden');
-        });
-      });
-    } catch (e) {
-      console.error(e);
-    }
+      st.file = new File([blob], 'catalog-item.jpg', { type: 'image/jpeg' });
+      st.clearImage = false;
+      if (st.previewObjectUrl) {
+        URL.revokeObjectURL(st.previewObjectUrl);
+        st.previewObjectUrl = null;
+      }
+      const previewUrl = URL.createObjectURL(blob);
+      st.previewObjectUrl = previewUrl;
+      const preview = $('f_preview');
+      if (preview) {
+        preview.src = previewUrl;
+        preview.classList.remove('hidden');
+      }
+      syncImageUi();
+      showCropModal(false);
+      const input = $('f_image');
+      if (input) input.value = '';
+    }, 'image/jpeg', 0.9);
   }
 
   async function saveItem() {
+    setSelectedFromSelect();
     if (!st.selectedItem || !st.selectedItem.id) {
       alert('Selecciona un producto del inventario.');
       return;
@@ -376,10 +503,74 @@
     }
   }
 
+  function initImageDropzone() {
+    const zone = $('imageDropzone');
+    const input = $('f_image');
+    if (!zone || !input) return;
+
+    const openPicker = () => {
+      if (st.editing && $('f_preview')?.src && !st.file) {
+        // allow replacing existing image
+      }
+      input.click();
+    };
+
+    zone.addEventListener('click', (e) => {
+      if (e.target.closest('#btnClearImg')) return;
+      openPicker();
+    });
+
+    zone.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openPicker();
+      }
+    });
+
+    zone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      zone.classList.add('border-dw-primary', 'bg-dw-lilac-soft');
+    });
+    zone.addEventListener('dragleave', () => {
+      zone.classList.remove('border-dw-primary', 'bg-dw-lilac-soft');
+    });
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('border-dw-primary', 'bg-dw-lilac-soft');
+      const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (file) openCropperWithFile(file);
+    });
+
+    input.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) openCropperWithFile(file);
+      e.target.value = '';
+    });
+
+    document.addEventListener('paste', (e) => {
+      if ($('itemModal').classList.contains('hidden')) return;
+      const items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            openCropperWithFile(file);
+          }
+          break;
+        }
+      }
+    });
+  }
+
   function initEvents() {
     $('btnAdd').addEventListener('click', openNew);
     $('modalClose').addEventListener('click', () => showModal(false));
     $('modalCancel').addEventListener('click', () => showModal(false));
+    document.querySelectorAll('[data-close-item-modal]').forEach((el) => {
+      el.addEventListener('click', () => showModal(false));
+    });
     $('modalSave').addEventListener('click', saveItem);
 
     $('coverInput')?.addEventListener('change', (e) => {
@@ -389,43 +580,25 @@
     });
     $('btnClearCover')?.addEventListener('click', clearCover);
 
-    $('btnClearImg').addEventListener('click', () => {
-      $('f_image').value = '';
-      $('f_preview').src = '';
-      st.file = null;
-      st.clearImage = true;
-    });
-    $('f_image').addEventListener('change', (e) => {
-      st.file = e.target.files && e.target.files[0] ? e.target.files[0] : null;
-      st.clearImage = false;
-      if (st.file) {
-        const r = new FileReader();
-        r.onload = (ev) => ($('f_preview').src = ev.target.result);
-        r.readAsDataURL(st.file);
-      }
+    $('btnClearImg').addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearItemImage({ markClear: true });
     });
 
-    $('f_item_search').addEventListener('input', (e) => {
-      clearTimeout(st.searchTimer);
-      st.searchTimer = setTimeout(() => searchInventory(e.target.value.trim()), 250);
-    });
+    $('f_item_id').addEventListener('change', setSelectedFromSelect);
 
     $('f_category').addEventListener('change', () => {
       if (!st.editing) {
-        setSelectedItem(null);
-        $('f_item_search').value = '';
-        $('f_item_results').classList.add('hidden');
+        st.selectedItem = null;
+        loadInventoryOptions();
       }
     });
 
-    document.addEventListener('click', (e) => {
-      const results = $('f_item_results');
-      const search = $('f_item_search');
-      if (!results || !search) return;
-      if (!results.contains(e.target) && e.target !== search) {
-        results.classList.add('hidden');
-      }
-    });
+    $('cropClose').addEventListener('click', () => showCropModal(false));
+    $('cropCancel').addEventListener('click', () => showCropModal(false));
+    $('cropApply').addEventListener('click', applyCrop);
+
+    initImageDropzone();
   }
 
   document.addEventListener('DOMContentLoaded', () => {
