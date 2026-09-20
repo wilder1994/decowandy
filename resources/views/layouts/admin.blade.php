@@ -67,7 +67,7 @@
             </button>
         </aside>
 
-        <main class="dw-admin-main flex min-h-screen w-full flex-col overflow-hidden">
+        <main class="dw-admin-main flex min-h-screen min-w-0 flex-col overflow-x-hidden">
 
             <header class="dw-header-bar sticky top-0 z-30 border-b dw-hairline backdrop-blur">
                 <div class="flex w-full items-center justify-between gap-2 px-4 py-2.5 lg:px-5">

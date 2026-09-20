@@ -1031,7 +1031,10 @@
 
         .dw-admin-main {
             margin-left: var(--dw-sidebar-w);
-            transition: margin-left 0.2s ease-out;
+            width: calc(100% - var(--dw-sidebar-w));
+            max-width: calc(100% - var(--dw-sidebar-w));
+            min-width: 0;
+            transition: margin-left 0.2s ease-out, width 0.2s ease-out;
         }
 
         .dw-sidebar-toggle {
