@@ -6,7 +6,9 @@
     :root {
         --dw-primary: #A98AD4;
         --dw-primary-dark: #8B6BB8;
+        --dw-accent: #8B6BB8;
         --dw-lilac: #C4A1E0;
+        --dw-lilac-2: #B08FD4;
         --dw-lilac-soft: #EDE7F6;
         --dw-rose: #F8A3C9;
         --dw-yellow: #F7D87B;
@@ -26,7 +28,9 @@
     [data-theme='dark'] {
         --dw-primary: #B99AE0;
         --dw-primary-dark: #D4B8F0;
+        --dw-accent: #D4B8F0;
         --dw-lilac: #9B7CC8;
+        --dw-lilac-2: #A98AD4;
         --dw-lilac-soft: #2E2A38;
         --dw-rose: #E88BB0;
         --dw-yellow: #E8C96A;
@@ -56,6 +60,46 @@
 @layer components {
     .brand-gradient {
         background: linear-gradient(135deg, var(--dw-primary), var(--dw-lilac));
+    }
+
+    .dw-featured-panel {
+        @apply relative overflow-hidden rounded-[1.75rem] p-3 shadow-xl sm:p-4;
+        background: linear-gradient(145deg, var(--dw-primary) 0%, #6b4f9a 48%, var(--dw-accent, #8B6BB8) 100%);
+    }
+
+    .dw-featured-tile {
+        @apply relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-lg ring-1 ring-white/25;
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .dw-featured-tile img {
+        @apply absolute inset-0 h-full w-full object-cover transition duration-500;
+    }
+
+    .dw-featured-tile:hover img {
+        transform: scale(1.05);
+    }
+
+    .dw-featured-tile-fallback {
+        @apply absolute inset-0 flex items-center justify-center px-3 text-center text-sm text-white/90;
+        background: linear-gradient(135deg, var(--dw-primary), var(--dw-accent, #8B6BB8));
+    }
+
+    .dw-featured-tile-overlay {
+        @apply absolute inset-0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.2) 45%, transparent 70%);
+    }
+
+    .dw-featured-tile-meta {
+        @apply absolute inset-x-0 bottom-0 p-2.5 sm:p-3;
+    }
+
+    .dw-featured-slot {
+        @apply aspect-[4/3] rounded-2xl border border-dashed border-white/35 bg-white/10;
+    }
+
+    .dw-featured-nav {
+        @apply flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55;
     }
 
     .subtle-gradient {

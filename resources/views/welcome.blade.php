@@ -85,9 +85,9 @@
                 </div>
             </div>
 
-            {{-- Destacados: 2 filas × 2 columnas (carrusel por fila si hay overflow) --}}
+            {{-- Destacados: siempre 2 filas × 2 columnas --}}
             <div class="w-full justify-self-stretch">
-                <div class="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[color:var(--dw-primary)] via-[#6b4f9a] to-[color:var(--dw-accent)] p-3 shadow-xl sm:p-4">
+                <div class="dw-featured-panel">
                     <div class="mb-3 flex items-center justify-between px-1">
                         <p class="text-xs font-semibold uppercase tracking-wide text-white/80">Destacados</p>
                         @if($hasFeatured)
@@ -95,32 +95,64 @@
                         @endif
                     </div>
 
-                    @if($hasFeatured)
-                        <div class="space-y-3">
-                            @foreach([0, 1] as $rowIndex)
-                                <div class="relative" data-featured-row="{{ $rowIndex }}">
-                                    <div class="grid grid-cols-2 gap-3" data-featured-viewport>
-                                        {{-- JS hidrata; fallback SSR abajo --}}
-                                    </div>
-                                    <div class="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-1">
-                                        <button type="button"
-                                                data-featured-prev
-                                                class="pointer-events-auto invisible flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50"
-                                                aria-label="Anterior">‹</button>
-                                        <button type="button"
-                                                data-featured-next
-                                                class="pointer-events-auto invisible flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50"
-                                                aria-label="Siguiente">›</button>
-                                    </div>
+                    <div class="space-y-3">
+                        @foreach([0, 1] as $rowIndex)
+                            @php
+                                $rowItems = $rowIndex === 0 ? $featuredRow1 : $featuredRow2;
+                                $slotA = $rowItems->get(0);
+                                $slotB = $rowItems->get(1);
+                            @endphp
+                            <div class="relative" data-featured-row="{{ $rowIndex }}">
+                                <div class="grid grid-cols-2 gap-3" data-featured-viewport>
+                                    @forelse([$slotA, $slotB] as $slot)
+                                        @if($slot)
+                                            <a href="{{ $slot['wa'] ?? '#contacto' }}"
+                                               @if(!empty($slot['has_whatsapp'])) target="_blank" rel="noopener" @endif
+                                               class="dw-featured-tile">
+                                                @if(!empty($slot['image']))
+                                                    <img src="{{ $slot['image'] }}" alt="{{ $slot['title'] }}">
+                                                @else
+                                                    <div class="dw-featured-tile-fallback">{{ $slot['title'] }}</div>
+                                                @endif
+                                                <div class="dw-featured-tile-overlay"></div>
+                                                <div class="dw-featured-tile-meta">
+                                                    <p class="truncate text-sm font-semibold text-white">{{ $slot['title'] }}</p>
+                                                    <div class="mt-1 flex items-center justify-between gap-2 text-xs">
+                                                        <span class="font-semibold text-dw-lilac">
+                                                            @if(!empty($slot['show_price']) && !empty($slot['price']))
+                                                                $ {{ number_format((int) $slot['price'], 0, ',', '.') }}
+                                                            @else
+                                                                Cotizar
+                                                            @endif
+                                                        </span>
+                                                        @php $st = (int) ($slot['stock'] ?? 0); @endphp
+                                                        <span class="{{ $st > 0 ? 'text-emerald-200' : 'text-rose-200' }}">
+                                                            {{ $st > 0 ? $st.' disp.' : 'Agotado' }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        @else
+                                            <div class="dw-featured-slot" aria-hidden="true"></div>
+                                        @endif
+                                    @empty
+                                        <div class="dw-featured-slot" aria-hidden="true"></div>
+                                        <div class="dw-featured-slot" aria-hidden="true"></div>
+                                    @endforelse
                                 </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="flex aspect-[4/3] flex-col items-center justify-center rounded-2xl border border-dashed border-white/30 bg-white/10 px-6 text-center">
-                            <p class="text-sm font-medium text-white">Pronto verás aquí los destacados</p>
-                            <p class="mt-1 text-xs text-white/70">Márcalos como destacados en Ajustes del catálogo.</p>
-                        </div>
-                    @endif
+                                <div class="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-1">
+                                    <button type="button"
+                                            data-featured-prev
+                                            class="dw-featured-nav pointer-events-auto invisible"
+                                            aria-label="Anterior">‹</button>
+                                    <button type="button"
+                                            data-featured-next
+                                            class="dw-featured-nav pointer-events-auto invisible"
+                                            aria-label="Siguiente">›</button>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
         </div>
