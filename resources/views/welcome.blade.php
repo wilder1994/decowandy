@@ -32,10 +32,10 @@
 
     {{-- HERO --}}
     <section class="relative overflow-hidden">
-        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[color:var(--dw-lilac)]/50 via-transparent to-transparent"></div>
-        <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-12 md:grid-cols-2">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[color:var(--dw-lilac)]/40 via-transparent to-transparent"></div>
+        <div class="relative mx-auto grid max-w-7xl items-start gap-6 px-4 pb-10 pt-6 md:grid-cols-2 md:items-end md:gap-8 md:pb-12 md:pt-8">
             <div>
-                <h1 class="text-4xl font-bold leading-tight md:text-5xl" style="font-family:'Poppins',Inter,system-ui">
+                <h1 class="text-3xl font-bold leading-tight md:text-5xl" style="font-family:'Poppins',Inter,system-ui">
                     <a href="{{ route('catalog.category', 'diseno') }}" class="transition hover:text-[color:var(--dw-accent)]">Diseños</a>,
                     <a href="{{ route('catalog.category', 'papeleria') }}" class="transition hover:text-[color:var(--dw-accent)]">papelería</a> e
                     <span class="block">
@@ -43,8 +43,8 @@
                     </span>
                 </h1>
 
-                <div class="mt-4">
-                    <svg viewBox="0 0 800 100" class="h-20 w-full" aria-hidden="true">
+                <div class="mt-2 md:mt-3">
+                    <svg viewBox="0 0 800 100" class="h-10 w-full md:h-14" aria-hidden="true">
                         <defs>
                             <linearGradient id="dwBrush" x1="0%" y1="0%" x2="100%" y2="0%">
                                 <stop offset="0%" stop-color="var(--dw-primary)" />
@@ -56,11 +56,11 @@
                     </svg>
                 </div>
 
-                <p class="mt-4 text-gray-600">
+                <p class="mt-2 text-sm text-gray-600 md:mt-3 md:text-base">
                     Logos, tarjetas, papelería y servicios de impresión. Hecho con cariño por DecoWandy.
                 </p>
 
-                <div class="mt-5 flex flex-wrap gap-3 text-sm text-gray-700">
+                <div class="mt-3 flex flex-wrap gap-2 text-sm text-gray-700 md:mt-4 md:gap-3">
                     <span class="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">
                         Fotocopias y escáner
                     </span>
@@ -72,7 +72,7 @@
                     </span>
                 </div>
 
-                <div class="mt-6 flex flex-wrap gap-3">
+                <div class="mt-4 flex flex-wrap gap-3 md:mt-5">
                     <a href="{{ $dwHeroWhatsappHref }}"
                        @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
                        class="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-white brand-gradient shadow transition hover:opacity-90">
@@ -85,26 +85,26 @@
                 </div>
             </div>
 
-            {{-- Destacados: siempre 2 filas × 2 columnas --}}
-            <div class="w-full justify-self-stretch">
-                <div class="dw-featured-panel">
-                    <div class="mb-3 flex items-center justify-between px-1">
-                        <p class="text-xs font-semibold uppercase tracking-wide text-white/80">Destacados</p>
+            {{-- Destacados flotantes: 2×2 compacto, sin caja de fondo --}}
+            <div class="w-full md:max-w-md md:justify-self-end">
+                <div class="dw-featured-rail">
+                    <div class="flex items-baseline justify-between gap-2 px-0.5">
+                        <p class="dw-featured-label">Destacados</p>
                         @if($hasFeatured)
-                            <p class="text-[11px] text-white/60">{{ $featuredMapped->count() }} en vitrina</p>
+                            <p class="text-[11px] text-dw-muted">{{ $featuredMapped->count() }} en vitrina</p>
                         @endif
                     </div>
 
-                    <div class="space-y-3">
+                    <div class="flex flex-col gap-2">
                         @foreach([0, 1] as $rowIndex)
                             @php
                                 $rowItems = $rowIndex === 0 ? $featuredRow1 : $featuredRow2;
                                 $slotA = $rowItems->get(0);
                                 $slotB = $rowItems->get(1);
                             @endphp
-                            <div class="relative" data-featured-row="{{ $rowIndex }}">
-                                <div class="grid grid-cols-2 gap-3" data-featured-viewport>
-                                    @forelse([$slotA, $slotB] as $slot)
+                            <div class="dw-featured-row" data-featured-row="{{ $rowIndex }}">
+                                <div class="dw-featured-grid" data-featured-viewport>
+                                    @foreach([$slotA, $slotB] as $slot)
                                         @if($slot)
                                             <a href="{{ $slot['wa'] ?? '#contacto' }}"
                                                @if(!empty($slot['has_whatsapp'])) target="_blank" rel="noopener" @endif
@@ -116,8 +116,8 @@
                                                 @endif
                                                 <div class="dw-featured-tile-overlay"></div>
                                                 <div class="dw-featured-tile-meta">
-                                                    <p class="truncate text-sm font-semibold text-white">{{ $slot['title'] }}</p>
-                                                    <div class="mt-1 flex items-center justify-between gap-2 text-xs">
+                                                    <p class="truncate text-xs font-semibold text-white sm:text-sm">{{ $slot['title'] }}</p>
+                                                    <div class="mt-0.5 flex items-center justify-between gap-2 text-[10px] sm:text-xs">
                                                         <span class="font-semibold text-dw-lilac">
                                                             @if(!empty($slot['show_price']) && !empty($slot['price']))
                                                                 $ {{ number_format((int) $slot['price'], 0, ',', '.') }}
@@ -135,12 +135,9 @@
                                         @else
                                             <div class="dw-featured-slot" aria-hidden="true"></div>
                                         @endif
-                                    @empty
-                                        <div class="dw-featured-slot" aria-hidden="true"></div>
-                                        <div class="dw-featured-slot" aria-hidden="true"></div>
-                                    @endforelse
+                                    @endforeach
                                 </div>
-                                <div class="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-1">
+                                <div class="pointer-events-none absolute inset-y-0 -left-1 -right-1 flex items-center justify-between">
                                     <button type="button"
                                             data-featured-prev
                                             class="dw-featured-nav pointer-events-auto invisible"

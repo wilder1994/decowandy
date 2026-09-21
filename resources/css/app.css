@@ -62,14 +62,20 @@
         background: linear-gradient(135deg, var(--dw-primary), var(--dw-lilac));
     }
 
-    .dw-featured-panel {
-        @apply relative overflow-hidden rounded-[1.75rem] p-3 shadow-xl sm:p-4;
-        background: linear-gradient(145deg, var(--dw-primary) 0%, #6b4f9a 48%, var(--dw-accent, #8B6BB8) 100%);
+    .dw-featured-rail {
+        @apply flex w-full flex-col gap-2;
+    }
+
+    .dw-featured-label {
+        @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-dw-muted;
     }
 
     .dw-featured-tile {
-        @apply relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-lg ring-1 ring-white/25;
-        background: rgba(255, 255, 255, 0.12);
+        @apply relative block h-28 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md transition duration-200 sm:h-[7.25rem];
+    }
+
+    .dw-featured-tile:hover {
+        @apply -translate-y-0.5 shadow-lg;
     }
 
     .dw-featured-tile img {
@@ -77,29 +83,36 @@
     }
 
     .dw-featured-tile:hover img {
-        transform: scale(1.05);
+        transform: scale(1.04);
     }
 
     .dw-featured-tile-fallback {
-        @apply absolute inset-0 flex items-center justify-center px-3 text-center text-sm text-white/90;
-        background: linear-gradient(135deg, var(--dw-primary), var(--dw-accent, #8B6BB8));
+        @apply absolute inset-0 flex items-center justify-center bg-gradient-to-br from-dw-lilac-soft to-white px-2 text-center text-xs font-semibold text-dw-text;
     }
 
     .dw-featured-tile-overlay {
         @apply absolute inset-0;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.2) 45%, transparent 70%);
+        background: linear-gradient(to top, rgba(45, 42, 50, 0.82) 0%, rgba(45, 42, 50, 0.25) 42%, transparent 68%);
     }
 
     .dw-featured-tile-meta {
-        @apply absolute inset-x-0 bottom-0 p-2.5 sm:p-3;
+        @apply absolute inset-x-0 bottom-0 px-2.5 pb-2 pt-6;
     }
 
     .dw-featured-slot {
-        @apply aspect-[4/3] rounded-2xl border border-dashed border-white/35 bg-white/10;
+        @apply h-28 rounded-2xl border border-dashed border-gray-200 bg-gray-50/90 sm:h-[7.25rem];
     }
 
     .dw-featured-nav {
-        @apply flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-sm transition hover:bg-black/55;
+        @apply flex h-7 w-7 items-center justify-center rounded-full border border-gray-100 bg-white/95 text-sm font-semibold text-dw-text shadow-sm transition hover:border-dw-border-neon hover:text-dw-primary;
+    }
+
+    .dw-featured-row {
+        @apply relative;
+    }
+
+    .dw-featured-grid {
+        @apply grid grid-cols-2 gap-2;
     }
 
     .subtle-gradient {

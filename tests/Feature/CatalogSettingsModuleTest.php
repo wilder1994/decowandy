@@ -159,9 +159,10 @@ class CatalogSettingsModuleTest extends TestCase
         $response = $this->get(route('welcome'));
         $response->assertOk();
         $response->assertSee('Destacados', false);
-        $response->assertSee('dw-featured-panel', false);
+        $response->assertSee('dw-featured-rail', false);
         $response->assertSee('dw-featured-tile', false);
         $response->assertSee('dw-featured-slot', false);
+        $response->assertDontSee('dw-featured-panel', false);
         $response->assertSee('1 en vitrina', false);
         $response->assertSee('DW_FEATURED', false);
         $response->assertSee('Explora por categoría', false);

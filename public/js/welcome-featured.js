@@ -31,12 +31,12 @@
     return `
       <a href="${esc(item.wa || '#contacto')}"
          ${item.has_whatsapp ? 'target="_blank" rel="noopener"' : ''}
-         class="dw-featured-tile group/tile">
+         class="dw-featured-tile">
         ${media}
         <div class="dw-featured-tile-overlay"></div>
         <div class="dw-featured-tile-meta">
-          <p class="truncate text-sm font-semibold text-white">${esc(item.title)}</p>
-          <div class="mt-1 flex items-center justify-between gap-2 text-xs">
+          <p class="truncate text-xs font-semibold text-white sm:text-sm">${esc(item.title)}</p>
+          <div class="mt-0.5 flex items-center justify-between gap-2 text-[10px] sm:text-xs">
             <span class="font-semibold text-dw-lilac">${price}</span>
             <span class="${stockCls}">${stockLabel}</span>
           </div>
@@ -55,8 +55,6 @@
 
     if (!viewport) return;
 
-    // Siempre visible: grilla 2 columnas (slots vacíos si faltan ítems).
-    root.classList.remove('hidden');
     let index = 0;
     let timer = null;
     const canRotate = list.length > 2 && !REDUCE;
@@ -65,13 +63,14 @@
       if (list.length === 0) return [null, null];
       if (list.length === 1) return [list[0], null];
       if (list.length === 2) return [list[0], list[1]];
-      const a = list[index % list.length];
-      const b = list[(index + 1) % list.length];
-      return [a, b];
+      return [
+        list[index % list.length],
+        list[(index + 1) % list.length],
+      ];
     }
 
     function render() {
-      viewport.className = 'grid grid-cols-2 gap-3';
+      viewport.className = 'dw-featured-grid';
       const [a, b] = visiblePair();
       viewport.innerHTML = tileHTML(a) + tileHTML(b);
 
