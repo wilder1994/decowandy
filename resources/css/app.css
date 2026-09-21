@@ -63,15 +63,27 @@
     }
 
     .dw-featured-rail {
-        @apply flex w-full flex-col gap-2;
+        @apply flex h-full min-h-0 w-full flex-col gap-1.5;
     }
 
     .dw-featured-label {
         @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-dw-muted;
     }
 
+    .dw-featured-rows {
+        @apply flex min-h-0 flex-1 flex-col gap-2;
+    }
+
+    .dw-featured-row {
+        @apply relative min-h-[5.25rem] flex-1;
+    }
+
+    .dw-featured-grid {
+        @apply grid h-full grid-cols-2 gap-2;
+    }
+
     .dw-featured-tile {
-        @apply relative block h-28 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-md transition duration-200 sm:h-[7.25rem];
+        @apply relative block h-full min-h-[5.25rem] overflow-hidden rounded-2xl border border-gray-100/90 bg-white shadow-md transition duration-200;
     }
 
     .dw-featured-tile:hover {
@@ -92,27 +104,19 @@
 
     .dw-featured-tile-overlay {
         @apply absolute inset-0;
-        background: linear-gradient(to top, rgba(45, 42, 50, 0.82) 0%, rgba(45, 42, 50, 0.25) 42%, transparent 68%);
+        background: linear-gradient(to top, rgba(45, 42, 50, 0.82) 0%, rgba(45, 42, 50, 0.22) 42%, transparent 68%);
     }
 
     .dw-featured-tile-meta {
-        @apply absolute inset-x-0 bottom-0 px-2.5 pb-2 pt-6;
+        @apply absolute inset-x-0 bottom-0 px-2.5 pb-2 pt-5;
     }
 
     .dw-featured-slot {
-        @apply h-28 rounded-2xl border border-dashed border-gray-200 bg-gray-50/90 sm:h-[7.25rem];
+        @apply h-full min-h-[5.25rem] rounded-2xl border border-dashed border-gray-200/90 bg-transparent;
     }
 
     .dw-featured-nav {
         @apply flex h-7 w-7 items-center justify-center rounded-full border border-gray-100 bg-white/95 text-sm font-semibold text-dw-text shadow-sm transition hover:border-dw-border-neon hover:text-dw-primary;
-    }
-
-    .dw-featured-row {
-        @apply relative;
-    }
-
-    .dw-featured-grid {
-        @apply grid grid-cols-2 gap-2;
     }
 
     .subtle-gradient {
