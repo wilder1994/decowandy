@@ -137,4 +137,33 @@ class CatalogSettingsModuleTest extends TestCase
         $this->assertFalse($ids->contains($a->id));
         $this->assertTrue($ids->contains($b->id));
     }
+
+    public function test_welcome_shows_featured_in_hero_and_category_summary(): void
+    {
+        $item = $this->papeleriaItem('Bolígrafo azul');
+        DB::table('catalog_items')->insert([
+            'category' => 'Papelería',
+            'title' => $item->name,
+            'description' => null,
+            'price' => 2500,
+            'show_price' => 1,
+            'visible' => 1,
+            'featured' => 1,
+            'sort_order' => 1,
+            'image_path' => null,
+            'item_id' => $item->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $response = $this->get(route('welcome'));
+        $response->assertOk();
+        $response->assertSee('Destacados', false);
+        $response->assertSee('1 en vitrina', false);
+        $response->assertSee('DW_FEATURED', false);
+        $response->assertSee('Explora por categoría', false);
+        $response->assertSee('Cuadernos, sobres, papel bond', false);
+        $response->assertSee('1 ítem', false);
+        $response->assertDontSee('>Destacados</h2>', false);
+    }
 }

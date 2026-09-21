@@ -4,55 +4,70 @@
 
     $slug = Str::slug($category['slug'] ?? $category['key'] ?? $category['name'] ?? 'categoria');
     $items = collect($category['items'] ?? []);
+    $count = $items->count();
+    $summary = $category['card_summary'] ?? '';
+    $cta = $category['cta_label'] ?? 'Ver productos';
+    $thumbs = $items->filter(function ($item) {
+            $path = is_array($item)
+                ? ($item['image_path'] ?? null)
+                : ($item->image_path ?? null);
+
+            return ! empty($path);
+        })
+        ->take(3)
+        ->values();
 @endphp
 
 <a href="{{ route('catalog.category', $slug) }}"
-   class="block rounded-3xl overflow-hidden shadow-md hover:-translate-y-1 hover:shadow-xl transition bg-white">
-    <div class="h-48 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200 relative" @if(!empty($category['card_background'] ?? null) && empty($category['cover_image'] ?? null)) style="background: {{ $category['card_background'] }}" @endif>
-        <div class="absolute top-3 left-3 z-10 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 text-[color:var(--dw-primary)] text-xs shadow-sm">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M4 5h16M7 9h10M5 9l1 10h12l1-10" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M9 13h1m4 0h1" stroke-linecap="round"/>
-            </svg>
-            {{ $category['cta_label'] ?? 'Ver más' }}
-        </div>
+   class="group relative block overflow-hidden rounded-3xl bg-white shadow-md transition hover:-translate-y-1 hover:shadow-xl">
+    <div class="relative h-48 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200"
+         @if(!empty($category['card_background'] ?? null) && empty($category['cover_image'] ?? null))
+             style="background: {{ $category['card_background'] }}"
+         @endif>
         @if(!empty($category['cover_image'] ?? null))
-            <img src="{{ $category['cover_image'] }}" class="w-full h-full object-cover" alt="{{ $category['name'] }}">
+            <img src="{{ $category['cover_image'] }}"
+                 class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                 alt="{{ $category['name'] }}">
         @endif
-    </div>
-
-    <div class="p-6 space-y-3">
-        <div class="flex items-center justify-between">
-            <h3 class="text-xl font-semibold">{{ $category['name'] }}</h3>
-            <span class="text-xs px-2 py-1 rounded-full bg-purple-50 text-purple-700">
-                {{ Str::title($slug) }}
+        <div class="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-transparent"></div>
+        <div class="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+            <h3 class="text-xl font-semibold text-white drop-shadow-sm">{{ $category['name'] }}</h3>
+            <span class="shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[color:var(--dw-primary)] shadow-sm">
+                {{ $count === 0 ? 'Vacío' : $count.' '.($count === 1 ? 'ítem' : 'ítems') }}
             </span>
         </div>
-        @if($items->isEmpty())
+    </div>
+
+    <div class="relative space-y-3 bg-gradient-to-br from-white via-white to-[color:var(--dw-lilac)]/40 p-5">
+        @if($summary !== '')
+            <p class="text-sm leading-relaxed text-gray-600">{{ $summary }}</p>
+        @elseif($count === 0)
             <p class="text-sm text-gray-500">{{ $category['tag_empty'] ?? 'Sin productos' }}</p>
-        @else
-            <ul class="text-sm text-gray-700 space-y-1">
-                @foreach($items->take(5) as $item)
-                    <li class="flex items-center justify-between">
-                        <span>{{ $item->title ?? $item['title'] ?? 'Item' }}</span>
-                        @php
-                            $price = $item->price ?? $item['price'] ?? null;
-                            $showPrice = $item->show_price ?? $item['show_price'] ?? false;
-                        @endphp
-                        <span class="text-xs text-gray-500">
-                            @if($showPrice && $price)
-                                ${{ number_format((int) $price, 0, ',', '.') }}
-                            @else
-                                Cotizar
-                            @endif
-                        </span>
-                    </li>
-                @endforeach
-            </ul>
-            @if($items->count() > 5)
-                <p class="text-xs text-gray-400">y {{ $items->count() - 5 }} más…</p>
-            @endif
         @endif
-        <p class="mt-1 font-semibold text-[color:var(--dw-accent)]">Ver productos</p>
+
+        @if($thumbs->isNotEmpty())
+            <div class="flex -space-x-2">
+                @foreach($thumbs as $thumb)
+                    @php
+                        $src = is_array($thumb)
+                            ? ($thumb['image_path'] ?? '')
+                            : ($thumb->image_path ?? '');
+                    @endphp
+                    <img src="{{ $src }}"
+                         alt=""
+                         class="h-9 w-9 rounded-full object-cover ring-2 ring-white shadow-sm">
+                @endforeach
+                @if($count > $thumbs->count())
+                    <span class="flex h-9 w-9 items-center justify-center rounded-full bg-[color:var(--dw-lilac)] text-[10px] font-semibold text-[color:var(--dw-primary)] ring-2 ring-white">
+                        +{{ $count - $thumbs->count() }}
+                    </span>
+                @endif
+            </div>
+        @endif
+
+        <span class="inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--dw-accent)] transition group-hover:gap-2.5">
+            {{ $cta }}
+            <span aria-hidden="true">→</span>
+        </span>
     </div>
 </a>

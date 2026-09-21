@@ -7,24 +7,47 @@
     @php
         $dwHasWhatsapp = \App\Support\PublicContact::hasWhatsapp();
         $dwHeroWhatsappHref = \App\Support\PublicContact::whatsappHref('Hola DecoWandy, quiero cotizar un diseño o impresión');
+
+        $featuredMapped = collect($destacados ?? [])->map(function ($d) use ($dwHasWhatsapp) {
+            $stock = (int) ($d->stock_quantity ?? 0);
+            $waMsg = $stock > 0
+                ? "Hola DecoWandy, vi el destacado «{$d->title}». Hay {$stock} disponibles. ¿Me los puedes vender?"
+                : "Hola DecoWandy, vi el destacado «{$d->title}». ¿Cuándo vuelven a tener stock?";
+
+            return [
+                'title' => $d->title,
+                'image' => $d->image_path,
+                'price' => (int) ($d->price ?? 0),
+                'show_price' => (bool) ($d->show_price ?? false),
+                'stock' => $stock,
+                'wa' => \App\Support\PublicContact::whatsappHref($waMsg),
+                'has_whatsapp' => $dwHasWhatsapp,
+            ];
+        })->values();
+
+        $featuredRow1 = $featuredMapped->filter(fn ($_, $i) => $i % 2 === 0)->values();
+        $featuredRow2 = $featuredMapped->filter(fn ($_, $i) => $i % 2 === 1)->values();
+        $hasFeatured = $featuredMapped->isNotEmpty();
     @endphp
+
     {{-- HERO --}}
     <section class="relative overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 pt-12 pb-16 grid gap-10 md:grid-cols-2 items-center">
+        <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[color:var(--dw-lilac)]/50 via-transparent to-transparent"></div>
+        <div class="relative mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-12 md:grid-cols-2">
             <div>
-                <h1 class="text-4xl md:text-5xl font-bold leading-tight" style="font-family:'Poppins',Inter,system-ui">
-                    <a href="{{ route('catalog.category', 'diseno') }}" class="hover:text-[color:var(--dw-accent)] transition">Diseños</a>,
-                    <a href="{{ route('catalog.category', 'papeleria') }}" class="hover:text-[color:var(--dw-accent)] transition">papelería</a> e
+                <h1 class="text-4xl font-bold leading-tight md:text-5xl" style="font-family:'Poppins',Inter,system-ui">
+                    <a href="{{ route('catalog.category', 'diseno') }}" class="transition hover:text-[color:var(--dw-accent)]">Diseños</a>,
+                    <a href="{{ route('catalog.category', 'papeleria') }}" class="transition hover:text-[color:var(--dw-accent)]">papelería</a> e
                     <span class="block">
-                        <a href="{{ route('catalog.category', 'impresion') }}" class="hover:text-[color:var(--dw-accent)] transition">impresiones</a>
+                        <a href="{{ route('catalog.category', 'impresion') }}" class="transition hover:text-[color:var(--dw-accent)]">impresiones</a>
                     </span>
                 </h1>
 
                 <div class="mt-4">
-                    <svg viewBox="0 0 800 100" class="w-full h-20">
+                    <svg viewBox="0 0 800 100" class="h-20 w-full" aria-hidden="true">
                         <defs>
                             <linearGradient id="dwBrush" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%"  stop-color="var(--dw-primary)" />
+                                <stop offset="0%" stop-color="var(--dw-primary)" />
                                 <stop offset="100%" stop-color="var(--dw-accent)" />
                             </linearGradient>
                         </defs>
@@ -38,16 +61,13 @@
                 </p>
 
                 <div class="mt-5 flex flex-wrap gap-3 text-sm text-gray-700">
-                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-gray-100">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h12v12H6z"/><path d="M8 10h8M8 14h5"/></svg>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">
                         Fotocopias y escáner
                     </span>
-                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-gray-100">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 7h14v10H5z" stroke-linejoin="round"/><path d="M9 7V5h6v2M9 14h6M9 11h6"/></svg>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">
                         Impresión fotográfica
                     </span>
-                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-gray-100">
-                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17l5.5-9L13 13l3-5 4 9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">
                         Detalles y regalos
                     </span>
                 </div>
@@ -55,81 +75,77 @@
                 <div class="mt-6 flex flex-wrap gap-3">
                     <a href="{{ $dwHeroWhatsappHref }}"
                        @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
-                       class="inline-flex items-center px-5 py-3 rounded-2xl text-white brand-gradient shadow hover:opacity-90 transition gap-2">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2.01h-.08a10 10 0 00-8.9 14.5l-1 3.65a.75.75 0 00.92.92l3.58-.97a10 10 0 104.48-18.1zM18 16.57c-.2.57-.99 1.04-1.61 1.18-.43.1-.99.17-3.05-.65-2.56-1.06-4.2-3.66-4.33-3.83-.13-.17-1.03-1.37-1.03-2.61s.65-1.85.88-2.11c.23-.26.5-.32.67-.32.17 0 .34 0 .49.01.16.01.37-.06.58.45.22.53.75 1.84.82 1.98.07.14.11.3.02.47-.08.17-.12.28-.24.43-.12.14-.26.31-.37.42-.12.12-.25.24-.11.47.13.23.57.93 1.21 1.51.83.74 1.52.97 1.75 1.08.23.11.36.09.49-.05.13-.14.57-.66.72-.89.15-.23.3-.19.51-.11.21.08 1.34.63 1.57.74.23.12.38.17.44.26.06.09.06.52-.14 1.09z"/></svg>
+                       class="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-white brand-gradient shadow transition hover:opacity-90">
                         {{ $dwHasWhatsapp ? 'Solicitar por WhatsApp' : 'Ver contacto' }}
                     </a>
                     <a href="#catalogo"
-                       class="inline-flex items-center px-5 py-3 rounded-2xl border border-[color:var(--dw-lilac-2)] text-[color:var(--dw-accent)] hover:bg-[color:var(--dw-lilac)] transition gap-2">
-                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/></svg>
+                       class="inline-flex items-center gap-2 rounded-2xl border border-[color:var(--dw-lilac-2)] px-5 py-3 text-[color:var(--dw-accent)] transition hover:bg-[color:var(--dw-lilac)]">
                         Ver catálogo
                     </a>
                 </div>
             </div>
 
-            {{-- ilustración --}}
-            <div class="justify-self-center">
-                {{-- si quieres dejamos el SVG que ya tenías, lo omito aquí para no alargar --}}
+            {{-- Destacados: 2 filas × 2 columnas (carrusel por fila si hay overflow) --}}
+            <div class="w-full justify-self-stretch">
+                <div class="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-[color:var(--dw-primary)] via-[#6b4f9a] to-[color:var(--dw-accent)] p-3 shadow-xl sm:p-4">
+                    <div class="mb-3 flex items-center justify-between px-1">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-white/80">Destacados</p>
+                        @if($hasFeatured)
+                            <p class="text-[11px] text-white/60">{{ $featuredMapped->count() }} en vitrina</p>
+                        @endif
+                    </div>
+
+                    @if($hasFeatured)
+                        <div class="space-y-3">
+                            @foreach([0, 1] as $rowIndex)
+                                <div class="relative" data-featured-row="{{ $rowIndex }}">
+                                    <div class="grid grid-cols-2 gap-3" data-featured-viewport>
+                                        {{-- JS hidrata; fallback SSR abajo --}}
+                                    </div>
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 right-0 flex items-center justify-between px-1">
+                                        <button type="button"
+                                                data-featured-prev
+                                                class="pointer-events-auto invisible flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50"
+                                                aria-label="Anterior">‹</button>
+                                        <button type="button"
+                                                data-featured-next
+                                                class="pointer-events-auto invisible flex h-8 w-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition hover:bg-black/50"
+                                                aria-label="Siguiente">›</button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="flex aspect-[4/3] flex-col items-center justify-center rounded-2xl border border-dashed border-white/30 bg-white/10 px-6 text-center">
+                            <p class="text-sm font-medium text-white">Pronto verás aquí los destacados</p>
+                            <p class="mt-1 text-xs text-white/70">Márcalos como destacados en Ajustes del catálogo.</p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </section>
 
     {{-- CATÁLOGO / TARJETAS --}}
-    <section id="catalogo" class="max-w-7xl mx-auto px-4 py-12 grid gap-6">
-        <h2 class="text-2xl font-bold mb-2">Explora por categoría</h2>
+    <section id="catalogo" class="mx-auto grid max-w-7xl gap-6 px-4 py-12">
+        <div>
+            <h2 class="text-2xl font-bold">Explora por categoría</h2>
+            <p class="mt-1 text-sm text-gray-500">Elige una categoría para ver productos y stock disponible.</p>
+        </div>
         <div class="grid gap-6 md:grid-cols-3">
             @foreach($categories as $category)
                 @include('welcome.partials.category-card', ['category' => $category])
             @endforeach
         </div>
     </section>
-
-    {{-- DESTACADOS --}}
-    <section class="max-w-7xl mx-auto px-4 pb-16">
-        <h2 class="text-2xl font-bold mb-4">Destacados</h2>
-        <div class="grid gap-6 md:grid-cols-3">
-            @forelse($destacados as $d)
-                <div class="rounded-3xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition overflow-hidden">
-                    <div class="h-48 flex items-center justify-center bg-[color:var(--dw-lilac)]/20 overflow-hidden">
-                        @if($d->image_path)
-                            <img src="{{ $d->image_path }}"
-                                class="max-h-44 w-auto object-contain transition-transform duration-300 hover:scale-105"
-                                alt="{{ $d->title }}">
-                        @else
-                            <div class="text-gray-400 text-sm">Sin imagen</div>
-                        @endif
-                    </div>
-                    <div class="p-5">
-                        <h3 class="font-semibold">{{ $d->title }}</h3>
-                        @if($d->description)
-                            <p class="text-sm text-gray-600">{{ $d->description }}</p>
-                        @endif
-                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                            <span class="text-[color:var(--dw-accent)] font-semibold">
-                                @if($d->show_price && $d->price)
-                                    $ {{ number_format($d->price, 0, ',', '.') }}
-                                @else
-                                    Cotizar
-                                @endif
-                            </span>
-                            @php
-                                $stock = (int) ($d->stock_quantity ?? 0);
-                                $waMsg = $stock > 0
-                                    ? "Hola DecoWandy, vi el destacado «{$d->title}». Hay {$stock} disponibles. ¿Me los puedes vender?"
-                                    : "Hola DecoWandy, vi el destacado «{$d->title}». ¿Cuándo vuelven a tener stock?";
-                            @endphp
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs {{ $stock > 0 ? 'text-emerald-700' : 'text-rose-600' }}">{{ $stock > 0 ? $stock.' disp.' : 'Agotado' }}</span>
-                                <a href="{{ \App\Support\PublicContact::whatsappHref($waMsg) }}"
-                                   @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
-                                   class="text-sm px-3 py-1.5 rounded-xl bg-[color:var(--dw-primary)] text-white hover:opacity-90 transition">{{ $dwHasWhatsapp ? 'Pedir' : 'Contacto' }}</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <p class="text-sm text-gray-500">No hay destacados por ahora.</p>
-            @endforelse
-        </div>
-    </section>
 @endsection
+
+@push('scripts')
+<script>
+  window.DW_FEATURED = {
+    row1: @json($featuredRow1),
+    row2: @json($featuredRow2),
+  };
+</script>
+<script src="{{ asset('js/welcome-featured.js') }}?v={{ filemtime(public_path('js/welcome-featured.js')) }}"></script>
+@endpush

@@ -20,6 +20,7 @@
           'slug' => $c['slug'],
           'cta_label' => $c['cta_label'] ?? 'Ver más',
           'tag_empty' => $c['tag_empty'] ?? 'Sin productos',
+          'card_summary' => $c['card_summary'] ?? '',
           'card_background' => $c['card_background'] ?? null,
       ],
   ]);
@@ -56,19 +57,16 @@
 
     <div id="coverCard" class="mx-auto w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-md">
       <div id="coverPreview" class="relative h-48 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-purple-200">
-        <div id="coverCta" class="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-xs text-[color:var(--dw-primary)] shadow-sm">
-          <span class="material-symbols-outlined text-sm">inventory_2</span>
-          <span id="coverCtaLabel">Ver más</span>
+        <div class="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-black/35 via-transparent to-transparent"></div>
+        <div class="absolute bottom-3 left-3 right-3 z-10 flex items-end justify-between gap-2">
+          <h3 id="coverName" class="text-xl font-semibold text-white drop-shadow-sm">Categoría</h3>
+          <span id="coverCount" class="shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-[color:var(--dw-primary)] shadow-sm">0 ítems</span>
         </div>
         <span id="coverEmptyHint" class="flex h-full items-center justify-center text-sm text-dw-muted">Sin portada (degradado por defecto)</span>
       </div>
-      <div class="space-y-3 p-6">
-        <div class="flex items-center justify-between">
-          <h3 id="coverName" class="text-xl font-semibold text-dw-text">Categoría</h3>
-          <span id="coverSlug" class="rounded-full bg-purple-50 px-2 py-1 text-xs text-purple-700"></span>
-        </div>
-        <p id="coverEmpty" class="text-sm text-gray-500"></p>
-        <p class="mt-1 font-semibold text-[color:var(--dw-accent)]">Ver productos</p>
+      <div class="space-y-3 bg-gradient-to-br from-white via-white to-purple-50 p-5">
+        <p id="coverSummary" class="text-sm leading-relaxed text-gray-600"></p>
+        <p id="coverCta" class="inline-flex items-center gap-1.5 text-sm font-semibold text-[color:var(--dw-accent)]">Ver productos →</p>
       </div>
     </div>
   </div>

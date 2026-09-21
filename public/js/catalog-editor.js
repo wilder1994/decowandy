@@ -60,13 +60,6 @@
     if (initial) setActive(initial);
   }
 
-  function titleCaseSlug(slug) {
-    return (slug || '')
-      .split('-')
-      .map((p) => (p ? p.charAt(0).toUpperCase() + p.slice(1) : ''))
-      .join(' ');
-  }
-
   function renderCover() {
     const box = $('coverPreview');
     if (!box) return;
@@ -74,19 +67,22 @@
     const meta = (CATALOG.categories && CATALOG.categories[st.activeSlug]) || {
       name: st.activeCat,
       slug: st.activeSlug,
-      cta_label: 'Ver más',
+      cta_label: 'Ver productos',
       tag_empty: 'Sin productos',
+      card_summary: '',
       card_background: null,
     };
     const url = (CATALOG.covers && CATALOG.covers[st.activeSlug]) || '';
+    const count = st.list.length;
+    const countLabel = count === 0 ? 'Vacío' : `${count} ${count === 1 ? 'ítem' : 'ítems'}`;
 
-    if ($('coverCtaLabel')) $('coverCtaLabel').textContent = meta.cta_label || 'Ver más';
     if ($('coverName')) $('coverName').textContent = meta.name || st.activeCat;
-    if ($('coverSlug')) $('coverSlug').textContent = titleCaseSlug(meta.slug || st.activeSlug);
-    if ($('coverEmpty')) {
-      $('coverEmpty').textContent = st.list.length
-        ? `${st.list.length} producto(s) publicados`
-        : (meta.tag_empty || 'Sin productos');
+    if ($('coverCount')) $('coverCount').textContent = countLabel;
+    if ($('coverSummary')) {
+      $('coverSummary').textContent = meta.card_summary || (count === 0 ? (meta.tag_empty || 'Sin productos') : '');
+    }
+    if ($('coverCta')) {
+      $('coverCta').textContent = `${meta.cta_label || 'Ver productos'} →`;
     }
 
     const existingImg = box.querySelector('img.cover-img');

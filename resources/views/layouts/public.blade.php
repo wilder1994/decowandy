@@ -80,5 +80,6 @@
         </div>
         <div class="border-t py-3 text-center text-xs text-dw-muted dw-hairline">© {{ date('Y') }} DecoWandy. Todos los derechos reservados.</div>
     </footer>
+    @stack('scripts')
 </body>
 </html>

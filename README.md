@@ -73,6 +73,11 @@ Laragon debe servir `decowandy/public` con `auto.decowandy.test.conf` y la entra
 ### Contacto público
 En el pie de la tienda: correo Outlook `decowandy2025@hotmail.com` y WhatsApp `317 836 2567` (`DW_CONTACT_EMAIL` y `DW_WHATSAPP` en `.env`; Colombia se arma como `57…` para `wa.me`).
 
+### Página de bienvenida (pública)
+- **Hero:** copy + CTAs a la izquierda; a la derecha vitrina de **destacados** en grilla 2×2 (dos carruseles por fila, autoplay ~3 s si hay más de 2 ítems por fila).
+- **Explora por categoría:** tarjetas con portada, resumen y contador (sin listar productos). El listado vive en `/catalogo/{slug}`.
+- Tras categorías sigue el **contacto** del pie (sin sección Destacados duplicada abajo).
+
 ### Editor de página pública (Ajustes)
 - **Vista previa in-situ:** la portada se edita como la tarjeta real de la tienda (sin panel aparte ni otra pestaña).
 - **Portada por categoría:** subir / reemplazar / quitar imagen (JPG/PNG/WebP, máx. 2 MB) en `catalog_category_settings`.

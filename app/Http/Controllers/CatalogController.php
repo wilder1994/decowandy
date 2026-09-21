@@ -274,7 +274,7 @@ class CatalogController extends Controller
     {
         $items = $this->fetchVisibleItems();
         $categories = CatalogView::compose($items);
-        $destacados = $items->where('featured', 1)->take(6)->values();
+        $destacados = $items->where('featured', 1)->take(8)->values();
 
         return [$categories, $destacados];
     }
