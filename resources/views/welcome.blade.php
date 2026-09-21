@@ -30,12 +30,12 @@
         $hasFeatured = $featuredMapped->isNotEmpty();
     @endphp
 
-    {{-- HERO: columnas a la misma altura; CTAs y 2.º carrusel comparten la línea inferior --}}
-    <section class="relative overflow-hidden">
+    {{-- HERO: marco verde = viewport bajo header; CTAs y 2.º carrusel en la línea inferior --}}
+    <section class="dw-hero">
         <div class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[color:var(--dw-lilac)]/35 via-transparent to-transparent"></div>
-        <div class="relative mx-auto grid max-w-7xl gap-5 px-4 pb-8 pt-4 md:grid-cols-2 md:items-stretch md:gap-8 md:pb-10 md:pt-5">
-            {{-- Columna izquierda --}}
-            <div class="flex min-h-0 flex-col">
+        <div class="dw-hero-inner">
+            {{-- Columna izquierda: espacio repartido; botones al fondo del marco --}}
+            <div class="dw-hero-copy">
                 <div>
                     <h1 class="text-3xl font-bold leading-tight md:text-4xl lg:text-5xl" style="font-family:'Poppins',Inter,system-ui">
                         <a href="{{ route('catalog.category', 'diseno') }}" class="transition hover:text-[color:var(--dw-accent)]">Diseños</a>,
@@ -45,8 +45,8 @@
                         </span>
                     </h1>
 
-                    <div class="mt-1.5 md:mt-2">
-                        <svg viewBox="0 0 800 100" class="h-8 w-full md:h-10" aria-hidden="true">
+                    <div class="mt-2 md:mt-3">
+                        <svg viewBox="0 0 800 100" class="h-9 w-full md:h-11" aria-hidden="true">
                             <defs>
                                 <linearGradient id="dwBrush" x1="0%" y1="0%" x2="100%" y2="0%">
                                     <stop offset="0%" stop-color="var(--dw-primary)" />
@@ -58,19 +58,18 @@
                         </svg>
                     </div>
 
-                    <p class="mt-2 text-sm text-gray-600 md:text-[0.95rem]">
+                    <p class="mt-2 text-sm text-gray-600 md:mt-3 md:text-base">
                         Logos, tarjetas, papelería y servicios de impresión. Hecho con cariño por DecoWandy.
                     </p>
 
-                    <div class="mt-3 flex flex-wrap gap-2 text-sm text-gray-700">
+                    <div class="mt-3 flex flex-wrap gap-2 text-sm text-gray-700 md:mt-4">
                         <span class="inline-flex items-center rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">Fotocopias y escáner</span>
                         <span class="inline-flex items-center rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">Impresión fotográfica</span>
                         <span class="inline-flex items-center rounded-full border border-gray-100 bg-white px-3 py-1.5 shadow-sm">Detalles y regalos</span>
                     </div>
                 </div>
 
-                {{-- Empuja CTAs al fondo = misma línea que el 2.º carrusel --}}
-                <div class="mt-auto flex flex-wrap gap-3 pt-5">
+                <div class="dw-hero-actions">
                     <a href="{{ $dwHeroWhatsappHref }}"
                        @if($dwHasWhatsapp) target="_blank" rel="noopener" @endif
                        class="inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-white brand-gradient shadow transition hover:opacity-90">
@@ -83,8 +82,8 @@
                 </div>
             </div>
 
-            {{-- Columna derecha: vitrina flotante 2 filas, sin contenedor de fondo --}}
-            <div class="flex min-h-0 w-full flex-col md:min-h-[17.5rem]">
+            {{-- Columna derecha: 2 carruseles flotantes llenan el marco --}}
+            <div class="dw-hero-featured">
                 <div class="dw-featured-rail">
                     <div class="flex shrink-0 items-baseline justify-between gap-2">
                         <p class="dw-featured-label">Destacados</p>
@@ -147,7 +146,7 @@
         </div>
     </section>
 
-    <section id="catalogo" class="mx-auto grid max-w-7xl gap-6 px-4 py-10 md:py-12">
+    <section id="catalogo" class="mx-auto grid max-w-7xl gap-6 px-4 pb-12 pt-10 md:pb-16 md:pt-14">
         <div>
             <h2 class="text-2xl font-bold">Explora por categoría</h2>
             <p class="mt-1 text-sm text-gray-500">Elige una categoría para ver productos y stock disponible.</p>
